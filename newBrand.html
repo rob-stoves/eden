@@ -673,8 +673,7 @@
         const showApiIssueMessageSelect = $('showApiIssueMessage');
         const errorMessage = $('errorMessage'), locationNameEl = $('locationName');
         const lastUpdatedEl = $('lastUpdated');
-        const capacityBarFill = $('capacityBarFill');
-        const statValueEl = $('statValue'), statLabelEl = $('statLabel'), statSubEl = $('statSub');
+        const statValueEl = $('statValue'), statLabelEl = $('statLabel');
         const deskGrid = $('deskGrid');
         const settingsBtn = $('settingsBtn');
         const nextRefreshEl = $('nextRefresh');
@@ -1126,8 +1125,6 @@
 
             statValueEl.textContent = avail;
             statLabelEl.textContent = 'FREE';
-            statSubEl.textContent   = `${occ} of ${total} desks occupied · ${occPct}% full`;
-            capacityBarFill.style.width = freePct + '%';
             lastUpdatedEl.textContent   = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
             deskGrid.innerHTML = '';
