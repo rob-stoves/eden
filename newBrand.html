@@ -993,7 +993,7 @@
                 <div class="waiting-list-manage-item">
                     <div>
                         <span class="waiting-list-manage-name">${esc(entry.name)}</span>
-                        <span class="waiting-list-manage-time">${formatTimeAgo(entry.timestamp)}</span>
+                        <span class="waiting-list-manage-time">${entry.desired_date || 'Any day'} · ${formatTimeAgo(entry.timestamp)}</span>
                     </div>
                     <button class="waiting-list-manage-remove" data-name="${esc(entry.name)}">Remove</button>
                 </div>`).join('');
