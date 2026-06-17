@@ -830,13 +830,9 @@
                     $('waitingListName').value = '';
                     $('waitingListEmail').value = '';
                     $('waitingListForm').classList.remove('active');
-                    $('waitingListSuccess').classList.add('show');
+                    $('joinWaitingListBtn').style.display = 'inline-block';
+                    $('waitingListQueue').style.display = 'block';
                     await updateWaitingListQueue();
-                    setTimeout(() => {
-                        $('waitingListSuccess').classList.remove('show');
-                        $('joinWaitingListBtn').style.display = 'inline-block';
-                        $('waitingListQueue').style.display = 'block';
-                    }, 2000);
                 }
             }
         });
