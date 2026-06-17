@@ -29,8 +29,8 @@ export default {
       return handleApiProxy(request, url, env);
     }
     
-    // Gate /newBrand.html behind a URL token
-    if (url.pathname === '/newBrand.html') {
+    // Gate /newBrand.html (and /newBrand) behind a URL token
+    if (url.pathname === '/newBrand.html' || url.pathname === '/newBrand') {
       const expected = env.DISPLAY_TOKEN;
       if (!expected) {
         return new Response('Display token not configured. Set DISPLAY_TOKEN in Cloudflare Pages environment variables.', {
