@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -21,12 +21,31 @@
             --glow-red: rgba(255, 68, 102, 0.15);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        body.light-mode {
+            --bg-dark: #f5f5f7;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f0f0f2;
+            --accent-green: #00aa55;
+            --accent-red: #dd3355;
+            --accent-amber: #dd8800;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666677;
+            --text-muted: #999999;
+            --border-subtle: #ddddee;
+            --glow-green: rgba(0, 170, 85, 0.15);
+            --glow-red: rgba(221, 51, 85, 0.15);
         }
 
+        body.light-mode .bg-pattern {
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 170, 85, 0.08), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(221, 51, 85, 0.05), transparent);
+        }
+
+        body.light-mode .grid-overlay {
+            opacity: 0.08;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'DM Sans', sans-serif;
             background: var(--bg-dark);
@@ -34,573 +53,545 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
-
         .bg-pattern {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: 
                 radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 255, 136, 0.08), transparent),
                 radial-gradient(ellipse 60% 40% at 100% 100%, rgba(255, 68, 102, 0.05), transparent);
-            pointer-events: none;
-            z-index: 0;
+            pointer-events: none; z-index: 0;
         }
-
         .grid-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background-image: 
                 linear-gradient(var(--border-subtle) 1px, transparent 1px),
                 linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
             background-size: 60px 60px;
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: 0;
+            opacity: 0.15; pointer-events: none; z-index: 0;
         }
-
         .config-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            padding: 40px;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; align-items: flex-start; justify-content: center;
+            z-index: 100; padding: 40px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
-
         .config-card {
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
-            border-radius: 24px;
-            padding: 48px;
-            max-width: 600px;
-            width: 100%;
+            border-radius: 24px; padding: 48px;
+            max-width: 800px; width: 100%;
             position: relative;
             animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            margin: auto 0;
         }
-
+        @media (max-width: 600px) {
+            .config-screen {
+                padding: 20px;
+                align-items: flex-start;
+            }
+            .config-card {
+                padding: 24px;
+                margin: 0;
+            }
+            .settings-columns {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(40px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         .config-card::before {
-            content: '';
-            position: absolute;
-            top: -1px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 3px;
+            content: ''; position: absolute;
+            top: -1px; left: 50%; transform: translateX(-50%);
+            width: 200px; height: 3px;
             background: linear-gradient(90deg, transparent, var(--accent-green), transparent);
             border-radius: 2px;
         }
-
-        .logo {
-            font-family: 'Space Mono', monospace;
-            font-size: 14px;
-            color: var(--accent-green);
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .config-title {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .config-subtitle {
-            color: var(--text-secondary);
-            font-size: 16px;
-            margin-bottom: 40px;
-        }
-
-        .form-group {
+        .settings-columns {
+            display: flex;
+            gap: 32px;
             margin-bottom: 24px;
         }
-
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
+        .settings-column {
+            flex: 1;
         }
-
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 14px; color: var(--accent-green);
+            letter-spacing: 4px; text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .config-title { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+        .config-subtitle { color: var(--text-secondary); font-size: 16px; margin-bottom: 40px; }
+        .form-group { margin-bottom: 24px; }
+        .form-label {
+            display: block; font-size: 13px; font-weight: 600;
+            color: var(--text-secondary); text-transform: uppercase;
+            letter-spacing: 1px; margin-bottom: 10px;
+        }
         .form-input {
-            width: 100%;
-            padding: 16px 20px;
+            width: 100%; padding: 16px 20px;
             background: var(--bg-dark);
             border: 1px solid var(--border-subtle);
-            border-radius: 12px;
-            color: var(--text-primary);
-            font-size: 16px;
-            font-family: 'Space Mono', monospace;
+            border-radius: 12px; color: var(--text-primary);
+            font-size: 16px; font-family: 'Space Mono', monospace;
             transition: all 0.3s ease;
         }
-
         .form-input:focus {
-            outline: none;
-            border-color: var(--accent-green);
+            outline: none; border-color: var(--accent-green);
             box-shadow: 0 0 0 4px var(--glow-green);
         }
-
-        .form-input::placeholder {
-            color: var(--text-muted);
-        }
-
+        .form-input::placeholder { color: var(--text-muted); }
         .form-select {
-            width: 100%;
-            padding: 16px 20px;
+            width: 100%; padding: 16px 20px;
             background: var(--bg-dark);
             border: 1px solid var(--border-subtle);
-            border-radius: 12px;
-            color: var(--text-primary);
-            font-size: 16px;
-            font-family: 'DM Sans', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            border-radius: 12px; color: var(--text-primary);
+            font-size: 16px; font-family: 'DM Sans', sans-serif;
+            cursor: pointer; transition: all 0.3s ease;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238888aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238888aa' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 16px center;
         }
-
         .form-select:focus {
-            outline: none;
-            border-color: var(--accent-green);
+            outline: none; border-color: var(--accent-green);
             box-shadow: 0 0 0 4px var(--glow-green);
         }
-
-        .form-select option {
-            background: var(--bg-card);
-            color: var(--text-primary);
+        .form-select option { background: var(--bg-card); color: var(--text-primary); }
+        .form-caption {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
         }
-
-        .btn-primary {
+        .form-range {
             width: 100%;
-            padding: 18px 32px;
-            background: var(--accent-green);
-            color: var(--bg-dark);
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
-            font-family: 'DM Sans', sans-serif;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--bg-dark);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        }
+        .form-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 255, 136, 0.3);
+        }
+        .form-range::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 255, 136, 0.3);
+        }
+        .btn-primary {
+            width: 100%; padding: 18px 32px;
+            background: var(--accent-green); color: var(--bg-dark);
+            border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer; transition: all 0.3s ease;
+            text-transform: uppercase; letter-spacing: 1px;
             margin-top: 16px;
         }
-
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 32px var(--glow-green);
         }
-
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .btn-secondary {
-            width: 100%;
-            padding: 14px 24px;
-            background: transparent;
-            color: var(--accent-green);
+            width: 100%; padding: 14px 24px;
+            background: transparent; color: var(--accent-green);
             border: 1px solid var(--accent-green);
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
+            border-radius: 12px; font-size: 14px; font-weight: 600;
             font-family: 'DM Sans', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            cursor: pointer; transition: all 0.3s ease;
+            text-transform: uppercase; letter-spacing: 1px;
         }
-
-        .btn-secondary:hover {
-            background: var(--glow-green);
-        }
-
-        .btn-secondary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
+        .btn-secondary:hover { background: var(--glow-green); }
+        .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
         .error-message {
             background: var(--glow-red);
             border: 1px solid var(--accent-red);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 24px;
-            color: var(--accent-red);
-            font-size: 14px;
-            display: none;
+            border-radius: 12px; padding: 16px;
+            margin-bottom: 24px; color: var(--accent-red);
+            font-size: 14px; display: none;
         }
-
         .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid transparent;
-            border-top-color: currentColor;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-            vertical-align: middle;
+            display: inline-block; width: 20px; height: 20px;
+            border: 2px solid transparent; border-top-color: currentColor;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+            margin-right: 8px; vertical-align: middle;
         }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
+        @keyframes spin { to { transform: rotate(360deg); } }
         .dashboard {
-            display: none;
-            min-height: 100vh;
-            padding: 40px;
-            position: relative;
-            z-index: 1;
+            display: none; min-height: 100vh; padding: 20px;
+            position: relative; z-index: 1;
         }
-
         .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 48px;
-            flex-wrap: wrap;
-            gap: 24px;
+            display: flex; justify-content: space-between;
+            align-items: flex-start; margin-bottom: 24px;
+            flex-wrap: wrap; gap: 16px;
         }
-
-        .location-info {
-            flex: 1;
-            min-width: 300px;
-        }
-
+        .location-info { flex: 1; min-width: 250px; }
         .location-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            display: inline-flex; align-items: center; gap: 6px;
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
-            border-radius: 100px;
-            padding: 8px 16px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
+            border-radius: 100px; padding: 5px 12px;
+            font-size: 11px; color: var(--text-secondary);
+            margin-bottom: 8px;
         }
-
         .location-badge .dot {
-            width: 8px;
-            height: 8px;
+            width: 6px; height: 6px;
             background: var(--accent-green);
             border-radius: 50%;
             animation: pulse 2s ease-in-out infinite;
         }
-
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(0.8); }
         }
-
         .location-name {
-            font-size: 48px;
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 8px;
+            font-size: 32px; font-weight: 700;
+            line-height: 1.1; margin-bottom: 4px;
         }
-
         .last-updated {
             color: var(--text-muted);
             font-family: 'Space Mono', monospace;
-            font-size: 13px;
+            font-size: 11px;
         }
-
-        .stats-row {
-            display: flex;
-            gap: 24px;
+        .stats-row { display: flex; gap: 12px; align-items: center; }
+        .capacity-bar-container {
+            display: flex; align-items: center; gap: 12px;
         }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            padding: 24px 32px;
-            min-width: 180px;
+        .capacity-bar {
+            width: 300px; height: 30px;
+            background: var(--bg-dark);
+            border: 1px solid var(--text-primary);
+            border-radius: 30px;
+            overflow: hidden;
+            position: relative;
         }
-
-        .stat-card.available {
-            border-color: var(--accent-green);
-            background: linear-gradient(135deg, var(--bg-card), rgba(0, 255, 136, 0.05));
+        .capacity-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-amber), var(--accent-red));
+            background-size: 200% 100%;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
         }
-
-        .stat-card.occupied {
-            border-color: var(--accent-red);
-            background: linear-gradient(135deg, var(--bg-card), rgba(255, 68, 102, 0.05));
+        .capacity-bar-fill.animate {
+            animation: capacityPulse 0.6s ease-out;
         }
-
-        .stat-value {
-            font-size: 42px;
-            font-weight: 700;
+        @keyframes capacityPulse {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+            100% { filter: brightness(1); }
+        }
+        .capacity-text {
             font-family: 'Space Mono', monospace;
-            line-height: 1;
-        }
-
-        .stat-card.available .stat-value { color: var(--accent-green); }
-        .stat-card.occupied .stat-value { color: var(--accent-red); }
-
-        .stat-label {
             font-size: 13px;
             color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 8px;
+            white-space: nowrap;
         }
-
+        .capacity-text span:first-child {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
         .desk-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
         }
-
         .desk-card {
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            padding: 24px;
+            border-radius: 10px; padding: 12px;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            position: relative; overflow: hidden;
         }
-
         .desk-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
+            content: ''; position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
             background: var(--accent-green);
-            transform: scaleX(0);
-            transform-origin: left;
+            transform: scaleX(0); transform-origin: left;
             transition: transform 0.3s ease;
         }
-
-        .desk-card.available::before {
-            transform: scaleX(1);
-            background: var(--accent-green);
+        .desk-card.available::before { transform: scaleX(1); background: var(--accent-green); }
+        .desk-card.occupied::before { transform: scaleX(1); background: var(--accent-red); }
+        .desk-card:hover { background: var(--bg-card-hover); transform: translateY(-2px); }
+        .desk-row {
+            display: flex; justify-content: space-between;
+            align-items: center; gap: 8px;
         }
-
-        .desk-card.occupied::before {
-            transform: scaleX(1);
-            background: var(--accent-red);
+        .desk-name { font-size: var(--desk-name-size, 14px); font-weight: 600; flex-shrink: 0; }
+        .occupant-name {
+            display: var(--occupant-name-display, block);
+            font-weight: 500; font-size: var(--occupant-name-size, 11px);
+            white-space: nowrap; overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-primary);
+            text-align: right;
         }
+        .available-text { color: var(--accent-green); }
 
-        .desk-card:hover {
-            background: var(--bg-card-hover);
-            transform: translateY(-4px);
-        }
-
-        .desk-header {
+        /* Waiting list header styles */
+        .waiting-list-header {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 16px;
-        }
-
-        .desk-name {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .desk-status {
-            display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            margin-right: 16px;
+        }
+        .waiting-list-btn-small {
             padding: 6px 12px;
-            border-radius: 100px;
+            background: var(--accent-amber);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 6px;
             font-size: 12px;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .desk-status.available {
-            background: var(--glow-green);
-            color: var(--accent-green);
-        }
-
-        .desk-status.occupied {
-            background: var(--glow-red);
-            color: var(--accent-red);
-        }
-
-        .desk-status .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-
-        .occupant-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid var(--border-subtle);
-        }
-
-        .occupant-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--accent-red), var(--accent-amber));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
-            color: var(--bg-dark);
-            flex-shrink: 0;
-        }
-
-        .occupant-details {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .occupant-name {
-            font-weight: 600;
-            font-size: 15px;
+            cursor: pointer;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            transition: all 0.2s ease;
         }
-
-        .occupant-time {
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-family: 'Space Mono', monospace;
-            margin-top: 2px;
+        .waiting-list-btn-small:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
         }
-
-        .empty-desk-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: var(--glow-green);
-            display: flex;
+        .waiting-list-form-inline {
+            display: none;
             align-items: center;
-            justify-content: center;
+            gap: 4px;
         }
-
-        .empty-desk-icon svg {
-            width: 24px;
-            height: 24px;
+        .waiting-list-form-inline.active {
+            display: flex;
+        }
+        .waiting-list-input-small {
+            padding: 6px 10px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 12px;
+            width: 120px;
+        }
+        .waiting-list-input-small:focus {
+            outline: none;
+            border-color: var(--accent-amber);
+        }
+        .waiting-list-submit-small,
+        .waiting-list-cancel-small {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .waiting-list-submit-small {
+            background: var(--accent-green);
+            color: var(--bg-dark);
+        }
+        .waiting-list-cancel-small {
+            background: var(--border-subtle);
+            color: var(--text-secondary);
+        }
+        .waiting-list-queue-small {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .waiting-list-queue-small strong {
+            color: var(--accent-amber);
+        }
+        .waiting-list-success-small {
+            display: none;
+            font-size: 11px;
             color: var(--accent-green);
+            font-weight: 600;
+        }
+        .waiting-list-success-small.show {
+            display: block;
         }
 
-        .btn-settings {
-            position: fixed;
-            bottom: 32px;
-            right: 32px;
-            width: 56px;
-            height: 56px;
+        /* Waiting list management in settings */
+        .waiting-list-manage {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .waiting-list-manage-empty {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-align: center;
+            padding: 8px;
+        }
+        .waiting-list-manage-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+        .waiting-list-manage-item:last-child {
+            margin-bottom: 0;
+        }
+        .waiting-list-manage-item:hover {
+            background: var(--bg-card-hover);
+        }
+        .waiting-list-manage-name {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+        .waiting-list-manage-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: 8px;
+        }
+        .waiting-list-manage-remove {
+            background: transparent;
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .waiting-list-manage-remove:hover {
+            opacity: 1;
+            background: var(--accent-red);
+            color: var(--bg-dark);
+        }
+
+        /* Nicknames management */
+        .nickname-add-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .nickname-input {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        .btn-add-nickname {
+            padding: 8px 16px;
+            background: var(--accent-green);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-add-nickname:hover {
+            opacity: 0.9;
+        }
+        .nicknames-list {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .nicknames-list-empty {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-align: center;
+            padding: 8px;
+        }
+        .nickname-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+        .nickname-item:last-child {
+            margin-bottom: 0;
+        }
+        .nickname-item:hover {
+            background: var(--bg-card-hover);
+        }
+        .nickname-item-names {
+            font-size: 13px;
+        }
+        .nickname-item-full {
+            color: var(--text-secondary);
+        }
+        .nickname-item-arrow {
+            color: var(--text-muted);
+            margin: 0 8px;
+        }
+        .nickname-item-nick {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+        .nickname-item-remove {
+            background: transparent;
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .nickname-item-remove:hover {
+            opacity: 1;
+            background: var(--accent-red);
+            color: var(--bg-dark);
+        }
+        .btn-settings-header {
+            width: 44px; height: 44px;
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
+            border-radius: 12px; color: var(--text-secondary);
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
         }
-
-        .btn-settings:hover {
+        .btn-settings-header:hover {
             background: var(--bg-card-hover);
             color: var(--accent-green);
             border-color: var(--accent-green);
         }
-
-        .btn-settings svg {
-            width: 24px;
-            height: 24px;
-        }
-
-        @media (min-width: 1920px) {
-            .location-name { font-size: 64px; }
-            .stat-value { font-size: 56px; }
-            .desk-grid {
-                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-                gap: 28px;
-            }
-            .desk-card { padding: 32px; }
-            .desk-name { font-size: 22px; }
-        }
-
+        .btn-settings-header svg { width: 20px; height: 20px; }
         .hidden { display: none !important; }
-
         .section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
+            font-size: 11px; font-weight: 600;
+            color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 2px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 12px;
         }
-
         .section-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
+            content: ''; flex: 1; height: 1px;
             background: var(--border-subtle);
         }
-
-        .refresh-indicator {
-            position: fixed;
-            top: 32px;
-            right: 32px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 100px;
-            padding: 10px 16px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            font-family: 'Space Mono', monospace;
-            z-index: 50;
-        }
-
-        .refresh-icon {
-            width: 16px;
-            height: 16px;
-            animation: spin 2s linear infinite;
-        }
-
-        .refresh-icon.paused {
-            animation-play-state: paused;
+        .refresh-divider {
+            color: var(--text-muted);
+            margin: 0 4px;
         }
     </style>
 </head>
@@ -608,481 +599,1042 @@
     <div class="bg-pattern"></div>
     <div class="grid-overlay"></div>
 
-    <!-- Configuration Screen -->
     <div class="config-screen" id="configScreen">
         <div class="config-card">
             <div class="logo">● EDEN</div>
             <h1 class="config-title">Desk Availability</h1>
             <p class="config-subtitle">Configure your office display settings</p>
-
             <div class="error-message" id="errorMessage"></div>
-
-            <div class="form-group">
-                <label class="form-label">API Token</label>
-                <input type="password" class="form-input" id="apiToken" placeholder="Enter your Eden API token" value="Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl">
+            
+            <div class="settings-columns">
+                <div class="settings-column">
+                    <div class="form-group">
+                        <label class="form-label">API Token</label>
+                        <input type="password" class="form-input" id="apiToken" placeholder="Enter your Eden API token" value="Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Select Office Location</label>
+                        <select class="form-select" id="locationSelect">
+                            <option value="">Loading locations...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Dashboard Title (optional)</label>
+                        <input type="text" class="form-input" id="dashboardTitle" placeholder="Override location name" style="font-family: 'DM Sans', sans-serif;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Auto-Refresh Interval</label>
+                        <select class="form-select" id="refreshInterval">
+                            <option value="120" selected>Every 2 minutes</option>
+                            <option value="300">Every 5 minutes</option>
+                            <option value="600">Every 10 minutes</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Theme</label>
+                        <select class="form-select" id="themeMode">
+                            <option value="dark" selected>Dark Mode</option>
+                            <option value="light">Light Mode</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Desk Name Size: <span id="deskNameSizeValue">43px</span></label>
+                        <input type="range" class="form-range" id="deskNameSize" min="10" max="50" value="43">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Occupant Name Size: <span id="occupantNameSizeValue">22px</span></label>
+                        <input type="range" class="form-range" id="occupantNameSize" min="0" max="30" value="22">
+                        <p class="form-caption">Set to 0 to hide occupant names</p>
+                    </div>
+                </div>
+                
+                <div class="settings-column">
+                    <div class="form-group">
+                        <label class="form-label">Card Width</label>
+                        <select class="form-select" id="cardWidth">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Display Mode</label>
+                        <select class="form-select" id="showMode">
+                            <option value="all" selected>Show all desks</option>
+                            <option value="available">Show available desks only</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Hide non-desks</label>
+                        <select class="form-select" id="hideNonDesks">
+                            <option value="0" selected>Show all</option>
+                            <option value="3">Hide names over 3 characters</option>
+                            <option value="5">Hide names over 5 characters</option>
+                            <option value="10">Hide names over 10 characters</option>
+                            <option value="15">Hide names over 15 characters</option>
+                            <option value="20">Hide names over 20 characters</option>
+                        </select>
+                        <p class="form-caption">This hides any desks with names over the selected number of characters</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Waiting List</label>
+                        <select class="form-select" id="showWaitingList">
+                            <option value="off" selected>Hide waiting list</option>
+                            <option value="auto">Show when no desks available</option>
+                            <option value="always">Always show waiting list</option>
+                        </select>
+                        <p class="form-caption">Shows a button to join the waiting list when no desks are available</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">API Issue Message</label>
+                        <select class="form-select" id="showApiIssueMessage">
+                            <option value="false" selected>Disabled</option>
+                            <option value="true">Show issue message when no bookings</option>
+                        </select>
+                        <p class="form-caption">Displays a maintenance message instead of showing all desks as available</p>
+                    </div>
+                    <div class="form-group" id="waitingListManagement" style="display: none;">
+                        <label class="form-label">Manage Waiting List</label>
+                        <div class="waiting-list-manage" id="waitingListManageContainer">
+                            <p class="form-caption">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Manage Nicknames</label>
+                        <div class="nickname-add-form">
+                            <input type="text" class="form-input nickname-input" id="nicknameFullName" placeholder="Full name">
+                            <input type="text" class="form-input nickname-input" id="nicknameNickname" placeholder="Nickname">
+                            <button class="btn-add-nickname" id="addNicknameBtn">Add</button>
+                        </div>
+                        <div class="nicknames-list" id="nicknamesListContainer">
+                            <p class="form-caption">Loading...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <button class="btn-secondary" id="loadLocationsBtn" style="margin-bottom: 24px;">
-                <span id="loadBtnText">Load Locations</span>
-            </button>
-
-            <div class="form-group">
-                <label class="form-label">Select Office Location</label>
-                <select class="form-select" id="locationSelect" disabled>
-                    <option value="">Click "Load Locations" first...</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Auto-Refresh Interval</label>
-                <select class="form-select" id="refreshInterval">
-                    <option value="30">Every 30 seconds</option>
-                    <option value="60" selected>Every 1 minute</option>
-                    <option value="120">Every 2 minutes</option>
-                    <option value="300">Every 5 minutes</option>
-                </select>
-            </div>
-
-            <button class="btn-primary" id="startBtn" disabled>
-                Launch Display
-            </button>
+            
+            <button class="btn-primary" id="startBtn" disabled>Launch Display</button>
         </div>
     </div>
 
-    <!-- Dashboard Screen -->
     <div class="dashboard" id="dashboard">
-        <div class="refresh-indicator">
-            <svg class="refresh-icon" id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-            </svg>
-            <span id="nextRefresh">Refreshing...</span>
-        </div>
-
         <header class="dashboard-header">
             <div class="location-info">
                 <div class="location-badge">
                     <span class="dot"></span>
                     <span>Live</span>
+                    <span class="refresh-divider">•</span>
+                    <span id="nextRefresh">Refreshing...</span>
                 </div>
                 <h1 class="location-name" id="locationName">Loading...</h1>
                 <p class="last-updated">Last updated: <span id="lastUpdated">--:--</span></p>
             </div>
             <div class="stats-row">
-                <div class="stat-card available">
-                    <div class="stat-value" id="availableCount">--</div>
-                    <div class="stat-label">Available</div>
+                <div class="waiting-list-header" id="waitingListContainer" style="display: none;">
+                    <button class="waiting-list-btn-small" id="joinWaitingListBtn">+ Join Waitlist</button>
+                    <div class="waiting-list-form-inline" id="waitingListForm">
+                        <input type="text" class="waiting-list-input-small" id="waitingListName" placeholder="Your name">
+                        <button class="waiting-list-submit-small" id="waitingListSubmit">✓</button>
+                        <button class="waiting-list-cancel-small" id="waitingListCancel">✕</button>
+                    </div>
+                    <div class="waiting-list-queue-small" id="waitingListQueue"></div>
+                    <div class="waiting-list-success-small" id="waitingListSuccess">Added!</div>
                 </div>
-                <div class="stat-card occupied">
-                    <div class="stat-value" id="occupiedCount">--</div>
-                    <div class="stat-label">Occupied</div>
+                <div class="capacity-bar-container">
+                    <div class="capacity-bar">
+                        <div class="capacity-bar-fill" id="capacityBarFill"></div>
+                    </div>
+                    <div class="capacity-text">
+                        <span id="occupiedCount">0</span>/<span id="totalCount">0</span> desks
+                    </div>
                 </div>
+                <button class="btn-settings-header" id="settingsBtn" title="Settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                    </svg>
+                </button>
             </div>
         </header>
-
         <div class="section-title">All Desks</div>
         <div class="desk-grid" id="deskGrid"></div>
-
-        <button class="btn-settings" id="settingsBtn" title="Settings">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
-            </svg>
-        </button>
     </div>
 
     <script>
-        // State
         let state = {
             apiToken: localStorage.getItem('eden_api_token') || 'Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl',
             locationId: localStorage.getItem('eden_location_id') || '',
             locationName: localStorage.getItem('eden_location_name') || '',
-            refreshInterval: parseInt(localStorage.getItem('eden_refresh_interval')) || 60,
-            locations: [],
-            desks: [],
-            reservations: [],
-            refreshTimer: null,
-            countdownTimer: null,
-            nextRefreshTime: null
+            dashboardTitle: localStorage.getItem('eden_dashboard_title') || '',
+            refreshInterval: parseInt(localStorage.getItem('eden_refresh_interval')) || 120,
+            deskNameSize: parseInt(localStorage.getItem('eden_desk_name_size')) || 43,
+            occupantNameSize: parseInt(localStorage.getItem('eden_occupant_name_size')) || 22,
+            cardWidth: localStorage.getItem('eden_card_width') || 'medium',
+            showMode: localStorage.getItem('eden_show_mode') || 'all',
+            hideNonDesks: parseInt(localStorage.getItem('eden_hide_non_desks')) || 0,
+            themeMode: localStorage.getItem('eden_theme_mode') || 'dark',
+            showWaitingList: localStorage.getItem('eden_show_waiting_list') || 'off',
+            showApiIssueMessage: localStorage.getItem('eden_show_api_issue_message') === 'true',
+            locations: [], desks: [], reservations: [],
+            refreshTimer: null, countdownTimer: null, nextRefreshTime: null
         };
 
-        // DOM Elements
-        const configScreen = document.getElementById('configScreen');
-        const dashboard = document.getElementById('dashboard');
-        const apiTokenInput = document.getElementById('apiToken');
-        const locationSelect = document.getElementById('locationSelect');
-        const refreshIntervalSelect = document.getElementById('refreshInterval');
-        const startBtn = document.getElementById('startBtn');
-        const loadLocationsBtn = document.getElementById('loadLocationsBtn');
-        const loadBtnText = document.getElementById('loadBtnText');
-        const errorMessage = document.getElementById('errorMessage');
-        const locationNameEl = document.getElementById('locationName');
-        const lastUpdatedEl = document.getElementById('lastUpdated');
-        const availableCountEl = document.getElementById('availableCount');
-        const occupiedCountEl = document.getElementById('occupiedCount');
-        const deskGrid = document.getElementById('deskGrid');
-        const settingsBtn = document.getElementById('settingsBtn');
-        const refreshIcon = document.getElementById('refreshIcon');
-        const nextRefreshEl = document.getElementById('nextRefresh');
+        const $ = id => document.getElementById(id);
+        const configScreen = $('configScreen'), dashboard = $('dashboard');
+        const apiTokenInput = $('apiToken'), locationSelect = $('locationSelect');
+        const dashboardTitleInput = $('dashboardTitle');
+        const refreshIntervalSelect = $('refreshInterval'), startBtn = $('startBtn');
+        const themeModeSelect = $('themeMode');
+        const deskNameSizeSlider = $('deskNameSize'), deskNameSizeValue = $('deskNameSizeValue');
+        const occupantNameSizeSlider = $('occupantNameSize'), occupantNameSizeValue = $('occupantNameSizeValue');
+        const cardWidthSelect = $('cardWidth');
+        const showModeSelect = $('showMode'), hideNonDesksSelect = $('hideNonDesks');
+        const showWaitingListSelect = $('showWaitingList');
+        const showApiIssueMessageSelect = $('showApiIssueMessage');
+        const errorMessage = $('errorMessage'), locationNameEl = $('locationName');
+        const lastUpdatedEl = $('lastUpdated');
+        const capacityBarFill = $('capacityBarFill');
+        const occupiedCountEl = $('occupiedCount'), totalCountEl = $('totalCount');
+        const deskGrid = $('deskGrid');
+        const settingsBtn = $('settingsBtn');
+        const nextRefreshEl = $('nextRefresh');
 
-        // API Helper - Uses /api/ path which Cloudflare Functions proxies to Eden
         const API_BASE = '/api';
 
-        async function apiRequest(endpoint, options = {}) {
-            try {
-                const response = await fetch(`${API_BASE}${endpoint}`, {
-                    ...options,
-                    headers: {
-                        'Authorization': state.apiToken,
-                        'Content-Type': 'application/json',
-                        ...options.headers
-                    }
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    if (response.status === 401) {
-                        throw new Error('Invalid API token. Please check your token and try again.');
-                    } else if (response.status === 403) {
-                        throw new Error('Access forbidden. Your token may not have permission for this endpoint.');
-                    }
-                    throw new Error(errorData.error || `API Error: ${response.status}`);
-                }
-
-                return response.json();
-            } catch (error) {
-                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                    throw new Error('Network error: Unable to reach the API. Please check your connection.');
-                }
-                throw error;
+        async function apiRequest(endpoint) {
+            const response = await fetch(`${API_BASE}${endpoint}`, {
+                headers: { 'Authorization': state.apiToken, 'Content-Type': 'application/json' }
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || `API Error: ${response.status}`);
             }
+            return response.json();
         }
 
-        // Fetch locations
         async function fetchLocations() {
-            try {
-                const data = await apiRequest('/locations?type=all');
-                if (data.message === "No items found") {
-                    return [];
-                }
-                return Array.isArray(data) ? data : [];
-            } catch (error) {
-                throw error;
-            }
+            const data = await apiRequest('/locations?type=all');
+            return data.message === "No items found" ? [] : (Array.isArray(data) ? data : []);
         }
 
-        // Fetch desks for a location
         async function fetchDesks(locationId) {
             try {
-                const data = await apiRequest(`/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`);
+                const data = await apiRequest(`/locations?type=desks&parent_id=${locationId}`);
                 if (data.message === "No items found") {
                     return [];
                 }
                 return Array.isArray(data) ? data : [];
-            } catch (error) {
-                console.error('Error fetching desks:', error);
-                return [];
+            } catch (e) { 
+                console.error('Error fetching desks - will preserve existing data:', e); 
+                return null; // Return null to indicate error
             }
         }
 
-        // Fetch reservations for today
         async function fetchReservations(locationId) {
             const today = new Date().toISOString().split('T')[0];
-            try {
-                const data = await apiRequest(`/cola_reservations?date=${today}&location_id=${encodeURIComponent(locationId)}`);
-                if (data.message === "No items found") {
-                    return [];
-                }
-                return Array.isArray(data) ? data : [];
-            } catch (error) {
-                console.error('Error fetching reservations:', error);
-                return [];
-            }
-        }
-
-        // Show/hide error
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-        }
-
-        function hideError() {
-            errorMessage.style.display = 'none';
-        }
-
-        // Load locations when button is clicked
-        loadLocationsBtn.addEventListener('click', async () => {
-            state.apiToken = apiTokenInput.value.trim();
+            let allReservations = [];
+            let page = 1;
             
-            if (!state.apiToken || state.apiToken.length < 10) {
-                showError('Please enter a valid API token first.');
-                return;
+            try {
+                // Fetch all pages of reservations
+                while (true) {
+                    const data = await apiRequest(`/cola_reservations?date=${today}&page=${page}`);
+                    console.log(`Reservations page ${page}:`, data);
+                    
+                    if (data.message === "No items found") {
+                        break;
+                    }
+                    
+                    if (!Array.isArray(data) || data.length === 0) {
+                        break;
+                    }
+                    
+                    allReservations = allReservations.concat(data);
+                    
+                    // If we got less than 25, we've reached the last page
+                    if (data.length < 25) break;
+                    page++;
+                    
+                    // Safety limit
+                    if (page > 50) break;
+                }
+                
+                console.log(`Total reservations fetched: ${allReservations.length}`);
+                return allReservations;
+            } catch (e) { 
+                console.error('Error fetching reservations - will preserve existing data:', e); 
+                return null; // Return null to indicate error
             }
+        }
 
-            loadLocationsBtn.disabled = true;
-            loadBtnText.innerHTML = '<span class="loading-spinner"></span>Loading...';
-            locationSelect.disabled = true;
-            locationSelect.innerHTML = '<option value="">Loading locations...</option>';
+        function showError(msg) { errorMessage.textContent = msg; errorMessage.style.display = 'block'; }
+        function hideError() { errorMessage.style.display = 'none'; }
+
+        async function loadLocations() {
+            state.apiToken = apiTokenInput.value.trim();
+            if (!state.apiToken || state.apiToken.length < 10) return;
+
+            locationSelect.innerHTML = '<option value="">Loading...</option>';
             hideError();
 
             try {
-                state.locations = await fetchLocations();
-                console.log('Fetched locations:', state.locations);
+                const locations = await fetchLocations();
+
+                state.locations = locations;
+                const locs = state.locations.filter(l => ['floor','address','room','building'].includes(l.location_type?.toLowerCase()));
+                const show = locs.length ? locs : state.locations;
                 
-                const officeLocations = state.locations.filter(loc => 
-                    ['floor', 'address', 'room', 'building'].includes(loc.location_type?.toLowerCase()) ||
-                    loc.location_type === undefined
-                );
-
-                const locationsToShow = officeLocations.length > 0 ? officeLocations : state.locations;
-
-                if (locationsToShow.length === 0) {
+                if (!show.length) {
                     locationSelect.innerHTML = '<option value="">No locations found</option>';
-                    showError('No locations found. Please check your API token has the correct permissions.');
                 } else {
                     locationSelect.innerHTML = '<option value="">Select a location...</option>';
-                    locationsToShow.forEach(loc => {
-                        const option = document.createElement('option');
-                        option.value = loc.location_id;
-                        const typeLabel = loc.location_type ? ` (${loc.location_type})` : '';
-                        option.textContent = loc.title + typeLabel;
-                        option.dataset.type = loc.location_type || '';
-                        locationSelect.appendChild(option);
+                    show.forEach(l => {
+                        const opt = document.createElement('option');
+                        opt.value = l.location_id;
+                        opt.textContent = l.title + (l.location_type ? ` (${l.location_type})` : '');
+                        locationSelect.appendChild(opt);
                     });
-                    locationSelect.disabled = false;
+                    // Pre-select if we have a saved location
+                    if (state.locationId) {
+                        locationSelect.value = state.locationId;
+                    }
                 }
-            } catch (error) {
-                console.error('Location fetch error:', error);
-                showError(error.message);
-                locationSelect.innerHTML = '<option value="">Failed to load locations</option>';
+            } catch (e) {
+                showError(e.message);
+                locationSelect.innerHTML = '<option value="">Failed to load</option>';
             }
-
-            loadLocationsBtn.disabled = false;
-            loadBtnText.textContent = 'Load Locations';
             updateStartButton();
-        });
+        }
 
-        // Handle location selection
         locationSelect.addEventListener('change', () => {
             state.locationId = locationSelect.value;
             state.locationName = locationSelect.options[locationSelect.selectedIndex]?.textContent || '';
             updateStartButton();
         });
 
-        // Handle refresh interval change
+        deskNameSizeSlider.addEventListener('input', () => {
+            state.deskNameSize = parseInt(deskNameSizeSlider.value);
+            deskNameSizeValue.textContent = state.deskNameSize + 'px';
+        });
+
+        occupantNameSizeSlider.addEventListener('input', () => {
+            state.occupantNameSize = parseInt(occupantNameSizeSlider.value);
+            occupantNameSizeValue.textContent = state.occupantNameSize === 0 ? 'Hidden' : state.occupantNameSize + 'px';
+        });
+
         refreshIntervalSelect.addEventListener('change', () => {
             state.refreshInterval = parseInt(refreshIntervalSelect.value);
         });
 
-        // Update start button state
-        function updateStartButton() {
-            startBtn.disabled = !state.apiToken || !state.locationId;
+        cardWidthSelect.addEventListener('change', () => {
+            state.cardWidth = cardWidthSelect.value;
+        });
+
+        showModeSelect.addEventListener('change', () => {
+            state.showMode = showModeSelect.value;
+        });
+
+        showWaitingListSelect.addEventListener('change', () => {
+            state.showWaitingList = showWaitingListSelect.value;
+            localStorage.setItem('eden_show_waiting_list', state.showWaitingList);
+            renderWaitingListManagement();
+        });
+
+        showApiIssueMessageSelect.addEventListener('change', () => {
+            state.showApiIssueMessage = showApiIssueMessageSelect.value === 'true';
+            localStorage.setItem('eden_show_api_issue_message', state.showApiIssueMessage);
+            console.log('API Issue Message setting changed to:', state.showApiIssueMessage);
+        });
+
+        // Nickname add button
+        $('addNicknameBtn').addEventListener('click', async () => {
+            const fullName = $('nicknameFullName').value.trim();
+            const nickname = $('nicknameNickname').value.trim();
+            if (fullName && nickname) {
+                await setNickname(fullName, nickname);
+                $('nicknameFullName').value = '';
+                $('nicknameNickname').value = '';
+                renderNicknamesList();
+            }
+        });
+
+        // Waiting list event listeners
+        $('joinWaitingListBtn').addEventListener('click', () => {
+            $('waitingListForm').classList.add('active');
+            $('joinWaitingListBtn').style.display = 'none';
+            $('waitingListQueue').style.display = 'none';
+            $('waitingListName').focus();
+        });
+
+        $('waitingListCancel').addEventListener('click', () => {
+            $('waitingListForm').classList.remove('active');
+            $('joinWaitingListBtn').style.display = 'inline-block';
+            $('waitingListQueue').style.display = 'block';
+            $('waitingListName').value = '';
+        });
+
+        $('waitingListSubmit').addEventListener('click', async () => {
+            const name = $('waitingListName').value.trim();
+            if (name) {
+                const success = await addToWaitingList(name);
+                if (success) {
+                    $('waitingListName').value = '';
+                    $('waitingListForm').classList.remove('active');
+                    $('waitingListSuccess').classList.add('show');
+                    await updateWaitingListQueue();
+                    setTimeout(() => {
+                        $('waitingListSuccess').classList.remove('show');
+                        $('joinWaitingListBtn').style.display = 'inline-block';
+                        $('waitingListQueue').style.display = 'block';
+                    }, 2000);
+                }
+            }
+        });
+
+        $('waitingListName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                $('waitingListSubmit').click();
+            }
+        });
+
+        function updateStartButton() { startBtn.disabled = !state.apiToken || !state.locationId; }
+
+        function applyDisplaySettings() {
+            // Card width settings
+            const widthMap = { small: '140px', medium: '200px', large: '280px' };
+            deskGrid.style.gridTemplateColumns = `repeat(auto-fill, minmax(${widthMap[state.cardWidth]}, 1fr))`;
+            
+            // Apply font sizes via CSS custom properties
+            document.documentElement.style.setProperty('--desk-name-size', state.deskNameSize + 'px');
+            if (state.occupantNameSize === 0) {
+                document.documentElement.style.setProperty('--occupant-name-display', 'none');
+                document.documentElement.style.setProperty('--occupant-name-size', '0px');
+            } else {
+                document.documentElement.style.setProperty('--occupant-name-display', 'block');
+                document.documentElement.style.setProperty('--occupant-name-size', state.occupantNameSize + 'px');
+            }
+            
+            // Apply theme
+            if (state.themeMode === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
         }
 
-        // Start display
+        // Waiting list functions (using Cloudflare KV)
+        async function getWaitingList() {
+            try {
+                const response = await fetch(`/waitinglist/get?locationId=${encodeURIComponent(state.locationId)}`);
+                const result = await response.json();
+                return result.list || [];
+            } catch (e) {
+                console.log('Failed to get waiting list:', e.message);
+                return [];
+            }
+        }
+
+        async function addToWaitingList(name) {
+            try {
+                const response = await fetch('/waitinglist/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ locationId: state.locationId, name })
+                });
+                const result = await response.json();
+                return result.success;
+            } catch (e) {
+                console.log('Failed to add to waiting list:', e.message);
+                return false;
+            }
+        }
+
+        async function removeFromWaitingList(name) {
+            try {
+                const response = await fetch('/waitinglist/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ locationId: state.locationId, name })
+                });
+                const result = await response.json();
+                return result.success;
+            } catch (e) {
+                console.log('Failed to remove from waiting list:', e.message);
+                return false;
+            }
+        }
+
+        async function updateWaitingListQueue() {
+            const queueEl = $('waitingListQueue');
+            const list = await getWaitingList();
+            if (list.length > 0) {
+                queueEl.innerHTML = `<strong>${list.length}</strong> ${list.length === 1 ? 'person' : 'people'} waiting: ${list.map(e => e.name).join(', ')}`;
+            } else {
+                queueEl.innerHTML = 'No one currently waiting';
+            }
+        }
+
+        async function checkAndRemoveBookedFromWaitingList(deskRes) {
+            // Get current waiting list
+            const waitingList = await getWaitingList();
+            if (waitingList.length === 0) return;
+            
+            // Get all names from current reservations
+            const bookedNames = new Set();
+            deskRes.forEach(reservation => {
+                if (reservation.owner?.name) {
+                    bookedNames.add(reservation.owner.name.toLowerCase().trim());
+                }
+            });
+            
+            // Check each waiting list entry against booked names
+            for (const entry of waitingList) {
+                const entryName = entry.name.toLowerCase().trim();
+                // Also check first name only match
+                const firstName = entryName.split(' ')[0];
+                
+                for (const bookedName of bookedNames) {
+                    const bookedFirstName = bookedName.split(' ')[0];
+                    if (entryName === bookedName || firstName === bookedFirstName) {
+                        console.log(`Removing ${entry.name} from waiting list - they booked a desk`);
+                        await removeFromWaitingList(entry.name);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Nickname functions
+        let nicknamesMap = {};
+
+        async function loadNicknames() {
+            try {
+                const response = await fetch('/nicknames/get');
+                const result = await response.json();
+                if (result.nicknames) {
+                    nicknamesMap = result.nicknames;
+                    console.log('Loaded nicknames:', Object.keys(nicknamesMap).length);
+                }
+                return result.list || [];
+            } catch (e) {
+                console.log('Failed to load nicknames:', e.message);
+                return [];
+            }
+        }
+
+        async function setNickname(fullName, nickname) {
+            try {
+                const response = await fetch('/nicknames/set', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullName, nickname })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    nicknamesMap[fullName.toLowerCase()] = nickname;
+                }
+                return result.success;
+            } catch (e) {
+                console.log('Failed to set nickname:', e.message);
+                return false;
+            }
+        }
+
+        async function deleteNickname(fullName) {
+            try {
+                const response = await fetch('/nicknames/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullName })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    delete nicknamesMap[fullName.toLowerCase()];
+                }
+                return result.success;
+            } catch (e) {
+                console.log('Failed to delete nickname:', e.message);
+                return false;
+            }
+        }
+
+        function getDisplayName(fullName) {
+            if (!fullName) return 'Unknown';
+            const nickname = nicknamesMap[fullName.toLowerCase()];
+            return nickname || fullName;
+        }
+
+        async function renderWaitingListManagement() {
+            const container = $('waitingListManageContainer');
+            const managementSection = $('waitingListManagement');
+            
+            // Only show if waiting list is enabled and we have a location
+            if (state.showWaitingList === 'off' || !state.locationId) {
+                managementSection.style.display = 'none';
+                return;
+            }
+            
+            managementSection.style.display = 'block';
+            container.innerHTML = '<p class="form-caption">Loading...</p>';
+            
+            const list = await getWaitingList();
+            
+            if (list.length === 0) {
+                container.innerHTML = '<p class="waiting-list-manage-empty">No one on the waiting list</p>';
+                return;
+            }
+            
+            container.innerHTML = list.map(entry => {
+                const timeAgo = formatTimeAgo(entry.timestamp);
+                return `
+                    <div class="waiting-list-manage-item">
+                        <div>
+                            <span class="waiting-list-manage-name">${esc(entry.name)}</span>
+                            <span class="waiting-list-manage-time">${timeAgo}</span>
+                        </div>
+                        <button class="waiting-list-manage-remove" data-name="${esc(entry.name)}">Remove</button>
+                    </div>
+                `;
+            }).join('');
+            
+            // Add click handlers for remove buttons
+            container.querySelectorAll('.waiting-list-manage-remove').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const name = e.target.dataset.name;
+                    await removeFromWaitingList(name);
+                    renderWaitingListManagement();
+                });
+            });
+        }
+
+        function formatTimeAgo(timestamp) {
+            const seconds = Math.floor((Date.now() - timestamp) / 1000);
+            if (seconds < 60) return 'just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            return `${hours}h ago`;
+        }
+
+        async function renderNicknamesList() {
+            const container = $('nicknamesListContainer');
+            container.innerHTML = '<p class="form-caption">Loading...</p>';
+            
+            const list = await loadNicknames();
+            
+            if (list.length === 0) {
+                container.innerHTML = '<p class="nicknames-list-empty">No nicknames configured</p>';
+                return;
+            }
+            
+            container.innerHTML = list.map(entry => `
+                <div class="nickname-item">
+                    <div class="nickname-item-names">
+                        <span class="nickname-item-full">${esc(entry.full_name)}</span>
+                        <span class="nickname-item-arrow">→</span>
+                        <span class="nickname-item-nick">${esc(entry.nickname)}</span>
+                    </div>
+                    <button class="nickname-item-remove" data-name="${esc(entry.full_name)}">Remove</button>
+                </div>
+            `).join('');
+            
+            // Add click handlers for remove buttons
+            container.querySelectorAll('.nickname-item-remove').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const name = e.target.dataset.name;
+                    await deleteNickname(name);
+                    renderNicknamesList();
+                });
+            });
+        }
+
         startBtn.addEventListener('click', async () => {
+            // Read current values from form elements
+            state.apiToken = apiTokenInput.value.trim();
+            state.locationId = locationSelect.value;
+            state.locationName = locationSelect.options[locationSelect.selectedIndex]?.textContent || '';
+            state.dashboardTitle = dashboardTitleInput.value.trim();
+            state.refreshInterval = parseInt(refreshIntervalSelect.value);
+            state.themeMode = themeModeSelect.value;
+            state.deskNameSize = parseInt(deskNameSizeSlider.value);
+            state.occupantNameSize = parseInt(occupantNameSizeSlider.value);
+            state.cardWidth = cardWidthSelect.value;
+            state.showMode = showModeSelect.value;
+            state.hideNonDesks = parseInt(hideNonDesksSelect.value);
+            state.showWaitingList = showWaitingListSelect.value;
+            state.showApiIssueMessage = showApiIssueMessageSelect.value === 'true';
+            
+            console.log('Launch clicked - state.showMode:', state.showMode);
+            
             localStorage.setItem('eden_api_token', state.apiToken);
             localStorage.setItem('eden_location_id', state.locationId);
             localStorage.setItem('eden_location_name', state.locationName);
+            localStorage.setItem('eden_dashboard_title', state.dashboardTitle);
             localStorage.setItem('eden_refresh_interval', state.refreshInterval);
-
+            localStorage.setItem('eden_theme_mode', state.themeMode);
+            localStorage.setItem('eden_desk_name_size', state.deskNameSize);
+            localStorage.setItem('eden_occupant_name_size', state.occupantNameSize);
+            localStorage.setItem('eden_card_width', state.cardWidth);
+            localStorage.setItem('eden_show_mode', state.showMode);
+            localStorage.setItem('eden_hide_non_desks', state.hideNonDesks);
+            localStorage.setItem('eden_show_waiting_list', state.showWaitingList);
+            localStorage.setItem('eden_show_api_issue_message', state.showApiIssueMessage);
+            
+            // Update URL with all parameters
+            const url = new URL(window.location);
+            url.searchParams.set('location', state.locationId);
+            url.searchParams.set('name', state.locationName);
+            url.searchParams.set('theme', state.themeMode);
+            url.searchParams.set('deskNameSize', state.deskNameSize);
+            url.searchParams.set('occupantNameSize', state.occupantNameSize);
+            url.searchParams.set('cardWidth', state.cardWidth);
+            url.searchParams.set('showMode', state.showMode);
+            if (state.hideNonDesks > 0) {
+                url.searchParams.set('hideNonDesks', state.hideNonDesks);
+            } else {
+                url.searchParams.delete('hideNonDesks');
+            }
+            if (state.showWaitingList !== 'off') {
+                url.searchParams.set('waitingList', state.showWaitingList);
+            } else {
+                url.searchParams.delete('waitingList');
+            }
+            if (state.showApiIssueMessage) {
+                url.searchParams.set('apiIssue', 'true');
+            } else {
+                url.searchParams.delete('apiIssue');
+            }
+            if (state.dashboardTitle) {
+                url.searchParams.set('title', state.dashboardTitle);
+            } else {
+                url.searchParams.delete('title');
+            }
+            window.history.replaceState({}, '', url);
+            
             configScreen.classList.add('hidden');
             dashboard.style.display = 'block';
-            locationNameEl.textContent = state.locationName;
-
-            await refreshData();
-            startAutoRefresh();
+            locationNameEl.textContent = state.dashboardTitle || state.locationName;
+            applyDisplaySettings();
+            
+            // Check if location changed - compare with previously loaded data
+            const locationChanged = state.desks.length > 0 && 
+                state.desks[0]?.parent_id !== state.locationId;
+            
+            // If location changed, clear old data and fetch new
+            if (locationChanged) {
+                state.desks = [];
+                state.reservations = [];
+            }
+            
+            // If we already have data for this location, just re-render with new settings
+            if (state.desks.length > 0) {
+                await loadNicknames();
+                renderDashboard();
+                startAutoRefresh();
+            } else {
+                // Load nicknames first
+                await loadNicknames();
+                await refreshData();
+                startAutoRefresh();
+            }
         });
 
-        // Settings button
         settingsBtn.addEventListener('click', () => {
             clearInterval(state.refreshTimer);
             clearInterval(state.countdownTimer);
             dashboard.style.display = 'none';
             configScreen.classList.remove('hidden');
-            
             apiTokenInput.value = state.apiToken;
+            dashboardTitleInput.value = state.dashboardTitle;
             refreshIntervalSelect.value = state.refreshInterval;
+            themeModeSelect.value = state.themeMode;
+            deskNameSizeSlider.value = state.deskNameSize;
+            deskNameSizeValue.textContent = state.deskNameSize + 'px';
+            occupantNameSizeSlider.value = state.occupantNameSize;
+            occupantNameSizeValue.textContent = state.occupantNameSize === 0 ? 'Hidden' : state.occupantNameSize + 'px';
+            cardWidthSelect.value = state.cardWidth;
+            showModeSelect.value = state.showMode;
+            hideNonDesksSelect.value = state.hideNonDesks;
+            showWaitingListSelect.value = state.showWaitingList;
+            showApiIssueMessageSelect.value = state.showApiIssueMessage ? 'true' : 'false';
+            // Reload locations when returning to settings
+            loadLocations();
+            // Load waiting list management
+            renderWaitingListManagement();
+            // Load nicknames list
+            renderNicknamesList();
         });
 
-        // Refresh data
         async function refreshData() {
-            refreshIcon.classList.remove('paused');
-            
             try {
                 const [desks, reservations] = await Promise.all([
                     fetchDesks(state.locationId),
                     fetchReservations(state.locationId)
                 ]);
-
-                state.desks = desks;
-                state.reservations = reservations;
-
-                renderDashboard();
-            } catch (error) {
-                console.error('Error refreshing data:', error);
+                
+                // Only update if we got valid data
+                if (desks && desks.length > 0) {
+                    state.desks = desks;
+                }
+                
+                // Only update reservations if we got a valid response (could be empty array which is valid)
+                if (Array.isArray(reservations)) {
+                    state.reservations = reservations;
+                }
+                
+                // Only render if we have desk data
+                if (state.desks.length > 0) {
+                    renderDashboard();
+                }
+            } catch (e) { 
+                console.error('Refresh error - preserving existing data:', e); 
             }
-
-            refreshIcon.classList.add('paused');
         }
 
-        // Render dashboard
         function renderDashboard() {
             const now = new Date();
             
-            const deskReservations = new Map();
-            state.reservations.forEach(res => {
-                const startTime = new Date(res.start_at);
-                const endTime = new Date(res.end_at);
+            // Show API issue message if enabled
+            if (state.showApiIssueMessage) {
+                deskGrid.innerHTML = `
+                    <div style="grid-column:1/-1;text-align:center;padding:80px 20px;">
+                        <div style="background:var(--bg-card);border:2px solid var(--accent-amber);border-radius:16px;padding:40px;max-width:600px;margin:0 auto;">
+                            <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+                            <h2 style="color:var(--accent-amber);font-size:24px;margin-bottom:12px;">Eden API Issue</h2>
+                            <p style="color:var(--text-secondary);font-size:16px;line-height:1.6;">
+                                We're experiencing issues with the Eden booking system API.<br>
+                                Desk availability information is temporarily unavailable.
+                            </p>
+                            <p style="color:var(--text-muted);font-size:14px;margin-top:16px;">
+                                We're working to resolve this. Please check back shortly.
+                            </p>
+                        </div>
+                    </div>`;
+                lastUpdatedEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                return;
+            }
+            
+            const deskRes = new Map();
+            state.reservations.forEach(r => {
+                const start = new Date(r.start_at), end = new Date(r.end_at);
                 
-                if (now >= startTime && now <= endTime && res.status !== 'cancelled') {
-                    const deskId = res.location?.location_id;
-                    if (deskId) {
-                        deskReservations.set(deskId, res);
+                // Consider a reservation active if:
+                // 1. Status is 'scheduled' or 'in_progress' (regardless of time, for today's bookings)
+                // 2. OR current time is within the reservation window and not cancelled/finished/released
+                const activeStatuses = ['scheduled', 'in_progress'];
+                const inactiveStatuses = ['cancelled', 'finished', 'released'];
+                
+                const isActiveByStatus = activeStatuses.includes(r.status);
+                const isActiveByTime = now >= start && now <= end && !inactiveStatuses.includes(r.status);
+                const isActive = isActiveByStatus || isActiveByTime;
+                
+                console.log(`Reservation: ${r.location?.title || 'unknown'}, location_id: ${r.location?.location_id}, status: ${r.status}, activeByStatus: ${isActiveByStatus}, activeByTime: ${isActiveByTime}, start: ${r.start_at}, end: ${r.end_at}`);
+                
+                if (isActive) {
+                    const id = r.location?.location_id;
+                    if (id) {
+                        // Only keep the current/latest reservation for each desk
+                        if (!deskRes.has(id) || new Date(r.start_at) > new Date(deskRes.get(id).start_at)) {
+                            deskRes.set(id, r);
+                            console.log(`  -> Mapped to desk ID: ${id}`);
+                        }
                     }
                 }
             });
+            
+            console.log('Desk IDs:', state.desks.map(d => d.location_id));
+            console.log('Reservation desk IDs:', Array.from(deskRes.keys()));
+            console.log('Matched reservations count:', deskRes.size);
 
-            let availableCount = 0;
-            let occupiedCount = 0;
+            // Filter desks for capacity calculation (same as display filter but without available filter)
+            let desksForCapacity = [...state.desks];
+            if (state.hideNonDesks > 0) {
+                desksForCapacity = desksForCapacity.filter(desk => desk.title.length <= state.hideNonDesks);
+            }
+            
+            let avail = 0, occ = 0;
+            desksForCapacity.forEach(d => deskRes.has(d.location_id) ? occ++ : avail++);
 
-            state.desks.forEach(desk => {
-                if (deskReservations.has(desk.location_id)) {
-                    occupiedCount++;
-                } else {
-                    availableCount++;
-                }
-            });
-
-            availableCountEl.textContent = availableCount;
-            occupiedCountEl.textContent = occupiedCount;
+            const total = desksForCapacity.length;
+            const percentage = total > 0 ? (occ / total) * 100 : 0;
+            
+            occupiedCountEl.textContent = occ;
+            totalCountEl.textContent = total;
             lastUpdatedEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            
+            // Animate capacity bar
+            capacityBarFill.classList.remove('animate');
+            void capacityBarFill.offsetWidth; // Force reflow
+            capacityBarFill.style.width = percentage + '%';
+            capacityBarFill.classList.add('animate');
+            
+            // Change bar color based on capacity
+            if (percentage < 50) {
+                capacityBarFill.style.background = 'var(--accent-green)';
+            } else if (percentage < 80) {
+                capacityBarFill.style.background = 'linear-gradient(90deg, var(--accent-green), var(--accent-amber))';
+            } else {
+                capacityBarFill.style.background = 'linear-gradient(90deg, var(--accent-amber), var(--accent-red))';
+            }
 
             deskGrid.innerHTML = '';
+            
+            let desksToShow = [...state.desks].sort((a, b) => a.title.localeCompare(b.title, undefined, {numeric: true}));
+            
+            console.log('showMode:', state.showMode);
+            console.log('hideNonDesks:', state.hideNonDesks);
+            console.log('Total desks before filter:', desksToShow.length);
+            
+            // Filter by name length if hideNonDesks is set
+            if (state.hideNonDesks > 0) {
+                desksToShow = desksToShow.filter(desk => desk.title.length <= state.hideNonDesks);
+                console.log('Desks after hideNonDesks filter:', desksToShow.length);
+            }
+            
+            // Filter to available only if showMode is 'available'
+            if (state.showMode === 'available') {
+                desksToShow = desksToShow.filter(desk => !deskRes.has(desk.location_id));
+                console.log('Desks after filtering to available:', desksToShow.length);
+            }
 
-            const sortedDesks = [...state.desks].sort((a, b) => {
-                const aOccupied = deskReservations.has(a.location_id);
-                const bOccupied = deskReservations.has(b.location_id);
-                if (aOccupied === bOccupied) return a.title.localeCompare(b.title);
-                return aOccupied ? 1 : -1;
-            });
-
-            sortedDesks.forEach(desk => {
-                const reservation = deskReservations.get(desk.location_id);
-                const isOccupied = !!reservation;
-                
+            desksToShow.forEach(desk => {
+                const res = deskRes.get(desk.location_id);
                 const card = document.createElement('div');
-                card.className = `desk-card ${isOccupied ? 'occupied' : 'available'}`;
+                card.className = `desk-card ${res ? 'occupied' : 'available'}`;
                 
-                if (isOccupied) {
-                    const owner = reservation.owner || {};
-                    const initials = getInitials(owner.name || 'Unknown');
-                    const startTime = new Date(reservation.start_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-                    const endTime = new Date(reservation.end_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-                    
+                if (res) {
+                    const o = res.owner || {};
                     card.innerHTML = `
-                        <div class="desk-header">
-                            <span class="desk-name">${escapeHtml(desk.title)}</span>
-                            <span class="desk-status occupied">
-                                <span class="status-dot"></span>
-                                Occupied
-                            </span>
-                        </div>
-                        <div class="occupant-info">
-                            <div class="occupant-avatar">${initials}</div>
-                            <div class="occupant-details">
-                                <div class="occupant-name">${escapeHtml(owner.name || 'Unknown')}</div>
-                                <div class="occupant-time">${startTime} - ${endTime}</div>
-                            </div>
-                        </div>
-                    `;
+                        <div class="desk-row">
+                            <span class="desk-name">${esc(desk.title)}</span>
+                            <span class="occupant-name">${esc(getDisplayName(o.name))}</span>
+                        </div>`;
                 } else {
                     card.innerHTML = `
-                        <div class="desk-header">
-                            <span class="desk-name">${escapeHtml(desk.title)}</span>
-                            <span class="desk-status available">
-                                <span class="status-dot"></span>
-                                Available
-                            </span>
-                        </div>
-                        <div class="occupant-info">
-                            <div class="empty-desk-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                    <polyline points="22 4 12 14.01 9 11.01"/>
-                                </svg>
-                            </div>
-                            <div class="occupant-details">
-                                <div class="occupant-name" style="color: var(--accent-green)">Ready to book</div>
-                                <div class="occupant-time">All day available</div>
-                            </div>
-                        </div>
-                    `;
+                        <div class="desk-row">
+                            <span class="desk-name">${esc(desk.title)}</span>
+                            <span class="occupant-name available-text">Available</span>
+                        </div>`;
                 }
-
                 deskGrid.appendChild(card);
             });
 
-            if (state.desks.length === 0) {
-                deskGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 80px 20px; color: var(--text-muted);">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 20px; display: block; opacity: 0.5;">
-                            <rect x="2" y="7" width="20" height="14" rx="2"/>
-                            <path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/>
-                        </svg>
-                        <p style="font-size: 18px;">No desks found for this location</p>
-                        <p style="font-size: 14px; margin-top: 8px;">Try selecting a different location or check your API permissions</p>
-                    </div>
-                `;
+            // Handle waiting list visibility
+            const waitingListContainer = $('waitingListContainer');
+            const noDesksAvailable = avail === 0;
+            
+            if (state.showWaitingList === 'always') {
+                // Always show waiting list
+                waitingListContainer.style.display = 'block';
+                updateWaitingListQueue();
+                // Still check for booked users to remove
+                if (avail > 0) {
+                    checkAndRemoveBookedFromWaitingList(deskRes);
+                }
+            } else if (state.showWaitingList === 'auto' && noDesksAvailable) {
+                // Show only when no desks available
+                waitingListContainer.style.display = 'block';
+                updateWaitingListQueue();
+            } else if (state.showWaitingList === 'auto' && avail > 0) {
+                // Desks available - check if anyone on waiting list has booked
+                waitingListContainer.style.display = 'none';
+                checkAndRemoveBookedFromWaitingList(deskRes);
+            } else {
+                waitingListContainer.style.display = 'none';
+            }
+
+            if (desksToShow.length === 0 && !noDesksAvailable) {
+                const message = state.showMode === 'available' 
+                    ? 'No available desks' 
+                    : 'No desks found for this location';
+                deskGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--text-muted);">
+                    <p style="font-size:18px;">${message}</p>
+                    <p style="font-size:14px;margin-top:8px;">Try selecting a different location</p></div>`;
             }
         }
 
-        // Start auto-refresh
         function startAutoRefresh() {
             clearInterval(state.refreshTimer);
             clearInterval(state.countdownTimer);
-
-            state.nextRefreshTime = Date.now() + (state.refreshInterval * 1000);
-
+            state.nextRefreshTime = Date.now() + state.refreshInterval * 1000;
             state.countdownTimer = setInterval(() => {
-                const remaining = Math.max(0, Math.ceil((state.nextRefreshTime - Date.now()) / 1000));
-                nextRefreshEl.textContent = `Next refresh: ${remaining}s`;
+                const rem = Math.max(0, Math.ceil((state.nextRefreshTime - Date.now()) / 1000));
+                nextRefreshEl.textContent = `Next refresh: ${rem}s`;
             }, 1000);
-
             state.refreshTimer = setInterval(async () => {
                 await refreshData();
-                state.nextRefreshTime = Date.now() + (state.refreshInterval * 1000);
+                state.nextRefreshTime = Date.now() + state.refreshInterval * 1000;
             }, state.refreshInterval * 1000);
         }
 
-        // Utilities
-        function getInitials(name) {
-            return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-        }
+        function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        // Check URL parameters first, then localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlLocationId = urlParams.get('location');
+        const urlLocationName = urlParams.get('name');
+        const urlTheme = urlParams.get('theme');
+        const urlDeskNameSize = urlParams.get('deskNameSize');
+        const urlOccupantNameSize = urlParams.get('occupantNameSize');
+        const urlCardWidth = urlParams.get('cardWidth');
+        const urlShowMode = urlParams.get('showMode');
+        const urlHideNonDesks = urlParams.get('hideNonDesks');
+        const urlWaitingList = urlParams.get('waitingList');
+        const urlApiIssue = urlParams.get('apiIssue');
+        const urlTitle = urlParams.get('title');
+        
+        if (urlLocationId) {
+            state.locationId = urlLocationId;
+            state.locationName = urlLocationName || urlLocationId;
         }
-
-        // Initialize
-        if (state.apiToken && state.locationId) {
-            apiTokenInput.value = state.apiToken;
-            refreshIntervalSelect.value = state.refreshInterval;
+        if (urlTheme) state.themeMode = urlTheme;
+        if (urlDeskNameSize) state.deskNameSize = parseInt(urlDeskNameSize);
+        if (urlOccupantNameSize) state.occupantNameSize = parseInt(urlOccupantNameSize);
+        if (urlCardWidth) state.cardWidth = urlCardWidth;
+        if (urlShowMode) state.showMode = urlShowMode;
+        if (urlHideNonDesks) state.hideNonDesks = parseInt(urlHideNonDesks);
+        if (urlWaitingList) state.showWaitingList = urlWaitingList;
+        if (urlApiIssue) state.showApiIssueMessage = urlApiIssue === 'true';
+        if (urlTitle) state.dashboardTitle = urlTitle;
+        
+        console.log('URL params - showMode:', urlShowMode);
+        console.log('State showMode after URL parse:', state.showMode);
+        
+        // Apply theme immediately
+        if (state.themeMode === 'light') {
+            document.body.classList.add('light-mode');
+        }
+        
+        if (state.apiToken) apiTokenInput.value = state.apiToken;
+        if (state.dashboardTitle) dashboardTitleInput.value = state.dashboardTitle;
+        themeModeSelect.value = state.themeMode;
+        deskNameSizeSlider.value = state.deskNameSize;
+        deskNameSizeValue.textContent = state.deskNameSize + 'px';
+        occupantNameSizeSlider.value = state.occupantNameSize;
+        occupantNameSizeValue.textContent = state.occupantNameSize === 0 ? 'Hidden' : state.occupantNameSize + 'px';
+        cardWidthSelect.value = state.cardWidth;
+        showModeSelect.value = state.showMode;
+        hideNonDesksSelect.value = state.hideNonDesks;
+        showWaitingListSelect.value = state.showWaitingList;
+        showApiIssueMessageSelect.value = state.showApiIssueMessage ? 'true' : 'false';
+        refreshIntervalSelect.value = state.refreshInterval;
+        
+        // Auto-start if location is in URL (skip settings entirely)
+        if (urlLocationId && state.apiToken) {
+            configScreen.classList.add('hidden');
+            dashboard.style.display = 'block';
+            locationNameEl.textContent = state.dashboardTitle || state.locationName;
+            applyDisplaySettings();
             
-            setTimeout(async () => {
-                try {
-                    await fetchLocations();
-                    startBtn.disabled = false;
-                    locationSelect.innerHTML = `<option value="${state.locationId}">${state.locationName}</option>`;
-                    locationSelect.disabled = false;
-                    startBtn.click();
-                } catch (error) {
-                    console.log('Saved token invalid, showing config screen');
-                }
-            }, 100);
-        } else if (state.apiToken) {
-            apiTokenInput.value = state.apiToken;
+            // Load nicknames then data
+            loadNicknames().then(() => {
+                refreshData().then(() => startAutoRefresh());
+            });
+        }
+        // Show settings page and load locations
+        else {
+            loadLocations();
+            renderNicknamesList();
         }
     </script>
 </body>
