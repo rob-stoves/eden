@@ -613,8 +613,9 @@
                     </div>
                 </div>
 
-                <!-- Live pill + Settings stacked -->
+                <!-- Refresh + Live pill + Settings stacked -->
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+                    <span id="nextRefresh" style="font-family:'Roboto Mono',monospace;font-size:11px;color:var(--fg-tertiary);letter-spacing:.08em;"></span>
                     <div class="live-pill">
                         <span class="live-dot"></span>
                         <span class="live-label">LIVE · <span id="lastUpdated">--:--</span></span>
@@ -632,13 +633,6 @@
 
         <!-- Grid section -->
         <div class="grid-section">
-            <div class="grid-eyebrow">
-                <span class="eyebrow-label">All Desks</span>
-                <span id="nextRefresh" style="font-family:'Roboto Mono',monospace;font-size:11px;color:var(--fg-tertiary);letter-spacing:.08em;"></span>
-                <div class="eyebrow-spacer"></div>
-                <div class="legend"><span class="legend-swatch available"></span><span class="legend-text">Available</span></div>
-                <div class="legend"><span class="legend-swatch occupied"></span><span class="legend-text">Occupied</span></div>
-            </div>
             <div class="desk-grid" id="deskGrid"></div>
         </div>
 
