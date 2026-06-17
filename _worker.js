@@ -292,8 +292,8 @@ async function sendEmail(env, { to, name, locationName, deskName, unsubscribeUrl
 
   const from = env.RESEND_FROM_EMAIL || 'noreply@optimizely.com';
   const deskLine = deskName
-    ? `<p><strong>Desk ${deskName}</strong> is free — head in now to grab it.</p>`
-    : `<p>A desk has just become available — head in now to grab a spot.</p>`;
+    ? `<p>Desk ${deskName} is free — head in to Eden now to grab it.</p>`
+    : `<p>Head in to Eden now to grab a spot.</p>`;
 
   try {
     const res = await fetch('https://api.resend.com/emails', {
