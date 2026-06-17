@@ -67,7 +67,7 @@
             .settings-columns { flex-direction: column; gap: 0; }
         }
 
-        .config-logo { height: 30px; display: block; margin-bottom: 20px; }
+        .config-logo { height: 90px; display: block; margin-bottom: 20px; }
 
         .config-title {
             font-family: 'Roboto Condensed', sans-serif;
@@ -243,7 +243,7 @@
             display: flex; align-items: center; gap: 18px;
         }
 
-        .header-logo { height: 26px; display: block; flex-shrink: 0; }
+        .header-logo { height: 90px; display: block; flex-shrink: 0; }
 
         .header-divider { width: 1px; height: 30px; background: var(--border-default); flex-shrink: 0; }
 
@@ -1146,7 +1146,7 @@
                 card.className = `desk-card ${res ? 'occupied' : 'available'}`;
 
                 if (res) {
-                    const name = state.occupantNameSize === 0 ? 'Occupied' : getDisplayName(res.owner?.name);
+                    const name = getDisplayName(res.owner?.name);
                     card.innerHTML = `
                         <span class="desk-id">${esc(desk.title)}</span>
                         <span class="desk-occupant">${esc(name)}</span>`;
