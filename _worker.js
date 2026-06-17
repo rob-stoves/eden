@@ -79,6 +79,7 @@ async function initDB(db) {
       email TEXT,
       timestamp INTEGER,
       notified INTEGER DEFAULT 0,
+      last_notified_at INTEGER,
       token TEXT,
       desired_date TEXT
     )
@@ -89,6 +90,7 @@ async function initDB(db) {
   try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN notified INTEGER DEFAULT 0').run(); } catch(e) {}
   try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN token TEXT').run(); } catch(e) {}
   try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN desired_date TEXT').run(); } catch(e) {}
+  try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN last_notified_at INTEGER').run(); } catch(e) {}
 
   await db.prepare(`
     CREATE INDEX IF NOT EXISTS idx_waiting_list_location ON waiting_list(location_id)
@@ -255,12 +257,15 @@ async function handleWaitingListNotify(request, env) {
 
     const { deskName } = body;
 
-    // Find first un-notified entry that has an email address
+    const oneHourAgo = Date.now() - 3600000;
+
+    // Find first entry eligible for notification: has email, never notified or last notified over an hour ago
     const entry = await env.EDEN_DB.prepare(
       `SELECT id, name, email, token FROM waiting_list
-       WHERE location_id = ? AND notified = 0 AND email IS NOT NULL AND email != ''
+       WHERE location_id = ? AND email IS NOT NULL AND email != ''
+         AND (last_notified_at IS NULL OR last_notified_at < ?)
        ORDER BY timestamp ASC LIMIT 1`
-    ).bind(locationId).first();
+    ).bind(locationId, oneHourAgo).first();
 
     if (!entry) {
       return jsonResponse({ notified: false, reason: 'No un-notified entries with email' });
@@ -279,8 +284,8 @@ async function handleWaitingListNotify(request, env) {
 
     if (sent) {
       await env.EDEN_DB.prepare(
-        'UPDATE waiting_list SET notified = 1 WHERE id = ?'
-      ).bind(entry.id).run();
+        'UPDATE waiting_list SET notified = 1, last_notified_at = ? WHERE id = ?'
+      ).bind(Date.now(), entry.id).run();
       return jsonResponse({ notified: true, name: entry.name });
     }
 
