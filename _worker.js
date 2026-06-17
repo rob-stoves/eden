@@ -29,6 +29,22 @@ export default {
       return handleApiProxy(request, url, env);
     }
     
+    // Gate /newBrand.html behind a URL token
+    if (url.pathname === '/newBrand.html') {
+      const expected = env.DISPLAY_TOKEN;
+      if (!expected) {
+        return new Response('Display token not configured. Set DISPLAY_TOKEN in Cloudflare Pages environment variables.', {
+          status: 503, headers: { 'Content-Type': 'text/plain' }
+        });
+      }
+      const provided = url.searchParams.get('token');
+      if (!provided || provided !== expected) {
+        return new Response('Access denied. A valid ?token= is required.', {
+          status: 401, headers: { 'Content-Type': 'text/plain' }
+        });
+      }
+    }
+
     // For all other requests, serve static assets
     return env.ASSETS.fetch(request);
   }
