@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eden API Debug</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --accent-green: #00ff88;
+            --accent-red: #ff4466;
+            --accent-amber: #ffaa00;
+            --accent-blue: #4488ff;
+            --text-primary: #ffffff;
+            --text-secondary: #8888aa;
+            --text-muted: #555566;
+            --border-subtle: #2a2a3a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--accent-green);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .config {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'Space Mono', monospace;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: var(--accent-green);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn-secondary {
+            background: var(--accent-blue);
+        }
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-green);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-title .count {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .status {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-success { background: rgba(0,255,136,0.2); color: var(--accent-green); }
+        .status-error { background: rgba(255,68,102,0.2); color: var(--accent-red); }
+        .status-pending { background: rgba(136,136,170,0.2); color: var(--text-secondary); }
+        .json-output {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            max-height: 300px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .reservation-card {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        .reservation-card:last-child { margin-bottom: 0; }
+        .reservation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .reservation-desk {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .reservation-status {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .reservation-status.scheduled { background: rgba(68,136,255,0.2); color: var(--accent-blue); }
+        .reservation-status.in_progress { background: rgba(0,255,136,0.2); color: var(--accent-green); }
+        .reservation-status.cancelled { background: rgba(255,68,102,0.2); color: var(--accent-red); }
+        .reservation-status.finished { background: rgba(136,136,170,0.2); color: var(--text-muted); }
+        .reservation-status.released { background: rgba(255,170,0,0.2); color: var(--accent-amber); }
+        .reservation-details {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .reservation-details div {
+            margin-bottom: 4px;
+        }
+        .reservation-details span {
+            color: var(--text-muted);
+        }
+        .desk-card {
+            display: inline-block;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin: 4px;
+            font-size: 12px;
+        }
+        .desk-card .id {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 4px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .summary-card {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+        }
+        .summary-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+        .summary-card.green .summary-value { color: var(--accent-green); }
+        .summary-card.red .summary-value { color: var(--accent-red); }
+        .summary-card.amber .summary-value { color: var(--accent-amber); }
+        .summary-card.blue .summary-value { color: var(--accent-blue); }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .tab {
+            padding: 8px 16px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .tab.active {
+            background: var(--accent-green);
+            color: var(--bg-dark);
+            border-color: var(--accent-green);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        .error-box {
+            background: rgba(255,68,102,0.1);
+            border: 1px solid var(--accent-red);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--accent-red);
+            margin-bottom: 12px;
+        }
+        .match-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .match-indicator.matched { background: var(--accent-green); }
+        .match-indicator.unmatched { background: var(--accent-red); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">● EDEN</div>
+        <h1>API Debug Tool</h1>
+        <p class="subtitle">Inspect raw API responses and reservation matching</p>
+    </div>
+
+    <div class="config">
+        <div class="form-group">
+            <label class="form-label">API Token</label>
+            <input type="password" class="form-input" id="apiToken" value="Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Location</label>
+            <select class="form-select" id="locationSelect">
+                <option value="">Select location...</option>
+            </select>
+        </div>
+        <div class="form-group" style="flex: 0;">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="dateSelect">
+        </div>
+        <button class="btn" id="loadBtn">Load Data</button>
+        <button class="btn btn-secondary" id="refreshLocationsBtn">Refresh Locations</button>
+    </div>
+
+    <div id="results" style="display: none;">
+        <div class="summary-grid" id="summaryGrid"></div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="analysis">Analysis</div>
+            <div class="tab" data-tab="reservations">Reservations</div>
+            <div class="tab" data-tab="desks">Desks</div>
+            <div class="tab" data-tab="raw">Raw JSON</div>
+        </div>
+
+        <div id="analysisTab" class="tab-content active"></div>
+        <div id="reservationsTab" class="tab-content"></div>
+        <div id="desksTab" class="tab-content"></div>
+        <div id="rawTab" class="tab-content"></div>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">Loading data...</div>
+    <div id="error" class="error-box" style="display: none;"></div>
+
+    <script>
+        const API_BASE = '/api';
+        let state = {
+            locations: [],
+            desks: [],
+            reservations: [],
+            allReservationsRaw: []
+        };
+
+        const $ = id => document.getElementById(id);
+        const apiToken = $('apiToken');
+        const locationSelect = $('locationSelect');
+        const dateSelect = $('dateSelect');
+        const loadBtn = $('loadBtn');
+        const refreshLocationsBtn = $('refreshLocationsBtn');
+
+        // Set default date to today
+        dateSelect.value = new Date().toISOString().split('T')[0];
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+            });
+        });
+
+        async function apiRequest(endpoint) {
+            const response = await fetch(`${API_BASE}${endpoint}`, {
+                headers: {
+                    'Authorization': apiToken.value,
+                    'Content-Type': 'application/json'
+                }
+            });
+            return response.json();
+        }
+
+        async function loadLocations() {
+            try {
+                locationSelect.innerHTML = '<option value="">Loading...</option>';
+                const data = await apiRequest('/locations?type=all');
+                
+                if (data.message === "No items found" || !Array.isArray(data)) {
+                    locationSelect.innerHTML = '<option value="">No locations found</option>';
+                    return;
+                }
+                
+                state.locations = data;
+                const floors = data.filter(l => ['floor','address','room','building'].includes(l.location_type?.toLowerCase()));
+                const show = floors.length ? floors : data;
+                
+                locationSelect.innerHTML = '<option value="">Select location...</option>';
+                show.forEach(l => {
+                    const opt = document.createElement('option');
+                    opt.value = l.location_id;
+                    opt.textContent = l.title + (l.location_type ? ` (${l.location_type})` : '');
+                    locationSelect.appendChild(opt);
+                });
+            } catch (e) {
+                $('error').textContent = 'Error loading locations: ' + e.message;
+                $('error').style.display = 'block';
+            }
+        }
+
+        async function loadData() {
+            const locationId = locationSelect.value;
+            const date = dateSelect.value;
+            
+            if (!locationId) {
+                alert('Please select a location');
+                return;
+            }
+
+            $('loading').style.display = 'block';
+            $('results').style.display = 'none';
+            $('error').style.display = 'none';
+
+            try {
+                // Fetch desks
+                const desksData = await apiRequest(`/locations?type=desks&parent_id=${locationId}`);
+                state.desks = Array.isArray(desksData) ? desksData : [];
+                
+                // Fetch all reservations for the date (paginated)
+                let allReservations = [];
+                let page = 1;
+                while (true) {
+                    const resData = await apiRequest(`/cola_reservations?date=${date}&page=${page}`);
+                    console.log(`Reservations page ${page}:`, resData);
+                    
+                    if (resData.message === "No items found" || !Array.isArray(resData) || resData.length === 0) {
+                        break;
+                    }
+                    
+                    allReservations = allReservations.concat(resData);
+                    if (resData.length < 25) break;
+                    page++;
+                    if (page > 50) break;
+                }
+                
+                state.allReservationsRaw = allReservations;
+                
+                // Filter reservations for this location's desks
+                const deskIds = new Set(state.desks.map(d => d.location_id));
+                state.reservations = allReservations.filter(r => {
+                    const resLocationId = r.location?.location_id;
+                    return deskIds.has(resLocationId);
+                });
+
+                $('loading').style.display = 'none';
+                $('results').style.display = 'block';
+                
+                renderResults();
+            } catch (e) {
+                $('loading').style.display = 'none';
+                $('error').textContent = 'Error loading data: ' + e.message;
+                $('error').style.display = 'block';
+            }
+        }
+
+        function renderResults() {
+            const now = new Date();
+            const desks = state.desks;
+            const reservations = state.reservations;
+            const allRaw = state.allReservationsRaw;
+
+            // Count statuses
+            const statusCounts = {};
+            reservations.forEach(r => {
+                statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
+            });
+
+            // Active reservations (matching dashboard logic)
+            const activeStatuses = ['scheduled', 'in_progress'];
+            const activeReservations = reservations.filter(r => activeStatuses.includes(r.status));
+            
+            // Build desk-to-reservation map
+            const deskResMap = new Map();
+            activeReservations.forEach(r => {
+                const id = r.location?.location_id;
+                if (id) {
+                    if (!deskResMap.has(id) || new Date(r.start_at) > new Date(deskResMap.get(id).start_at)) {
+                        deskResMap.set(id, r);
+                    }
+                }
+            });
+
+            const occupiedCount = deskResMap.size;
+            const availableCount = desks.length - occupiedCount;
+
+            // Summary
+            $('summaryGrid').innerHTML = `
+                <div class="summary-card blue">
+                    <div class="summary-value">${desks.length}</div>
+                    <div class="summary-label">Total Desks</div>
+                </div>
+                <div class="summary-card green">
+                    <div class="summary-value">${availableCount}</div>
+                    <div class="summary-label">Available</div>
+                </div>
+                <div class="summary-card red">
+                    <div class="summary-value">${occupiedCount}</div>
+                    <div class="summary-label">Occupied</div>
+                </div>
+                <div class="summary-card amber">
+                    <div class="summary-value">${allRaw.length}</div>
+                    <div class="summary-label">Total Reservations (All Locations)</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${reservations.length}</div>
+                    <div class="summary-label">Reservations (This Location)</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${activeReservations.length}</div>
+                    <div class="summary-label">Active (scheduled/in_progress)</div>
+                </div>
+            `;
+
+            // Analysis tab
+            let analysisHtml = '<div class="section"><div class="section-title">Status Breakdown</div>';
+            analysisHtml += '<div class="json-output">';
+            for (const [status, count] of Object.entries(statusCounts)) {
+                analysisHtml += `${status}: ${count}\n`;
+            }
+            if (Object.keys(statusCounts).length === 0) {
+                analysisHtml += 'No reservations found for this location';
+            }
+            analysisHtml += '</div></div>';
+
+            analysisHtml += '<div class="section"><div class="section-title">Matching Analysis</div>';
+            analysisHtml += '<div class="json-output">';
+            analysisHtml += `Current time: ${now.toISOString()}\n`;
+            analysisHtml += `Date filter: ${dateSelect.value}\n\n`;
+            analysisHtml += `Desk IDs in this location: ${desks.length}\n`;
+            analysisHtml += `Reservations with matching desk IDs: ${reservations.length}\n`;
+            analysisHtml += `Active reservations (scheduled/in_progress): ${activeReservations.length}\n`;
+            analysisHtml += `Unique desks with active reservations: ${deskResMap.size}\n\n`;
+            
+            // Check for potential issues
+            analysisHtml += '--- POTENTIAL ISSUES ---\n\n';
+            
+            if (desks.length === 0) {
+                analysisHtml += '⚠️ NO DESKS FOUND for this location!\n';
+            }
+            
+            if (allRaw.length > 0 && reservations.length === 0) {
+                analysisHtml += '⚠️ Reservations exist but NONE match this location\'s desks!\n';
+                analysisHtml += 'Sample reservation location_ids from API:\n';
+                const sampleIds = [...new Set(allRaw.slice(0, 10).map(r => r.location?.location_id))];
+                sampleIds.forEach(id => analysisHtml += `  - ${id}\n`);
+                analysisHtml += '\nDesk location_ids in this location:\n';
+                desks.slice(0, 10).forEach(d => analysisHtml += `  - ${d.location_id}\n`);
+            }
+            
+            if (reservations.length > 0 && activeReservations.length === 0) {
+                analysisHtml += '⚠️ Reservations found but NONE are active (scheduled/in_progress)!\n';
+                analysisHtml += 'All reservation statuses: ' + [...new Set(reservations.map(r => r.status))].join(', ') + '\n';
+            }
+
+            // Check if location_id format has changed
+            if (allRaw.length > 0) {
+                const sampleRes = allRaw[0];
+                analysisHtml += '\n--- SAMPLE RESERVATION STRUCTURE ---\n';
+                analysisHtml += `location object: ${JSON.stringify(sampleRes.location, null, 2)}\n`;
+                analysisHtml += `status: ${sampleRes.status}\n`;
+                analysisHtml += `start_at: ${sampleRes.start_at}\n`;
+                analysisHtml += `end_at: ${sampleRes.end_at}\n`;
+            }
+
+            if (desks.length > 0) {
+                const sampleDesk = desks[0];
+                analysisHtml += '\n--- SAMPLE DESK STRUCTURE ---\n';
+                analysisHtml += `location_id: ${sampleDesk.location_id}\n`;
+                analysisHtml += `title: ${sampleDesk.title}\n`;
+                analysisHtml += `parent_id: ${sampleDesk.parent_id}\n`;
+            }
+
+            analysisHtml += '</div></div>';
+            $('analysisTab').innerHTML = analysisHtml;
+
+            // Reservations tab
+            let resHtml = '<div class="section"><div class="section-title">Reservations for This Location <span class="count">' + reservations.length + ' total</span></div>';
+            if (reservations.length === 0) {
+                resHtml += '<p style="color: var(--text-muted); padding: 20px; text-align: center;">No reservations found</p>';
+            } else {
+                reservations.forEach(r => {
+                    const isActive = activeStatuses.includes(r.status);
+                    const isMatched = deskResMap.get(r.location?.location_id) === r;
+                    resHtml += `
+                        <div class="reservation-card">
+                            <div class="reservation-header">
+                                <span class="reservation-desk">
+                                    <span class="match-indicator ${isMatched ? 'matched' : 'unmatched'}"></span>
+                                    ${r.location?.title || 'Unknown Desk'}
+                                </span>
+                                <span class="reservation-status ${r.status}">${r.status}</span>
+                            </div>
+                            <div class="reservation-details">
+                                <div><span>Owner:</span> ${r.owner?.name || 'Unknown'}</div>
+                                <div><span>Time:</span> ${new Date(r.start_at).toLocaleTimeString()} - ${new Date(r.end_at).toLocaleTimeString()}</div>
+                                <div><span>Location ID:</span> ${r.location?.location_id || 'N/A'}</div>
+                                <div><span>Active:</span> ${isActive ? 'Yes' : 'No'} | <span>Matched to desk:</span> ${isMatched ? 'Yes' : 'No'}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            resHtml += '</div>';
+            $('reservationsTab').innerHTML = resHtml;
+
+            // Desks tab
+            let desksHtml = '<div class="section"><div class="section-title">Desks <span class="count">' + desks.length + ' total</span></div>';
+            desksHtml += '<div>';
+            desks.forEach(d => {
+                const res = deskResMap.get(d.location_id);
+                const statusColor = res ? 'var(--accent-red)' : 'var(--accent-green)';
+                desksHtml += `
+                    <div class="desk-card" style="border-color: ${statusColor}">
+                        <strong>${d.title}</strong>
+                        ${res ? `<br><span style="color: var(--text-secondary)">${res.owner?.name || 'Occupied'}</span>` : ''}
+                        <span class="id">${d.location_id}</span>
+                    </div>
+                `;
+            });
+            desksHtml += '</div></div>';
+            $('desksTab').innerHTML = desksHtml;
+
+            // Raw JSON tab
+            $('rawTab').innerHTML = `
+                <div class="section">
+                    <div class="section-title">Raw Desks Response</div>
+                    <div class="json-output">${JSON.stringify(state.desks, null, 2)}</div>
+                </div>
+                <div class="section">
+                    <div class="section-title">Raw Reservations Response (This Location Only)</div>
+                    <div class="json-output">${JSON.stringify(state.reservations, null, 2)}</div>
+                </div>
+                <div class="section">
+                    <div class="section-title">Raw All Reservations (All Locations)</div>
+                    <div class="json-output">${JSON.stringify(state.allReservationsRaw, null, 2)}</div>
+                </div>
+            `;
+        }
+
+        loadBtn.addEventListener('click', loadData);
+        refreshLocationsBtn.addEventListener('click', loadLocations);
+
+        // Load locations on startup
+        loadLocations();
+    </script>
+</body>
+</html>
