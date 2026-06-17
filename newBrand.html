@@ -67,6 +67,19 @@
             .settings-columns { flex-direction: column; gap: 0; }
         }
 
+        @media (max-width: 700px) {
+            .dashboard-header {
+                flex-direction: column; align-items: flex-start;
+                padding: 16px 20px 12px; gap: 12px;
+            }
+            .header-right {
+                width: 100%; flex-wrap: wrap; gap: 12px;
+                justify-content: flex-start;
+            }
+            .header-title { font-size: 28px; }
+            .header-logo  { height: 60px; }
+        }
+
         .config-logo { height: 90px; display: block; margin-bottom: 20px; }
 
         .config-title {
@@ -376,12 +389,13 @@
         .waiting-list-btn-small:hover { opacity: .85; }
         .waiting-list-form-inline { display: none; align-items: center; gap: 4px; }
         .waiting-list-form-inline.active { display: flex; }
+        .waiting-list-inputs { display: flex; flex-direction: column; gap: 4px; }
         .waiting-list-input-small {
             padding: 6px 10px;
             background: var(--bg-page);
             border: 1px solid #e4f0da;
             border-radius: 6px; color: var(--fg-default);
-            font-size: 12px; width: 120px;
+            font-size: 12px; width: 140px; display: block;
         }
         .waiting-list-input-small:focus { outline: none; border-color: #abff44; box-shadow: 0 0 0 3px rgba(171,255,68,.15); }
         .waiting-list-submit-small,
@@ -600,8 +614,10 @@
                 <div class="waiting-list-header" id="waitingListContainer" style="display:none;">
                     <button class="waiting-list-btn-small" id="joinWaitingListBtn">Join Waitlist</button>
                     <div class="waiting-list-form-inline" id="waitingListForm">
-                        <input type="text" class="waiting-list-input-small" id="waitingListName" placeholder="Your name">
-                        <input type="email" class="waiting-list-input-small" id="waitingListEmail" placeholder="Email (optional, for notification)" style="margin-top:4px;">
+                        <div class="waiting-list-inputs">
+                            <input type="text" class="waiting-list-input-small" id="waitingListName" placeholder="Your name">
+                            <input type="email" class="waiting-list-input-small" id="waitingListEmail" placeholder="Email (optional)">
+                        </div>
                         <button class="waiting-list-submit-small" id="waitingListSubmit">✓</button>
                         <button class="waiting-list-cancel-small" id="waitingListCancel">✕</button>
                     </div>
