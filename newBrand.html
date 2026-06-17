@@ -30,13 +30,14 @@
             min-height: 100vh;
         }
 
-        /* ── CONFIG SCREEN ───────────────────────────────────────────── */
+        /* ── CONFIG / SETTINGS SCREEN ────────────────────────────────── */
         .config-screen {
             position: fixed; inset: 0;
-            display: flex; align-items: center; justify-content: center;
+            display: flex; align-items: flex-start; justify-content: center;
             background: var(--bg-page);
             z-index: 100;
             padding: 40px;
+            overflow-y: auto;
         }
 
         .config-card {
@@ -44,8 +45,9 @@
             border: 1px solid var(--border-tertiary);
             border-radius: 12px;
             padding: 48px;
-            max-width: 520px;
+            max-width: 560px;
             width: 100%;
+            margin: auto;
         }
 
         .config-logo { height: 48px; margin-bottom: 28px; display: block; }
@@ -65,6 +67,24 @@
             margin-bottom: 36px;
         }
 
+        /* ── Section headings ── */
+        .settings-section { margin-bottom: 8px; }
+
+        .settings-rule {
+            border: none;
+            border-top: 1px solid var(--border-tertiary);
+            margin: 24px 0 20px;
+        }
+
+        .settings-section-heading {
+            font-family: "Roboto Mono", monospace;
+            font-size: 11px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--fg-tertiary);
+            margin-bottom: 16px;
+        }
+
         .form-group { margin-bottom: 20px; }
 
         .form-label {
@@ -77,7 +97,7 @@
             margin-bottom: 8px;
         }
 
-        .form-input, .form-select {
+        .form-input, .form-select, .form-textarea {
             width: 100%;
             padding: 12px 16px;
             background: var(--bg-page);
@@ -88,11 +108,16 @@
             font-family: "Roboto Mono", monospace;
             transition: border-color var(--duration-sm);
         }
-        .form-input:focus, .form-select:focus {
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
             outline: none;
             border-color: var(--brand);
         }
-        .form-input::placeholder { color: var(--fg-tertiary); }
+        .form-input::placeholder, .form-textarea::placeholder { color: var(--fg-tertiary); }
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-size: 13px;
+        }
         .form-select {
             font-family: "Roboto", sans-serif;
             appearance: none;
@@ -102,6 +127,117 @@
         }
         .form-select option { background: var(--bg-default); }
 
+        .form-input-sm {
+            width: auto;
+            padding: 8px 12px;
+            background: var(--bg-page);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--fg-default);
+            font-size: 14px;
+            font-family: "Roboto Mono", monospace;
+            transition: border-color var(--duration-sm);
+        }
+        .form-input-sm:focus { outline: none; border-color: var(--brand); }
+
+        /* ── Toggle (pill) ── */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .toggle-row-label {
+            font-size: 14px;
+            color: var(--fg-default);
+            flex: 1;
+        }
+        .toggle-row-desc {
+            font-size: 12px;
+            color: var(--fg-tertiary);
+            margin-top: 2px;
+        }
+
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-track {
+            position: absolute; inset: 0;
+            background: var(--border-default);
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background var(--duration-sm);
+        }
+        .toggle-track::before {
+            content: '';
+            position: absolute;
+            width: 18px; height: 18px;
+            left: 3px; top: 3px;
+            background: var(--fg-tertiary);
+            border-radius: 50%;
+            transition: transform var(--duration-sm), background var(--duration-sm);
+        }
+        .toggle-switch input:checked + .toggle-track { background: var(--brand); }
+        .toggle-switch input:checked + .toggle-track::before {
+            transform: translateX(20px);
+            background: var(--brand-ink);
+        }
+
+        /* ── Segmented control ── */
+        .segmented {
+            display: inline-flex;
+            background: var(--bg-page);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .segmented input[type="radio"] { display: none; }
+        .segmented label {
+            padding: 8px 18px;
+            font-family: "Roboto Mono", monospace;
+            font-size: 12px;
+            letter-spacing: .06em;
+            color: var(--fg-secondary);
+            cursor: pointer;
+            border-right: 1px solid var(--border-default);
+            transition: background var(--duration-sm), color var(--duration-sm);
+            user-select: none;
+        }
+        .segmented label:last-of-type { border-right: none; }
+        .segmented input[type="radio"]:checked + label {
+            background: var(--brand);
+            color: var(--brand-ink);
+            font-weight: 700;
+        }
+
+        /* ── Metric focus radio ── */
+        .radio-group { display: flex; gap: 20px; }
+        .radio-row {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 14px; color: var(--fg-default); cursor: pointer;
+        }
+        .radio-row input[type="radio"] { accent-color: var(--brand); width: 16px; height: 16px; cursor: pointer; }
+
+        /* ── Number input row ── */
+        .inline-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .inline-row .form-label { margin-bottom: 0; }
+        .inline-row input[type="number"] {
+            width: 80px;
+            padding: 8px 12px;
+            background: var(--bg-page);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--fg-default);
+            font-size: 14px;
+            font-family: "Roboto Mono", monospace;
+        }
+        .inline-row input[type="number"]:focus { outline: none; border-color: var(--brand); }
+
+        /* ── Buttons ── */
         .btn-primary {
             width: 100%;
             padding: 14px;
@@ -136,6 +272,29 @@
         .btn-secondary:hover:not(:disabled) { border-color: var(--brand); color: var(--brand); }
         .btn-secondary:disabled { opacity: .4; cursor: not-allowed; }
 
+        .btn-small {
+            padding: 7px 14px;
+            background: transparent;
+            color: var(--fg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: "Roboto Mono", monospace;
+            cursor: pointer;
+            transition: border-color var(--duration-sm), color var(--duration-sm);
+            white-space: nowrap;
+        }
+        .btn-small:hover { border-color: var(--brand); color: var(--brand); }
+        .btn-small.btn-danger:hover { border-color: #ff4466; color: #ff4466; }
+        .btn-small.btn-accent {
+            background: var(--brand);
+            color: var(--brand-ink);
+            border-color: var(--brand);
+            font-weight: 700;
+        }
+        .btn-small.btn-accent:hover { opacity: .85; }
+
+        /* ── Error ── */
         .error-message {
             background: rgba(255,68,102,.08);
             border: 1px solid rgba(255,68,102,.35);
@@ -147,6 +306,7 @@
             display: none;
         }
 
+        /* ── Spinner ── */
         .loading-spinner {
             display: inline-block;
             width: 13px; height: 13px;
@@ -159,6 +319,88 @@
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Waiting list manage ── */
+        .waiting-manage {
+            background: var(--bg-page);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 8px;
+        }
+        .waiting-list-items { list-style: none; margin-bottom: 12px; }
+        .waiting-list-items li {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-tertiary);
+            font-size: 14px; color: var(--fg-default);
+        }
+        .waiting-list-items li:last-child { border-bottom: none; }
+        .waiting-list-empty {
+            font-size: 13px; color: var(--fg-tertiary);
+            font-family: "Roboto Mono", monospace;
+            margin-bottom: 12px;
+        }
+        .waiting-add-row { display: flex; gap: 8px; }
+        .waiting-add-row input {
+            flex: 1;
+            padding: 8px 12px;
+            background: var(--bg-default);
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            color: var(--fg-default);
+            font-size: 14px;
+            font-family: "Roboto", sans-serif;
+        }
+        .waiting-add-row input:focus { outline: none; border-color: var(--brand); }
+
+        /* ── Nicknames table ── */
+        .nicknames-note {
+            font-size: 13px; color: var(--fg-tertiary);
+            font-family: "Roboto Mono", monospace;
+            font-style: italic;
+        }
+        .nicknames-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        .nicknames-table th {
+            font-family: "Roboto Mono", monospace;
+            font-size: 10px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--fg-tertiary);
+            text-align: left;
+            padding: 0 8px 8px 0;
+            border-bottom: 1px solid var(--border-tertiary);
+        }
+        .nicknames-table td {
+            padding: 6px 8px 6px 0;
+            border-bottom: 1px solid var(--border-tertiary);
+            font-size: 13px;
+            color: var(--fg-secondary);
+            vertical-align: middle;
+        }
+        .nicknames-table tr:last-child td { border-bottom: none; }
+        .nicknames-table input {
+            width: 100%;
+            padding: 6px 10px;
+            background: var(--bg-page);
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            color: var(--fg-default);
+            font-size: 13px;
+            font-family: "Roboto", sans-serif;
+        }
+        .nicknames-table input:focus { outline: none; border-color: var(--brand); }
+
+        /* ── Form helper note ── */
+        .form-note {
+            font-size: 12px;
+            color: var(--fg-tertiary);
+            margin-top: 6px;
+        }
 
         /* ── DASHBOARD ──────────────────────────────────────────────── */
         .dashboard {
@@ -306,7 +548,7 @@
             display: flex;
             flex-direction: column;
             gap: 14px;
-            padding: 2px 52px 32px;
+            padding: 2px 52px 0;
             min-height: 0;
         }
 
@@ -359,6 +601,7 @@
             flex: 1;
             grid-auto-rows: 1fr;
             min-height: 0;
+            overflow: hidden;
         }
 
         /* Desk card */
@@ -412,6 +655,38 @@
             color: var(--fg-default);
         }
 
+        /* Waiting list footer band */
+        .waiting-footer {
+            flex-shrink: 0;
+            border-top: 1px solid var(--border-tertiary);
+            padding: 10px 52px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: var(--bg-secondary);
+        }
+        .waiting-footer-label {
+            font-family: "Roboto Mono", monospace;
+            font-size: 11px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--fg-tertiary);
+            flex-shrink: 0;
+        }
+        .waiting-footer-names {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .waiting-chip {
+            padding: 4px 12px;
+            border: 1px solid var(--border-default);
+            border-radius: 9999px;
+            font-size: 13px;
+            color: var(--fg-secondary);
+            font-family: "Roboto", sans-serif;
+        }
+
         /* Settings button */
         .settings-btn {
             position: fixed;
@@ -438,10 +713,9 @@
 </head>
 <body>
 
-    <!-- ── CONFIG SCREEN ───────────────────────────────────────────── -->
+    <!-- ── CONFIG / SETTINGS SCREEN ──────────────────────────────────── -->
     <div class="config-screen" id="configScreen">
         <div class="config-card">
-            <!-- Optimizely wordmark -->
             <img class="config-logo" src="Optimizely_Primary-Logo_Medium_Green_RGB.svg" alt="Optimizely">
 
             <h1 class="config-title">Desk Availability</h1>
@@ -449,31 +723,185 @@
 
             <div class="error-message" id="errorMessage"></div>
 
-            <div class="form-group">
-                <label class="form-label">API Token</label>
-                <input type="password" class="form-input" id="apiToken" placeholder="Enter your Eden API token" value="Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl">
+            <!-- ── 1. CONNECTION ─────────────────────────────────────── -->
+            <div class="settings-section">
+                <div class="settings-section-heading">Connection</div>
+
+                <div class="form-group">
+                    <label class="form-label">API Token</label>
+                    <input type="password" class="form-input" id="apiToken" placeholder="Enter your Eden API token" value="Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl">
+                </div>
+
+                <button class="btn-secondary" id="loadLocationsBtn">
+                    <span id="loadBtnText">Load Locations</span>
+                </button>
+
+                <div class="form-group">
+                    <label class="form-label">Select Office Location</label>
+                    <select class="form-select" id="locationSelect" disabled>
+                        <option value="">Click "Load Locations" first…</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Auto-Refresh Interval</label>
+                    <select class="form-select" id="refreshInterval">
+                        <option value="30">Every 30 seconds</option>
+                        <option value="60" selected>Every 1 minute</option>
+                        <option value="120">Every 2 minutes</option>
+                        <option value="300">Every 5 minutes</option>
+                    </select>
+                </div>
             </div>
 
-            <button class="btn-secondary" id="loadLocationsBtn">
-                <span id="loadBtnText">Load Locations</span>
-            </button>
+            <hr class="settings-rule">
 
-            <div class="form-group">
-                <label class="form-label">Select Office Location</label>
-                <select class="form-select" id="locationSelect" disabled>
-                    <option value="">Click "Load Locations" first…</option>
-                </select>
+            <!-- ── 2. DISPLAY ────────────────────────────────────────── -->
+            <div class="settings-section">
+                <div class="settings-section-heading">Display</div>
+
+                <div class="form-group">
+                    <label class="form-label" for="dashboardTitle">Dashboard Title</label>
+                    <input type="text" class="form-input" id="dashboardTitle" placeholder="e.g. London Office">
+                    <div class="form-note">If set, replaces the location name in the header.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Display Mode</label>
+                    <div class="toggle-row" style="margin-bottom:12px;">
+                        <div>
+                            <div class="toggle-row-label">Show occupant names</div>
+                            <div class="toggle-row-desc">When off, occupied cards show "Occupied"</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showNamesToggle" checked>
+                            <span class="toggle-track"></span>
+                        </label>
+                    </div>
+                    <label class="form-label" style="margin-bottom:8px;">Metric focus</label>
+                    <div class="radio-group">
+                        <label class="radio-row">
+                            <input type="radio" name="metricFocus" id="metricFree" value="free" checked>
+                            Free desks
+                        </label>
+                        <label class="radio-row">
+                            <input type="radio" name="metricFocus" id="metricOccupied" value="occupied">
+                            Occupied desks
+                        </label>
+                    </div>
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Hide non-desks</div>
+                        <div class="toggle-row-desc">Filter out items where location_type is not "desk"</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="hideNonDesksToggle">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Auto-Refresh Interval</label>
-                <select class="form-select" id="refreshInterval">
-                    <option value="30">Every 30 seconds</option>
-                    <option value="60" selected>Every 1 minute</option>
-                    <option value="120">Every 2 minutes</option>
-                    <option value="300">Every 5 minutes</option>
-                </select>
+            <hr class="settings-rule">
+
+            <!-- ── 3. APPEARANCE ─────────────────────────────────────── -->
+            <div class="settings-section">
+                <div class="settings-section-heading">Appearance</div>
+
+                <div class="form-group">
+                    <label class="form-label">Desk name size</label>
+                    <div class="segmented" id="deskNameSizeControl">
+                        <input type="radio" name="deskNameSize" id="dnskSm" value="sm">
+                        <label for="dnskSm">S</label>
+                        <input type="radio" name="deskNameSize" id="dnskMd" value="md" checked>
+                        <label for="dnskMd">M</label>
+                        <input type="radio" name="deskNameSize" id="dnskLg" value="lg">
+                        <label for="dnskLg">L</label>
+                    </div>
+                    <div class="form-note">S = 20px · M = 31px · L = 42px</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Occupant name size</label>
+                    <div class="segmented" id="occupantNameSizeControl">
+                        <input type="radio" name="occupantNameSize" id="onSm" value="sm">
+                        <label for="onSm">S</label>
+                        <input type="radio" name="occupantNameSize" id="onMd" value="md" checked>
+                        <label for="onMd">M</label>
+                        <input type="radio" name="occupantNameSize" id="onLg" value="lg">
+                        <label for="onLg">L</label>
+                    </div>
+                    <div class="form-note">S = 14px · M = 19px · L = 26px</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="gridColumns">Grid columns</label>
+                    <div class="inline-row">
+                        <input type="number" id="gridColumns" min="4" max="10" value="7" class="form-input-sm">
+                        <span style="font-size:13px;color:var(--fg-tertiary);">columns (4–10)</span>
+                    </div>
+                </div>
             </div>
+
+            <hr class="settings-rule">
+
+            <!-- ── 4. WAITING LIST ───────────────────────────────────── -->
+            <div class="settings-section">
+                <div class="settings-section-heading">Waiting List</div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Enable waiting list</div>
+                        <div class="toggle-row-desc">Shows a footer band on the dashboard</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="waitingListToggle">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+
+                <div id="waitingManage" class="waiting-manage hidden">
+                    <label class="form-label" style="margin-bottom:10px;">Manage waiting list</label>
+                    <ul class="waiting-list-items" id="waitingListItems"></ul>
+                    <div class="waiting-list-empty hidden" id="waitingListEmpty">No one on the waiting list yet.</div>
+                    <div class="waiting-add-row">
+                        <input type="text" id="waitingAddInput" placeholder="Add person…">
+                        <button class="btn-small btn-accent" id="waitingAddBtn">Add</button>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="settings-rule">
+
+            <!-- ── 5. CONTENT ────────────────────────────────────────── -->
+            <div class="settings-section">
+                <div class="settings-section-heading">Content</div>
+
+                <div class="form-group">
+                    <label class="form-label" for="apiIssueMsg">API issue message</label>
+                    <textarea class="form-textarea" id="apiIssueMsg" placeholder="Custom message shown when data fails to load…"></textarea>
+                    <div class="form-note">Shown in the desk grid when the API fails (leave blank for the default message).</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Manage desk nicknames</label>
+                    <div id="nicknamesArea">
+                        <div class="nicknames-note" id="nicknamesNote">Load a location first to manage nicknames.</div>
+                        <table class="nicknames-table hidden" id="nicknamesTable">
+                            <thead>
+                                <tr>
+                                    <th>Desk</th>
+                                    <th>Nickname (optional)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nicknamesTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="settings-rule">
 
             <button class="btn-primary" id="startBtn" disabled>Launch Display</button>
         </div>
@@ -484,11 +912,8 @@
 
         <header class="header">
             <div class="header-left">
-                <!-- Optimizely wordmark -->
                 <img class="header-logo" src="Optimizely_Primary-Logo_Medium_Green_RGB.svg" alt="Optimizely">
-
                 <div class="header-divider"></div>
-
                 <div>
                     <div class="header-eyebrow" id="headerEyebrow">WORKPLACE · LONDON</div>
                     <div class="header-title" id="headerTitle">London office</div>
@@ -533,6 +958,12 @@
             <div class="desk-grid" id="deskGrid"></div>
         </div>
 
+        <!-- Waiting list footer band -->
+        <div class="waiting-footer hidden" id="waitingFooter">
+            <span class="waiting-footer-label">Waiting</span>
+            <div class="waiting-footer-names" id="waitingFooterNames"></div>
+        </div>
+
         <button class="settings-btn" id="settingsBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="3"/>
@@ -544,26 +975,47 @@
     </div>
 
     <script>
-        // ── Config flags from URL params ──────────────────────────────
-        const urlParams = new URLSearchParams(window.location.search);
-        // showNames: when false, occupied cards show "Occupied" instead of the person's name
-        const SHOW_NAMES   = urlParams.get('showNames')    !== 'false';
-        // metricFocus: "free" (default) or "occupied" controls the big header stat
-        const METRIC_FOCUS = urlParams.get('metricFocus') === 'occupied' ? 'occupied' : 'free';
+        // ── Helpers ───────────────────────────────────────────────────
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ── Settings getters/setters with defaults ────────────────────
+        const S = {
+            get apiToken()          { return localStorage.getItem('eden_nb_api_token')          || 'Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl'; },
+            get locationId()        { return localStorage.getItem('eden_nb_location_id')        || ''; },
+            get locationName()      { return localStorage.getItem('eden_nb_location_name')      || ''; },
+            get refreshInterval()   { return parseInt(localStorage.getItem('eden_nb_refresh_interval')) || 60; },
+            get dashboardTitle()    { return localStorage.getItem('eden_nb_dashboard_title')    || ''; },
+            get showNames()         { return localStorage.getItem('eden_nb_show_names')         !== 'false'; },
+            get metricFocus()       { return localStorage.getItem('eden_nb_metric_focus')       || 'free'; },
+            get hideNonDesks()      { return localStorage.getItem('eden_nb_hide_non_desks')     === 'true'; },
+            get deskNameSize()      { return localStorage.getItem('eden_nb_desk_name_size')     || 'md'; },
+            get occupantNameSize()  { return localStorage.getItem('eden_nb_occupant_name_size') || 'md'; },
+            get cardColumns()       { return parseInt(localStorage.getItem('eden_nb_card_columns')) || 7; },
+            get waitingListEnabled(){ return localStorage.getItem('eden_nb_waiting_list_enabled') === 'true'; },
+            get waitingList()       { try { return JSON.parse(localStorage.getItem('eden_nb_waiting_list') || '[]'); } catch { return []; } },
+            get apiIssueMessage()   { return localStorage.getItem('eden_nb_api_issue_message') || ''; },
+            get nicknames()         { try { return JSON.parse(localStorage.getItem('eden_nb_nicknames') || '{}'); } catch { return {}; } },
+        };
+
+        function saveNicknames(obj) { localStorage.setItem('eden_nb_nicknames', JSON.stringify(obj)); }
+        function saveWaitingList(arr){ localStorage.setItem('eden_nb_waiting_list', JSON.stringify(arr)); }
+
+        const DESK_NAME_SIZES     = { sm: '20px', md: '31px', lg: '42px' };
+        const OCCUPANT_NAME_SIZES = { sm: '14px', md: '19px', lg: '26px' };
 
         // ── State ─────────────────────────────────────────────────────
         let state = {
-            apiToken:      localStorage.getItem('eden_nb_api_token')      || 'Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl',
-            locationId:    localStorage.getItem('eden_nb_location_id')    || '',
-            locationName:  localStorage.getItem('eden_nb_location_name')  || '',
-            refreshInterval: parseInt(localStorage.getItem('eden_nb_refresh_interval')) || 60,
-            locations:     [],
-            desks:         [],
-            reservations:  [],
-            refreshTimer:  null,
+            locations:    [],
+            desks:        [],
+            reservations: [],
+            refreshTimer: null,
         };
 
-        // ── DOM refs ──────────────────────────────────────────────────
+        // ── DOM refs — connection ─────────────────────────────────────
         const configScreen       = document.getElementById('configScreen');
         const dashboard          = document.getElementById('dashboard');
         const apiTokenInput      = document.getElementById('apiToken');
@@ -573,34 +1025,61 @@
         const loadLocationsBtn   = document.getElementById('loadLocationsBtn');
         const loadBtnText        = document.getElementById('loadBtnText');
         const errorMessage       = document.getElementById('errorMessage');
-        const headerEyebrow      = document.getElementById('headerEyebrow');
-        const headerTitle        = document.getElementById('headerTitle');
-        const lastUpdatedEl      = document.getElementById('lastUpdated');
-        const statValueEl        = document.getElementById('statValue');
-        const statLabelEl        = document.getElementById('statLabel');
-        const statSubEl          = document.getElementById('statSub');
-        const capacityBarEl      = document.getElementById('capacityBar');
-        const deskGrid           = document.getElementById('deskGrid');
-        const settingsBtn        = document.getElementById('settingsBtn');
+
+        // DOM refs — display settings
+        const dashboardTitleInput  = document.getElementById('dashboardTitle');
+        const showNamesToggle      = document.getElementById('showNamesToggle');
+        const metricFreeRadio      = document.getElementById('metricFree');
+        const metricOccupiedRadio  = document.getElementById('metricOccupied');
+        const hideNonDesksToggle   = document.getElementById('hideNonDesksToggle');
+
+        // DOM refs — appearance
+        const gridColumnsInput = document.getElementById('gridColumns');
+
+        // DOM refs — waiting list
+        const waitingListToggle = document.getElementById('waitingListToggle');
+        const waitingManage     = document.getElementById('waitingManage');
+        const waitingListItems  = document.getElementById('waitingListItems');
+        const waitingListEmpty  = document.getElementById('waitingListEmpty');
+        const waitingAddInput   = document.getElementById('waitingAddInput');
+        const waitingAddBtn     = document.getElementById('waitingAddBtn');
+
+        // DOM refs — content
+        const apiIssueMsgArea  = document.getElementById('apiIssueMsg');
+        const nicknamesNote    = document.getElementById('nicknamesNote');
+        const nicknamesTable   = document.getElementById('nicknamesTable');
+        const nicknamesTbody   = document.getElementById('nicknamesTbody');
+
+        // DOM refs — dashboard
+        const headerEyebrow    = document.getElementById('headerEyebrow');
+        const headerTitle      = document.getElementById('headerTitle');
+        const lastUpdatedEl    = document.getElementById('lastUpdated');
+        const statValueEl      = document.getElementById('statValue');
+        const statLabelEl      = document.getElementById('statLabel');
+        const statSubEl        = document.getElementById('statSub');
+        const capacityBarEl    = document.getElementById('capacityBar');
+        const deskGrid         = document.getElementById('deskGrid');
+        const settingsBtn      = document.getElementById('settingsBtn');
+        const waitingFooter    = document.getElementById('waitingFooter');
+        const waitingFooterNames = document.getElementById('waitingFooterNames');
 
         // ── API helper ────────────────────────────────────────────────
         async function apiRequest(endpoint, options = {}) {
+            const token = apiTokenInput.value.trim() || S.apiToken;
             const response = await fetch(`/api${endpoint}`, {
                 ...options,
                 headers: {
-                    'Authorization': state.apiToken,
+                    'Authorization': token,
                     'Content-Type':  'application/json',
                     ...options.headers,
                 },
             });
-
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
                 if (response.status === 401) throw new Error('Invalid API token.');
                 if (response.status === 403) throw new Error('Access forbidden. Check token permissions.');
                 throw new Error(err.error || `API Error: ${response.status}`);
             }
-
             return response.json();
         }
 
@@ -627,7 +1106,7 @@
             } catch (e) { console.error(e); return []; }
         }
 
-        // ── Config screen helpers ─────────────────────────────────────
+        // ── Error helpers ─────────────────────────────────────────────
         function showError(msg) {
             errorMessage.textContent = msg;
             errorMessage.style.display = 'block';
@@ -635,12 +1114,152 @@
         function hideError() { errorMessage.style.display = 'none'; }
 
         function updateStartButton() {
-            startBtn.disabled = !state.apiToken || !state.locationId;
+            const locId = locationSelect.value || S.locationId;
+            const tok   = apiTokenInput.value.trim() || S.apiToken;
+            startBtn.disabled = !tok || !locId;
         }
 
+        // ── Populate settings panel from localStorage ─────────────────
+        function populateSettingsPanel() {
+            apiTokenInput.value          = S.apiToken;
+            refreshIntervalSel.value     = String(S.refreshInterval);
+            dashboardTitleInput.value    = S.dashboardTitle;
+            showNamesToggle.checked      = S.showNames;
+            hideNonDesksToggle.checked   = S.hideNonDesks;
+            gridColumnsInput.value       = String(S.cardColumns);
+            waitingListToggle.checked    = S.waitingListEnabled;
+            apiIssueMsgArea.value        = S.apiIssueMessage;
+
+            if (S.metricFocus === 'occupied') {
+                metricOccupiedRadio.checked = true;
+            } else {
+                metricFreeRadio.checked = true;
+            }
+
+            const dnsVal = S.deskNameSize;
+            const dns = document.querySelector(`input[name="deskNameSize"][value="${dnsVal}"]`);
+            if (dns) dns.checked = true;
+
+            const onsVal = S.occupantNameSize;
+            const ons = document.querySelector(`input[name="occupantNameSize"][value="${onsVal}"]`);
+            if (ons) ons.checked = true;
+
+            // Waiting list manage visibility
+            toggleWaitingManage(S.waitingListEnabled);
+            renderWaitingListItems();
+
+            // Nicknames table (only if desks known)
+            renderNicknamesTable();
+        }
+
+        function saveAllSettings() {
+            localStorage.setItem('eden_nb_api_token',         apiTokenInput.value.trim());
+            localStorage.setItem('eden_nb_refresh_interval',  refreshIntervalSel.value);
+            localStorage.setItem('eden_nb_dashboard_title',   dashboardTitleInput.value.trim());
+            localStorage.setItem('eden_nb_show_names',        showNamesToggle.checked ? 'true' : 'false');
+            localStorage.setItem('eden_nb_metric_focus',      document.querySelector('input[name="metricFocus"]:checked')?.value || 'free');
+            localStorage.setItem('eden_nb_hide_non_desks',    hideNonDesksToggle.checked ? 'true' : 'false');
+            localStorage.setItem('eden_nb_desk_name_size',    document.querySelector('input[name="deskNameSize"]:checked')?.value || 'md');
+            localStorage.setItem('eden_nb_occupant_name_size',document.querySelector('input[name="occupantNameSize"]:checked')?.value || 'md');
+            const cols = parseInt(gridColumnsInput.value);
+            localStorage.setItem('eden_nb_card_columns',      (cols >= 4 && cols <= 10) ? cols : 7);
+            localStorage.setItem('eden_nb_waiting_list_enabled', waitingListToggle.checked ? 'true' : 'false');
+            localStorage.setItem('eden_nb_api_issue_message', apiIssueMsgArea.value.trim());
+            // nicknames are saved inline as user types
+        }
+
+        // ── Waiting list UI ───────────────────────────────────────────
+        function toggleWaitingManage(enabled) {
+            if (enabled) {
+                waitingManage.classList.remove('hidden');
+            } else {
+                waitingManage.classList.add('hidden');
+            }
+        }
+
+        function renderWaitingListItems() {
+            const list = S.waitingList;
+            waitingListItems.innerHTML = '';
+            if (list.length === 0) {
+                waitingListEmpty.classList.remove('hidden');
+            } else {
+                waitingListEmpty.classList.add('hidden');
+                list.forEach((name, idx) => {
+                    const li = document.createElement('li');
+                    li.textContent = name;
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-small btn-danger';
+                    btn.textContent = 'Remove';
+                    btn.addEventListener('click', () => {
+                        const updated = S.waitingList.filter((_, i) => i !== idx);
+                        saveWaitingList(updated);
+                        renderWaitingListItems();
+                    });
+                    li.appendChild(btn);
+                    waitingListItems.appendChild(li);
+                });
+            }
+        }
+
+        waitingListToggle.addEventListener('change', () => {
+            toggleWaitingManage(waitingListToggle.checked);
+        });
+
+        waitingAddBtn.addEventListener('click', () => {
+            const name = waitingAddInput.value.trim();
+            if (!name) return;
+            const updated = [...S.waitingList, name];
+            saveWaitingList(updated);
+            waitingAddInput.value = '';
+            renderWaitingListItems();
+        });
+
+        waitingAddInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') waitingAddBtn.click();
+        });
+
+        // ── Nicknames table ───────────────────────────────────────────
+        function renderNicknamesTable() {
+            if (!state.desks || state.desks.length === 0) {
+                nicknamesNote.classList.remove('hidden');
+                nicknamesTable.classList.add('hidden');
+                return;
+            }
+            nicknamesNote.classList.add('hidden');
+            nicknamesTable.classList.remove('hidden');
+
+            const current = S.nicknames;
+            nicknamesTbody.innerHTML = '';
+            const sorted = [...state.desks].sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }));
+            sorted.forEach(desk => {
+                const tr = document.createElement('tr');
+                const tdDesk = document.createElement('td');
+                tdDesk.textContent = desk.title;
+                const tdNick = document.createElement('td');
+                const inp = document.createElement('input');
+                inp.type = 'text';
+                inp.placeholder = 'Nickname…';
+                inp.value = current[desk.location_id] || '';
+                inp.addEventListener('input', () => {
+                    const nn = S.nicknames;
+                    if (inp.value.trim()) {
+                        nn[desk.location_id] = inp.value.trim();
+                    } else {
+                        delete nn[desk.location_id];
+                    }
+                    saveNicknames(nn);
+                });
+                tdNick.appendChild(inp);
+                tr.appendChild(tdDesk);
+                tr.appendChild(tdNick);
+                nicknamesTbody.appendChild(tr);
+            });
+        }
+
+        // ── Load locations ────────────────────────────────────────────
         loadLocationsBtn.addEventListener('click', async () => {
-            state.apiToken = apiTokenInput.value.trim();
-            if (!state.apiToken || state.apiToken.length < 10) {
+            const tok = apiTokenInput.value.trim();
+            if (!tok || tok.length < 10) {
                 showError('Please enter a valid API token first.');
                 return;
             }
@@ -684,21 +1303,27 @@
             updateStartButton();
         });
 
-        locationSelect.addEventListener('change', () => {
-            state.locationId   = locationSelect.value;
-            state.locationName = locationSelect.options[locationSelect.selectedIndex]?.textContent || '';
+        locationSelect.addEventListener('change', async () => {
+            const locId   = locationSelect.value;
+            const locName = locationSelect.options[locationSelect.selectedIndex]?.textContent || '';
+            localStorage.setItem('eden_nb_location_id',   locId);
+            localStorage.setItem('eden_nb_location_name', locName);
             updateStartButton();
+
+            // Pre-fetch desks so nicknames table can be populated while in settings
+            if (locId) {
+                state.desks = await fetchDesks(locId);
+                renderNicknamesTable();
+            }
         });
 
         refreshIntervalSel.addEventListener('change', () => {
-            state.refreshInterval = parseInt(refreshIntervalSel.value);
+            localStorage.setItem('eden_nb_refresh_interval', refreshIntervalSel.value);
         });
 
-        startBtn.addEventListener('click', async () => {
-            localStorage.setItem('eden_nb_api_token',      state.apiToken);
-            localStorage.setItem('eden_nb_location_id',    state.locationId);
-            localStorage.setItem('eden_nb_location_name',  state.locationName);
-            localStorage.setItem('eden_nb_refresh_interval', state.refreshInterval);
+        // ── Launch display ────────────────────────────────────────────
+        startBtn.addEventListener('click', () => {
+            saveAllSettings();
             launchDashboard();
         });
 
@@ -706,42 +1331,63 @@
             clearInterval(state.refreshTimer);
             dashboard.style.display = 'none';
             configScreen.style.display = 'flex';
-            apiTokenInput.value = state.apiToken;
-            refreshIntervalSel.value = state.refreshInterval;
+            populateSettingsPanel();
+            updateStartButton();
         });
 
-        // ── Dashboard ─────────────────────────────────────────────────
+        // ── Dashboard launch ──────────────────────────────────────────
         function launchDashboard() {
-            // Strip type suffix from location name for header display
-            const cleanName = state.locationName.replace(/\s*\([^)]*\)\s*$/, '').trim();
-            headerEyebrow.textContent = `WORKPLACE · ${cleanName.toUpperCase()}`;
-            headerTitle.textContent   = cleanName;
+            const customTitle = S.dashboardTitle;
+            const rawName     = S.locationName.replace(/\s*\([^)]*\)\s*$/, '').trim();
+            const displayName = customTitle || rawName;
+
+            headerEyebrow.textContent = `WORKPLACE · ${displayName.toUpperCase()}`;
+            headerTitle.textContent   = displayName;
 
             configScreen.style.display = 'none';
             dashboard.style.display    = 'flex';
 
             refreshData();
-            state.refreshTimer = setInterval(refreshData, state.refreshInterval * 1000);
+            const interval = S.refreshInterval;
+            state.refreshTimer = setInterval(refreshData, interval * 1000);
         }
 
         async function refreshData() {
+            const locId = S.locationId;
+            if (!locId) return;
             try {
                 const [desks, reservations] = await Promise.all([
-                    fetchDesks(state.locationId),
-                    fetchReservations(state.locationId),
+                    fetchDesks(locId),
+                    fetchReservations(locId),
                 ]);
                 state.desks        = desks;
                 state.reservations = reservations;
                 renderDashboard();
             } catch (error) {
                 console.error('Refresh error:', error);
+                const msg = S.apiIssueMessage;
+                deskGrid.innerHTML = `
+                    <div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--fg-tertiary);font-family:'Roboto Mono',monospace;font-size:13px;letter-spacing:.08em;">
+                        ${escapeHtml(msg || 'FAILED TO LOAD DATA — RETRYING…')}
+                    </div>
+                `;
             }
         }
 
         function renderDashboard() {
-            const now = new Date();
+            const now         = new Date();
+            const showNames   = S.showNames;
+            const metricFocus = S.metricFocus;
+            const hideNonDesk = S.hideNonDesks;
+            const deskNSz     = DESK_NAME_SIZES[S.deskNameSize]     || '31px';
+            const occNSz      = OCCUPANT_NAME_SIZES[S.occupantNameSize] || '19px';
+            const columns     = S.cardColumns;
+            const nicknames   = S.nicknames;
 
-            // Build active-reservation map keyed by desk location_id
+            // Apply grid columns
+            deskGrid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+
+            // Build active-reservation map
             const activeRes = new Map();
             state.reservations.forEach(res => {
                 if (res.status === 'cancelled') return;
@@ -753,41 +1399,48 @@
                 }
             });
 
-            const total    = state.desks.length;
-            const occupied = state.desks.filter(d => activeRes.has(d.location_id)).length;
+            // Filter desks
+            let desks = state.desks;
+            if (hideNonDesk) {
+                desks = desks.filter(d => (d.location_type || '').toLowerCase() === 'desk');
+            }
+
+            const total    = desks.length;
+            const occupied = desks.filter(d => activeRes.has(d.location_id)).length;
             const free     = total - occupied;
-            const freePct  = total > 0 ? Math.round((free    / total) * 100) : 0;
+            const freePct  = total > 0 ? Math.round((free     / total) * 100) : 0;
             const occPct   = total > 0 ? Math.round((occupied / total) * 100) : 0;
 
             // Header stat
-            if (METRIC_FOCUS === 'occupied') {
-                statValueEl.textContent = occupied;
-                statLabelEl.textContent = 'IN USE';
-                statSubEl.textContent   = `${free} of ${total} desks free · ${freePct}% occupied`;
+            if (metricFocus === 'occupied') {
+                statValueEl.textContent   = occupied;
+                statLabelEl.textContent   = 'IN USE';
+                statSubEl.textContent     = `${free} of ${total} desks free · ${freePct}% occupied`;
                 capacityBarEl.style.width = `${occPct}%`;
             } else {
-                statValueEl.textContent = free;
-                statLabelEl.textContent = 'FREE';
-                statSubEl.textContent   = `${occupied} of ${total} desks occupied · ${occPct}% full`;
+                statValueEl.textContent   = free;
+                statLabelEl.textContent   = 'FREE';
+                statSubEl.textContent     = `${occupied} of ${total} desks occupied · ${occPct}% full`;
                 capacityBarEl.style.width = `${freePct}%`;
             }
 
             lastUpdatedEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
-            // Desk grid — sort alphabetically/numerically by title
-            const sorted = [...state.desks].sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }));
+            // Desk grid
+            const sorted = [...desks].sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }));
 
             deskGrid.innerHTML = '';
             sorted.forEach((desk, idx) => {
                 const reservation = activeRes.get(desk.location_id);
                 const isOccupied  = !!reservation;
 
-                // Derive a short "number" label from the desk title
-                const deskNum = desk.title.replace(/^[A-Za-z\s]+/, '').trim() || String(idx + 1);
+                // Display title: nickname > title stripping prefix > fallback index
+                const rawNum     = desk.title.replace(/^[A-Za-z\s]+/, '').trim() || String(idx + 1);
+                const deskLabel  = nicknames[desk.location_id] || rawNum;
 
                 let occupantLabel;
                 if (isOccupied) {
-                    occupantLabel = (!SHOW_NAMES) ? 'Occupied' : escapeHtml(reservation.owner?.name || 'Occupied');
+                    occupantLabel = (!showNames) ? 'Occupied' : escapeHtml(reservation.owner?.name || 'Occupied');
                 } else {
                     occupantLabel = 'AVAILABLE';
                 }
@@ -795,38 +1448,53 @@
                 const card = document.createElement('div');
                 card.className = `desk-card ${isOccupied ? 'occupied' : 'available'}`;
                 card.innerHTML = `
-                    <span class="desk-number">${escapeHtml(deskNum)}</span>
-                    <span class="desk-occupant">${occupantLabel}</span>
+                    <span class="desk-number" style="font-size:${deskNSz}">${escapeHtml(deskLabel)}</span>
+                    <span class="desk-occupant" style="font-size:${isOccupied ? occNSz : ''}">${occupantLabel}</span>
                 `;
                 deskGrid.appendChild(card);
             });
 
-            if (state.desks.length === 0) {
+            if (desks.length === 0) {
+                const msg = S.apiIssueMessage;
                 deskGrid.innerHTML = `
                     <div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--fg-tertiary);font-family:'Roboto Mono',monospace;font-size:13px;letter-spacing:.08em;">
-                        NO DESKS FOUND FOR THIS LOCATION
+                        ${escapeHtml(msg || 'NO DESKS FOUND FOR THIS LOCATION')}
                     </div>
                 `;
             }
-        }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+            // Waiting list footer
+            const wlEnabled = S.waitingListEnabled;
+            const wlList    = S.waitingList;
+            if (wlEnabled && wlList.length > 0) {
+                waitingFooterNames.innerHTML = '';
+                wlList.forEach(name => {
+                    const chip = document.createElement('span');
+                    chip.className = 'waiting-chip';
+                    chip.textContent = name;
+                    waitingFooterNames.appendChild(chip);
+                });
+                waitingFooter.classList.remove('hidden');
+            } else {
+                waitingFooter.classList.add('hidden');
+            }
         }
 
         // ── Auto-launch if saved config exists ────────────────────────
-        if (state.apiToken && state.locationId) {
-            apiTokenInput.value       = state.apiToken;
-            refreshIntervalSel.value  = state.refreshInterval;
+        populateSettingsPanel();
+
+        if (S.apiToken && S.locationId) {
+            apiTokenInput.value = S.apiToken;
             setTimeout(() => {
-                locationSelect.innerHTML = `<option value="${state.locationId}">${state.locationName}</option>`;
-                locationSelect.disabled  = false;
+                locationSelect.innerHTML = `<option value="${S.locationId}">${S.locationName}</option>`;
+                locationSelect.value    = S.locationId;
+                locationSelect.disabled = false;
+                updateStartButton();
                 launchDashboard();
             }, 50);
-        } else if (state.apiToken) {
-            apiTokenInput.value = state.apiToken;
+        } else if (S.apiToken) {
+            apiTokenInput.value = S.apiToken;
+            updateStartButton();
         }
     </script>
 
