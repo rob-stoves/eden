@@ -307,12 +307,15 @@ async function sendEmail(env, { to, name, locationName, deskName, unsubscribeUrl
         to: [to],
         subject: deskName ? `Desk ${deskName} is free at ${locationName}!` : `A desk is free at ${locationName}!`,
         html: `<p>Hi ${name},</p>
-<p>Good news — a desk has just become available at <strong>${locationName}</strong>.</p>
+<p>Good news — a desk has just become available at ${locationName}.</p>
 ${deskLine}
-<p>You're first on the waiting list.</p>
-<br>
-<p><a href="${unsubscribeUrl}" style="color:#666;font-size:12px;">Remove me from the waiting list</a></p>
-<p style="color:#999;font-size:11px;">Optimizely Desk Availability</p>`
+<p><strong>What to do next:</strong></p>
+<ol>
+  <li>Log in to Eden via Okta to book your desk</li>
+  <li>If you continue to get this email, you may have entered your name differently to how it's stored in Eden — you can manually remove yourself from the waiting list below</li>
+</ol>
+<p><a href="${unsubscribeUrl}">Remove me from the waiting list</a></p>
+<p style="color:#999;font-size:12px;">(Hopefully if Eden update their API we can make step 2 automatic)</p>`
       })
     });
     return res.ok;
