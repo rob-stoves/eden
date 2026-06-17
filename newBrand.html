@@ -887,7 +887,7 @@
             fetch('/waitinglist/notify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ locationId: state.locationId, locationName, deskName })
+                body: JSON.stringify({ locationId: state.locationId, locationName, deskName, today: todayDate() })
             }).catch(() => {});
         }
 
@@ -902,9 +902,18 @@
             } catch (e) { return false; }
         }
 
+        function todayDate() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function isForToday(entry) {
+            return !entry.desired_date || entry.desired_date === todayDate();
+        }
+
         async function updateWaitingListQueue() {
             const queueEl = $('waitingListQueue');
-            const list = await getWaitingList();
+            const list = (await getWaitingList()).filter(isForToday);
             if (list.length > 0) {
                 const top = list.slice(0, 3);
                 const extra = list.length - top.length;
@@ -915,9 +924,8 @@
             }
         }
 
-
         async function checkAndRemoveBookedFromWaitingList(deskRes) {
-            const waitingList = await getWaitingList();
+            const waitingList = (await getWaitingList()).filter(isForToday);
             if (waitingList.length === 0) return;
             const bookedNames = new Set();
             deskRes.forEach(r => { if (r.owner?.name) bookedNames.add(r.owner.name.toLowerCase().trim()); });

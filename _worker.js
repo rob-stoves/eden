@@ -255,17 +255,18 @@ async function handleWaitingListNotify(request, env) {
       return jsonResponse({ error: 'locationId required' }, 400);
     }
 
-    const { deskName } = body;
+    const { deskName, today } = body;
 
     const oneHourAgo = Date.now() - 3600000;
 
-    // Find all entries eligible for notification: have email, never notified or last notified over an hour ago
+    // Find all entries eligible for notification: have email, for today (or no date), not notified in last hour
     const results = await env.EDEN_DB.prepare(
       `SELECT id, name, email, token FROM waiting_list
        WHERE location_id = ? AND email IS NOT NULL AND email != ''
+         AND (desired_date IS NULL OR desired_date = '' OR desired_date = ?)
          AND (last_notified_at IS NULL OR last_notified_at < ?)
        ORDER BY timestamp ASC`
-    ).bind(locationId, oneHourAgo).all();
+    ).bind(locationId, today || '', oneHourAgo).all();
 
     const entries = results.results;
 
