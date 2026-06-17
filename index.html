@@ -4,608 +4,490 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desk Availability Display</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Condensed:wght@900&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0a0a0f;
-            --bg-card: #12121a;
-            --bg-card-hover: #1a1a24;
-            --accent-green: #00ff88;
-            --accent-red: #ff4466;
+            --brand:        #ABFF44;
+            --brand-ink:    #08251A;
+            --bg-page:      #252825;
+            --bg-default:   #2B2E2B;
+            --bg-secondary: #202320;
+            --bg-hover:     #323532;
+            --border-default:  #484E46;
+            --border-tertiary: #383E38;
+            --fg-default:   #D2DEC2;
+            --fg-secondary: #B2BD9E;
+            --fg-tertiary:  #A1AC8D;
+            --accent-red:   #ff4466;
             --accent-amber: #ffaa00;
-            --text-primary: #ffffff;
-            --text-secondary: #8888aa;
-            --text-muted: #555566;
-            --border-subtle: #2a2a3a;
-            --glow-green: rgba(0, 255, 136, 0.15);
-            --glow-red: rgba(255, 68, 102, 0.15);
+            --glow-brand:   rgba(171,255,68,.15);
+            --glow-red:     rgba(255,68,102,.15);
         }
 
-        body.light-mode {
-            --bg-dark: #f5f5f7;
-            --bg-card: #ffffff;
-            --bg-card-hover: #f0f0f2;
-            --accent-green: #00aa55;
-            --accent-red: #dd3355;
-            --accent-amber: #dd8800;
-            --text-primary: #1a1a1a;
-            --text-secondary: #666677;
-            --text-muted: #999999;
-            --border-subtle: #ddddee;
-            --glow-green: rgba(0, 170, 85, 0.15);
-            --glow-red: rgba(221, 51, 85, 0.15);
-        }
-
-        body.light-mode .bg-pattern {
-            background: 
-                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 170, 85, 0.08), transparent),
-                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(221, 51, 85, 0.05), transparent);
-        }
-
-        body.light-mode .grid-overlay {
-            opacity: 0.08;
-        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-primary);
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg-page);
+            color: var(--fg-default);
             min-height: 100vh;
             overflow-x: hidden;
+            color-scheme: dark;
         }
-        .bg-pattern {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: 
-                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 255, 136, 0.08), transparent),
-                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(255, 68, 102, 0.05), transparent);
-            pointer-events: none; z-index: 0;
-        }
-        .grid-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background-image: 
-                linear-gradient(var(--border-subtle) 1px, transparent 1px),
-                linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
-            background-size: 60px 60px;
-            opacity: 0.15; pointer-events: none; z-index: 0;
-        }
+
+        /* ─── Config screen ─────────────────────────────────────────── */
+
         .config-screen {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            position: fixed; inset: 0;
             display: flex; align-items: flex-start; justify-content: center;
             z-index: 100; padding: 40px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
+
         .config-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 24px; padding: 48px;
-            max-width: 800px; width: 100%;
+            background: var(--bg-default);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 12px;
+            padding: 48px;
+            max-width: 1200px; width: 100%;
             position: relative;
-            animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
             margin: auto 0;
         }
-        @media (max-width: 600px) {
-            .config-screen {
-                padding: 20px;
-                align-items: flex-start;
-            }
-            .config-card {
-                padding: 24px;
-                margin: 0;
-            }
-            .settings-columns {
-                flex-direction: column;
-                gap: 0;
-            }
-        }
+
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(32px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        .config-card::before {
-            content: ''; position: absolute;
-            top: -1px; left: 50%; transform: translateX(-50%);
-            width: 200px; height: 3px;
-            background: linear-gradient(90deg, transparent, var(--accent-green), transparent);
-            border-radius: 2px;
+
+        @media (max-width: 600px) {
+            .config-screen { padding: 20px; align-items: flex-start; }
+            .config-card   { padding: 24px; margin: 0; }
+            .settings-columns { flex-direction: column; gap: 0; }
         }
-        .settings-columns {
-            display: flex;
-            gap: 32px;
-            margin-bottom: 24px;
+
+        @media (max-width: 700px) {
+            .dashboard-header {
+                flex-direction: column; align-items: flex-start;
+                padding: 16px 20px 12px; gap: 12px;
+            }
+            .header-right {
+                width: 100%; flex-wrap: wrap; gap: 12px;
+                justify-content: flex-start;
+            }
+            .header-title { font-size: 28px; }
+            .header-logo  { height: 60px; }
         }
-        .settings-column {
-            flex: 1;
+
+        .config-logo { height: 90px; display: block; margin-bottom: 20px; }
+
+        .config-title {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 900; font-size: 30px;
+            letter-spacing: -0.02em; margin-bottom: 6px;
         }
-        .logo {
-            font-family: 'Space Mono', monospace;
-            font-size: 14px; color: var(--accent-green);
-            letter-spacing: 4px; text-transform: uppercase;
+
+        .config-subtitle { color: var(--fg-secondary); font-size: 15px; margin-bottom: 36px; }
+
+        .settings-columns { display: flex; gap: 32px; margin-bottom: 24px; }
+        .settings-column  { flex: 1; }
+
+        .form-group  { margin-bottom: 20px; }
+
+        .form-label {
+            display: block;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px; font-weight: 400;
+            color: var(--fg-tertiary);
+            text-transform: uppercase; letter-spacing: .12em;
             margin-bottom: 8px;
         }
-        .config-title { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
-        .config-subtitle { color: var(--text-secondary); font-size: 16px; margin-bottom: 40px; }
-        .form-group { margin-bottom: 24px; }
-        .form-label {
-            display: block; font-size: 13px; font-weight: 600;
-            color: var(--text-secondary); text-transform: uppercase;
-            letter-spacing: 1px; margin-bottom: 10px;
-        }
+
         .form-input {
-            width: 100%; padding: 16px 20px;
-            background: var(--bg-dark);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px; color: var(--text-primary);
-            font-size: 16px; font-family: 'Space Mono', monospace;
-            transition: all 0.3s ease;
+            width: 100%; padding: 13px 16px;
+            background: var(--bg-page);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 8px; color: var(--fg-default);
+            font-size: 15px; font-family: 'Roboto Mono', monospace;
+            transition: border-color .2s, box-shadow .2s;
         }
         .form-input:focus {
-            outline: none; border-color: var(--accent-green);
-            box-shadow: 0 0 0 4px var(--glow-green);
+            outline: none; border-color: var(--brand);
+            box-shadow: 0 0 0 3px var(--glow-brand);
         }
-        .form-input::placeholder { color: var(--text-muted); }
+        .form-input::placeholder { color: var(--fg-tertiary); }
+
         .form-select {
-            width: 100%; padding: 16px 20px;
-            background: var(--bg-dark);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px; color: var(--text-primary);
-            font-size: 16px; font-family: 'DM Sans', sans-serif;
-            cursor: pointer; transition: all 0.3s ease;
+            width: 100%; padding: 13px 16px;
+            background: var(--bg-page);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 8px; color: var(--fg-default);
+            font-size: 15px; font-family: 'Roboto', sans-serif;
+            cursor: pointer; transition: border-color .2s, box-shadow .2s;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238888aa' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23A1AC8D' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 16px center;
+            background-position: right 14px center;
         }
         .form-select:focus {
-            outline: none; border-color: var(--accent-green);
-            box-shadow: 0 0 0 4px var(--glow-green);
+            outline: none; border-color: var(--brand);
+            box-shadow: 0 0 0 3px var(--glow-brand);
         }
-        .form-select option { background: var(--bg-card); color: var(--text-primary); }
-        .form-caption {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 6px;
-        }
+        .form-select option { background: var(--bg-default); color: var(--fg-default); }
+
+        .form-caption { font-size: 11px; color: var(--fg-tertiary); margin-top: 5px; }
+
         .form-range {
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: var(--bg-dark);
-            outline: none;
-            -webkit-appearance: none;
-            appearance: none;
-            cursor: pointer;
+            width: 100%; height: 6px;
+            border-radius: 9999px; background: var(--bg-secondary);
+            outline: none; -webkit-appearance: none; appearance: none; cursor: pointer;
         }
         .form-range::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--accent-green);
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 6px rgba(0, 255, 136, 0.3);
+            -webkit-appearance: none; appearance: none;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: var(--brand); cursor: pointer; border: none;
+            box-shadow: 0 2px 6px rgba(171,255,68,.35);
         }
         .form-range::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--accent-green);
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 6px rgba(0, 255, 136, 0.3);
+            width: 18px; height: 18px; border-radius: 50%;
+            background: var(--brand); cursor: pointer; border: none;
+            box-shadow: 0 2px 6px rgba(171,255,68,.35);
         }
+
         .btn-primary {
-            width: 100%; padding: 18px 32px;
-            background: var(--accent-green); color: var(--bg-dark);
-            border: none; border-radius: 12px;
-            font-size: 16px; font-weight: 700;
-            font-family: 'DM Sans', sans-serif;
-            cursor: pointer; transition: all 0.3s ease;
-            text-transform: uppercase; letter-spacing: 1px;
-            margin-top: 16px;
+            width: 100%; padding: 16px 28px;
+            background: var(--brand); color: var(--brand-ink);
+            border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 700;
+            font-family: 'Roboto Mono', monospace;
+            cursor: pointer; transition: opacity .2s, transform .15s;
+            text-transform: uppercase; letter-spacing: .08em;
+            margin-top: 12px;
         }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px var(--glow-green);
-        }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .btn-secondary {
-            width: 100%; padding: 14px 24px;
-            background: transparent; color: var(--accent-green);
-            border: 1px solid var(--accent-green);
-            border-radius: 12px; font-size: 14px; font-weight: 600;
-            font-family: 'DM Sans', sans-serif;
-            cursor: pointer; transition: all 0.3s ease;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        .btn-secondary:hover { background: var(--glow-green); }
-        .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
         .error-message {
             background: var(--glow-red);
             border: 1px solid var(--accent-red);
-            border-radius: 12px; padding: 16px;
-            margin-bottom: 24px; color: var(--accent-red);
-            font-size: 14px; display: none;
+            border-radius: 8px; padding: 14px;
+            margin-bottom: 20px; color: var(--accent-red);
+            font-size: 13px; display: none;
         }
-        .loading-spinner {
-            display: inline-block; width: 20px; height: 20px;
-            border: 2px solid transparent; border-top-color: currentColor;
-            border-radius: 50%; animation: spin 0.8s linear infinite;
-            margin-right: 8px; vertical-align: middle;
-        }
+
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── Waiting list — settings panel ────────────────────────── */
+
+        .waiting-list-manage {
+            background: var(--bg-page);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 8px; padding: 10px;
+            max-height: 140px; overflow-y: auto;
+        }
+        .waiting-list-manage-empty { color: var(--fg-tertiary); font-size: 12px; text-align: center; padding: 8px; }
+        .waiting-list-manage-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 8px; border-radius: 4px; margin-bottom: 3px;
+        }
+        .waiting-list-manage-item:hover { background: var(--bg-hover); }
+        .waiting-list-manage-name  { font-size: 13px; color: var(--fg-default); }
+        .waiting-list-manage-time  { font-size: 11px; color: var(--fg-tertiary); margin-left: 8px; }
+        .waiting-list-manage-remove {
+            background: transparent; border: 1px solid var(--accent-red);
+            color: var(--accent-red); padding: 3px 8px; border-radius: 4px;
+            font-size: 11px; cursor: pointer; opacity: .7; transition: opacity .2s;
+        }
+        .waiting-list-manage-remove:hover { opacity: 1; background: var(--accent-red); color: var(--bg-page); }
+
+        /* ─── Nicknames — settings panel ────────────────────────────── */
+
+        .nickname-add-form { display: flex; gap: 8px; margin-bottom: 10px; }
+        .nickname-input    { flex: 1; padding: 8px 12px; font-size: 13px; }
+        .btn-add-nickname {
+            padding: 8px 16px;
+            background: var(--brand); color: var(--brand-ink);
+            border: none; border-radius: 8px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        .btn-add-nickname:hover { opacity: .9; }
+
+        .nicknames-list {
+            background: var(--bg-page); border: 1px solid var(--border-tertiary);
+            border-radius: 8px; padding: 10px;
+            max-height: 140px; overflow-y: auto;
+        }
+        .nicknames-list-empty { color: var(--fg-tertiary); font-size: 12px; text-align: center; padding: 8px; }
+        .nickname-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 8px; border-radius: 4px; margin-bottom: 3px;
+        }
+        .nickname-item:hover { background: var(--bg-hover); }
+        .nickname-item-names  { font-size: 13px; }
+        .nickname-item-full   { color: var(--fg-secondary); }
+        .nickname-item-arrow  { color: var(--fg-tertiary); margin: 0 6px; }
+        .nickname-item-nick   { color: var(--brand); font-weight: 600; }
+        .nickname-item-remove {
+            background: transparent; border: 1px solid var(--accent-red);
+            color: var(--accent-red); padding: 3px 8px; border-radius: 4px;
+            font-size: 11px; cursor: pointer; opacity: .7; transition: opacity .2s;
+        }
+        .nickname-item-remove:hover { opacity: 1; background: var(--accent-red); color: var(--bg-page); }
+
+        /* ─── Dashboard ─────────────────────────────────────────────── */
+
         .dashboard {
-            display: none; min-height: 100vh; padding: 20px;
+            display: none;
+            min-height: 100vh;
+            flex-direction: column;
             position: relative; z-index: 1;
         }
+
+        /* Header */
         .dashboard-header {
-            display: flex; justify-content: space-between;
-            align-items: flex-start; margin-bottom: 24px;
-            flex-wrap: wrap; gap: 16px;
+            padding: 24px 52px 16px;
+            display: flex; align-items: center; gap: 28px;
+            flex-shrink: 0;
         }
-        .location-info { flex: 1; min-width: 250px; }
-        .location-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 100px; padding: 5px 12px;
-            font-size: 11px; color: var(--text-secondary);
-            margin-bottom: 8px;
+
+        .header-left {
+            flex: 1; min-width: 0;
+            display: flex; align-items: center; gap: 18px;
         }
-        .location-badge .dot {
-            width: 6px; height: 6px;
-            background: var(--accent-green);
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
+
+        .header-logo { height: 90px; display: block; flex-shrink: 0; }
+
+        .header-divider { width: 1px; height: 30px; background: var(--border-default); flex-shrink: 0; }
+
+        .header-text { min-width: 0; }
+
+        .header-eyebrow {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px; letter-spacing: .12em;
+            color: var(--fg-tertiary); text-transform: uppercase;
+            margin-bottom: 3px;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
+
+        .header-title {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 900; font-size: 42px;
+            line-height: .92; letter-spacing: -0.028em;
+            color: var(--fg-default);
         }
-        .location-name {
-            font-size: 32px; font-weight: 700;
-            line-height: 1.1; margin-bottom: 4px;
-        }
-        .last-updated {
-            color: var(--text-muted);
-            font-family: 'Space Mono', monospace;
-            font-size: 11px;
-        }
-        .stats-row { display: flex; gap: 12px; align-items: center; }
-        .capacity-bar-container {
-            display: flex; align-items: center; gap: 12px;
-        }
-        .capacity-bar {
-            width: 300px; height: 30px;
-            background: var(--bg-dark);
-            border: 1px solid var(--text-primary);
-            border-radius: 30px;
-            overflow: hidden;
-            position: relative;
-        }
-        .capacity-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-green), var(--accent-amber), var(--accent-red));
-            background-size: 200% 100%;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 0%;
-        }
-        .capacity-bar-fill.animate {
-            animation: capacityPulse 0.6s ease-out;
-        }
-        @keyframes capacityPulse {
-            0% { filter: brightness(1); }
-            50% { filter: brightness(1.3); }
-            100% { filter: brightness(1); }
-        }
-        .capacity-text {
-            font-family: 'Space Mono', monospace;
-            font-size: 13px;
-            color: var(--text-secondary);
+
+        .header-right { display: flex; align-items: center; gap: 28px; flex-shrink: 0; }
+
+        .live-pill {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 16px;
+            border: 1px solid var(--border-default);
+            border-radius: 9999px;
             white-space: nowrap;
         }
-        .capacity-text span:first-child {
-            color: var(--text-primary);
-            font-weight: 600;
+
+        .live-dot {
+            width: 9px; height: 9px; border-radius: 50%;
+            background: var(--brand);
+            animation: ax-pulse 2.2s ease-in-out infinite;
         }
+
+        @keyframes ax-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: .35; transform: scale(.78); }
+        }
+
+        .live-label {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px; letter-spacing: .1em;
+            color: var(--fg-secondary);
+        }
+
+        .stat-block { text-align: right; }
+
+        .stat-big-row {
+            display: flex; align-items: baseline; gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .stat-value {
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 700; font-size: 68px;
+            line-height: .85; color: var(--brand);
+        }
+
+        .stat-label {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 900; font-size: 30px;
+            text-transform: uppercase; letter-spacing: -0.01em;
+            color: var(--fg-default);
+        }
+
+        .stat-sub {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px; color: var(--fg-tertiary);
+            margin-top: 5px;
+        }
+
+        .capacity-track {
+            height: 7px; width: 300px;
+            background: var(--bg-secondary);
+            border-radius: 9999px; overflow: hidden;
+            margin-top: 8px; margin-left: auto;
+        }
+
+        .capacity-fill {
+            height: 100%; width: 0%;
+            background: var(--brand);
+            border-radius: 9999px;
+            transition: width 0.7s cubic-bezier(.4,0,.2,1);
+        }
+
+        /* Grid section */
+        .grid-section {
+            padding: 2px 52px 32px;
+            flex: 1; display: flex; flex-direction: column; gap: 14px;
+            min-height: 0;
+        }
+
+        .grid-eyebrow {
+            display: flex; align-items: center; gap: 20px;
+            border-top: 1px solid var(--border-tertiary);
+            padding-top: 14px;
+        }
+
+        .eyebrow-label {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px; letter-spacing: .12em;
+            color: var(--fg-tertiary); text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .eyebrow-spacer { flex: 1; }
+
+        .legend { display: flex; align-items: center; gap: 9px; }
+        .legend-swatch {
+            width: 14px; height: 14px; border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .legend-swatch.available { background: var(--brand); }
+        .legend-swatch.occupied  { background: var(--bg-default); border: 1px solid var(--border-default); }
+        .legend-text { font-size: 13px; color: var(--fg-secondary); }
+
+        /* Waiting list in dashboard header */
+        .waiting-list-header {
+            display: flex; align-items: center; gap: 8px; margin-right: 16px;
+        }
+        .waiting-list-btn-small {
+            padding: 6px 14px;
+            background: #e4f0da; color: #1a2e14;
+            border: none; border-radius: 9999px;
+            font-size: 12px; font-weight: 600;
+            font-family: 'Roboto Mono', monospace;
+            cursor: pointer; white-space: nowrap; transition: opacity .2s;
+        }
+        .waiting-list-btn-small:hover { opacity: .85; }
+        .waiting-list-form-inline { display: none; align-items: center; gap: 4px; }
+        .waiting-list-form-inline.active { display: flex; }
+        .waiting-list-inputs { display: flex; flex-direction: column; gap: 4px; }
+        .waiting-list-input-small {
+            padding: 6px 10px;
+            background: var(--bg-page);
+            border: 1px solid #e4f0da;
+            border-radius: 6px; color: var(--fg-default);
+            font-size: 12px; width: 210px; display: block;
+        }
+        .waiting-list-input-small:focus { outline: none; border-color: #abff44; box-shadow: 0 0 0 3px rgba(171,255,68,.15); }
+        .waiting-list-submit-small,
+        .waiting-list-cancel-small {
+            padding: 6px 10px; border: none; border-radius: 6px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        .waiting-list-submit-small { background: var(--brand); color: var(--brand-ink); }
+        .waiting-list-cancel-small { background: var(--border-tertiary); color: var(--fg-secondary); }
+        .waiting-list-queue-small  { font-size: 11px; color: var(--fg-tertiary); white-space: nowrap; }
+        .waiting-list-queue-small strong { color: var(--accent-amber); }
+        .waiting-list-success-small { display: none; font-size: 11px; color: var(--brand); font-weight: 600; }
+        .waiting-list-success-small.show { display: block; }
+
+        /* Settings button in dashboard */
+        .btn-settings-header {
+            display: flex; align-items: center; gap: 7px;
+            padding: 8px 14px;
+            background: var(--bg-default);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 8px; color: var(--fg-secondary);
+            font-family: 'Roboto Mono', monospace; font-size: 11px;
+            letter-spacing: .1em; text-transform: uppercase;
+            cursor: pointer; transition: border-color .2s, color .2s;
+            flex-shrink: 0;
+        }
+        .btn-settings-header:hover { color: var(--brand); border-color: var(--brand); }
+        .btn-settings-header svg   { width: 14px; height: 14px; flex-shrink: 0; }
+
+        /* Desk grid */
         .desk-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 12px;
+            flex: 1;
         }
+
+        /* Desk cards */
         .desk-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px; padding: 12px;
-            transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 14px;
+            border-radius: 8px; padding: 0 18px; min-height: 74px;
+            transition: background .15s, border-color .15s;
             position: relative; overflow: hidden;
         }
-        .desk-card::before {
-            content: ''; position: absolute;
-            top: 0; left: 0; right: 0; height: 2px;
-            background: var(--accent-green);
-            transform: scaleX(0); transform-origin: left;
-            transition: transform 0.3s ease;
-        }
-        .desk-card.available::before { transform: scaleX(1); background: var(--accent-green); }
-        .desk-card.occupied::before { transform: scaleX(1); background: var(--accent-red); }
-        .desk-card:hover { background: var(--bg-card-hover); transform: translateY(-2px); }
-        .desk-row {
-            display: flex; justify-content: space-between;
-            align-items: center; gap: 8px;
-        }
-        .desk-name { font-size: var(--desk-name-size, 14px); font-weight: 600; flex-shrink: 0; }
-        .occupant-name {
-            display: var(--occupant-name-display, block);
-            font-weight: 500; font-size: var(--occupant-name-size, 11px);
-            white-space: nowrap; overflow: hidden;
-            text-overflow: ellipsis;
-            color: var(--text-primary);
-            text-align: right;
-        }
-        .available-text { color: var(--accent-green); }
 
-        /* Waiting list header styles */
-        .waiting-list-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-right: 16px;
-        }
-        .waiting-list-btn-small {
-            padding: 6px 12px;
-            background: var(--accent-amber);
-            color: var(--bg-dark);
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s ease;
-        }
-        .waiting-list-btn-small:hover {
-            opacity: 0.9;
-            transform: scale(1.02);
-        }
-        .waiting-list-form-inline {
-            display: none;
-            align-items: center;
-            gap: 4px;
-        }
-        .waiting-list-form-inline.active {
-            display: flex;
-        }
-        .waiting-list-input-small {
-            padding: 6px 10px;
-            background: var(--bg-dark);
-            border: 1px solid var(--border-subtle);
-            border-radius: 6px;
-            color: var(--text-primary);
-            font-size: 12px;
-            width: 120px;
-        }
-        .waiting-list-input-small:focus {
-            outline: none;
-            border-color: var(--accent-amber);
-        }
-        .waiting-list-submit-small,
-        .waiting-list-cancel-small {
-            padding: 6px 10px;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .waiting-list-submit-small {
-            background: var(--accent-green);
-            color: var(--bg-dark);
-        }
-        .waiting-list-cancel-small {
-            background: var(--border-subtle);
-            color: var(--text-secondary);
-        }
-        .waiting-list-queue-small {
-            font-size: 11px;
-            color: var(--text-muted);
-            white-space: nowrap;
-        }
-        .waiting-list-queue-small strong {
-            color: var(--accent-amber);
-        }
-        .waiting-list-success-small {
-            display: none;
-            font-size: 11px;
-            color: var(--accent-green);
-            font-weight: 600;
-        }
-        .waiting-list-success-small.show {
-            display: block;
+        .desk-card.available {
+            background: var(--brand);
+            box-shadow: 0 0 26px -4px rgba(171,255,68,.45);
         }
 
-        /* Waiting list management in settings */
-        .waiting-list-manage {
-            background: var(--bg-dark);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            padding: 12px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-        .waiting-list-manage-empty {
-            color: var(--text-muted);
-            font-size: 12px;
-            text-align: center;
-            padding: 8px;
-        }
-        .waiting-list-manage-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 8px;
-            border-radius: 4px;
-            margin-bottom: 4px;
-        }
-        .waiting-list-manage-item:last-child {
-            margin-bottom: 0;
-        }
-        .waiting-list-manage-item:hover {
-            background: var(--bg-card-hover);
-        }
-        .waiting-list-manage-name {
-            font-size: 13px;
-            color: var(--text-primary);
-        }
-        .waiting-list-manage-time {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-left: 8px;
-        }
-        .waiting-list-manage-remove {
-            background: transparent;
-            border: 1px solid var(--accent-red);
-            color: var(--accent-red);
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-        .waiting-list-manage-remove:hover {
-            opacity: 1;
-            background: var(--accent-red);
-            color: var(--bg-dark);
+        .desk-card.occupied {
+            background: var(--bg-default);
+            border: 1px solid var(--border-tertiary);
         }
 
-        /* Nicknames management */
-        .nickname-add-form {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
+        .desk-id {
+            font-family: 'Roboto Mono', monospace;
+            font-size: var(--text-size-id, 31px); line-height: 1;
+            min-width: 42px; flex-shrink: 0;
         }
-        .nickname-input {
-            flex: 1;
-            padding: 8px 12px;
-            font-size: 13px;
+
+        .desk-card.available .desk-id  { font-weight: 600; color: var(--brand-ink); }
+        .desk-card.occupied  .desk-id  { font-weight: 500; color: var(--fg-tertiary); }
+
+        .desk-occupant {
+            font-size: var(--text-size-occupant, 19px); font-weight: 500;
+            color: var(--fg-default);
+            flex: 1; min-width: 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .btn-add-nickname {
-            padding: 8px 16px;
-            background: var(--accent-green);
-            color: var(--bg-dark);
-            border: none;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
+
+        .desk-card.available .desk-available-label {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 900; font-size: var(--text-size-label, 21px);
+            text-transform: uppercase; letter-spacing: .01em;
+            color: var(--brand-ink);
         }
-        .btn-add-nickname:hover {
-            opacity: 0.9;
-        }
-        .nicknames-list {
-            background: var(--bg-dark);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            padding: 12px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-        .nicknames-list-empty {
-            color: var(--text-muted);
-            font-size: 12px;
-            text-align: center;
-            padding: 8px;
-        }
-        .nickname-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 8px;
-            border-radius: 4px;
-            margin-bottom: 4px;
-        }
-        .nickname-item:last-child {
-            margin-bottom: 0;
-        }
-        .nickname-item:hover {
-            background: var(--bg-card-hover);
-        }
-        .nickname-item-names {
-            font-size: 13px;
-        }
-        .nickname-item-full {
-            color: var(--text-secondary);
-        }
-        .nickname-item-arrow {
-            color: var(--text-muted);
-            margin: 0 8px;
-        }
-        .nickname-item-nick {
-            color: var(--accent-green);
-            font-weight: 600;
-        }
-        .nickname-item-remove {
-            background: transparent;
-            border: 1px solid var(--accent-red);
-            color: var(--accent-red);
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-        .nickname-item-remove:hover {
-            opacity: 1;
-            background: var(--accent-red);
-            color: var(--bg-dark);
-        }
-        .btn-settings-header {
-            width: 44px; height: 44px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px; color: var(--text-secondary);
-            cursor: pointer; transition: all 0.3s ease;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-        .btn-settings-header:hover {
-            background: var(--bg-card-hover);
-            color: var(--accent-green);
-            border-color: var(--accent-green);
-        }
-        .btn-settings-header svg { width: 20px; height: 20px; }
+
+        /* Utilities */
         .hidden { display: none !important; }
-        .section-title {
-            font-size: 11px; font-weight: 600;
-            color: var(--text-muted); text-transform: uppercase;
-            letter-spacing: 2px; margin-bottom: 12px;
-            display: flex; align-items: center; gap: 12px;
-        }
-        .section-title::after {
-            content: ''; flex: 1; height: 1px;
-            background: var(--border-subtle);
-        }
-        .refresh-divider {
-            color: var(--text-muted);
-            margin: 0 4px;
-        }
     </style>
 </head>
 <body>
-    <div class="bg-pattern"></div>
-    <div class="grid-overlay"></div>
 
+    <!-- ── Config screen ─────────────────────────────────────────── -->
     <div class="config-screen" id="configScreen">
         <div class="config-card">
-            <div class="logo">● EDEN</div>
+            <img src="Optimizely_Primary-Logo_Medium_Green_RGB.svg" alt="Optimizely" class="config-logo">
             <h1 class="config-title">Desk Availability</h1>
             <p class="config-subtitle">Configure your office display settings</p>
             <div class="error-message" id="errorMessage"></div>
-            
+
             <div class="settings-columns">
                 <div class="settings-column">
                     <div class="form-group">
@@ -620,7 +502,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Dashboard Title (optional)</label>
-                        <input type="text" class="form-input" id="dashboardTitle" placeholder="Override location name" style="font-family: 'DM Sans', sans-serif;">
+                        <input type="text" class="form-input" id="dashboardTitle" placeholder="Override location name" style="font-family:'Roboto',sans-serif;">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Auto-Refresh Interval</label>
@@ -631,23 +513,15 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Theme</label>
-                        <select class="form-select" id="themeMode">
-                            <option value="dark" selected>Dark Mode</option>
-                            <option value="light">Light Mode</option>
+                        <label class="form-label">Text Size</label>
+                        <select class="form-select" id="textSize">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Desk Name Size: <span id="deskNameSizeValue">43px</span></label>
-                        <input type="range" class="form-range" id="deskNameSize" min="10" max="50" value="43">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Occupant Name Size: <span id="occupantNameSizeValue">22px</span></label>
-                        <input type="range" class="form-range" id="occupantNameSize" min="0" max="30" value="22">
-                        <p class="form-caption">Set to 0 to hide occupant names</p>
-                    </div>
                 </div>
-                
+
                 <div class="settings-column">
                     <div class="form-group">
                         <label class="form-label">Card Width</label>
@@ -674,16 +548,7 @@
                             <option value="15">Hide names over 15 characters</option>
                             <option value="20">Hide names over 20 characters</option>
                         </select>
-                        <p class="form-caption">This hides any desks with names over the selected number of characters</p>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Waiting List</label>
-                        <select class="form-select" id="showWaitingList">
-                            <option value="off" selected>Hide waiting list</option>
-                            <option value="auto">Show when no desks available</option>
-                            <option value="always">Always show waiting list</option>
-                        </select>
-                        <p class="form-caption">Shows a button to join the waiting list when no desks are available</p>
+                        <p class="form-caption">Hides desks with names over the selected number of characters</p>
                     </div>
                     <div class="form-group">
                         <label class="form-label">API Issue Message</label>
@@ -693,7 +558,19 @@
                         </select>
                         <p class="form-caption">Displays a maintenance message instead of showing all desks as available</p>
                     </div>
-                    <div class="form-group" id="waitingListManagement" style="display: none;">
+                </div>
+
+                <div class="settings-column">
+                    <div class="form-group">
+                        <label class="form-label">Waiting List</label>
+                        <select class="form-select" id="showWaitingList">
+                            <option value="off" selected>Hide waiting list</option>
+                            <option value="auto">Show when no desks available</option>
+                            <option value="always">Always show waiting list</option>
+                        </select>
+                        <p class="form-caption">Shows a button to join the waiting list when no desks are available</p>
+                    </div>
+                    <div class="form-group" id="waitingListManagement" style="display:none;">
                         <label class="form-label">Manage Waiting List</label>
                         <div class="waiting-list-manage" id="waitingListManageContainer">
                             <p class="form-caption">Loading...</p>
@@ -712,52 +589,74 @@
                     </div>
                 </div>
             </div>
-            
+
             <button class="btn-primary" id="startBtn" disabled>Launch Display</button>
         </div>
     </div>
 
+    <!-- ── Dashboard ──────────────────────────────────────────────── -->
     <div class="dashboard" id="dashboard">
+
         <header class="dashboard-header">
-            <div class="location-info">
-                <div class="location-badge">
-                    <span class="dot"></span>
-                    <span>Live</span>
-                    <span class="refresh-divider">•</span>
-                    <span id="nextRefresh">Refreshing...</span>
+            <!-- Left: logo + divider + location text -->
+            <div class="header-left">
+                <img src="Optimizely_Primary-Logo_Medium_Green_RGB.svg" alt="Optimizely" class="header-logo">
+                <span class="header-divider"></span>
+                <div class="header-text">
+                    <div class="header-eyebrow" id="headerEyebrow">WORKPLACE</div>
+                    <h1 class="header-title" id="locationName">Loading…</h1>
                 </div>
-                <h1 class="location-name" id="locationName">Loading...</h1>
-                <p class="last-updated">Last updated: <span id="lastUpdated">--:--</span></p>
             </div>
-            <div class="stats-row">
-                <div class="waiting-list-header" id="waitingListContainer" style="display: none;">
-                    <button class="waiting-list-btn-small" id="joinWaitingListBtn">+ Join Waitlist</button>
+
+            <!-- Right: waiting list + live pill + stat block -->
+            <div class="header-right">
+                <!-- Waiting list -->
+                <div class="waiting-list-header" id="waitingListContainer" style="display:none;">
+                    <button class="waiting-list-btn-small" id="joinWaitingListBtn">Join Waitlist</button>
                     <div class="waiting-list-form-inline" id="waitingListForm">
-                        <input type="text" class="waiting-list-input-small" id="waitingListName" placeholder="Your name">
+                        <div class="waiting-list-inputs">
+                            <input type="text" class="waiting-list-input-small" id="waitingListName" placeholder="Your name">
+                            <input type="email" class="waiting-list-input-small" id="waitingListEmail" placeholder="Email (optional)">
+                            <input type="date" class="waiting-list-input-small" id="waitingListDate">
+                        </div>
                         <button class="waiting-list-submit-small" id="waitingListSubmit">✓</button>
                         <button class="waiting-list-cancel-small" id="waitingListCancel">✕</button>
                     </div>
                     <div class="waiting-list-queue-small" id="waitingListQueue"></div>
                     <div class="waiting-list-success-small" id="waitingListSuccess">Added!</div>
                 </div>
-                <div class="capacity-bar-container">
-                    <div class="capacity-bar">
-                        <div class="capacity-bar-fill" id="capacityBarFill"></div>
-                    </div>
-                    <div class="capacity-text">
-                        <span id="occupiedCount">0</span>/<span id="totalCount">0</span> desks
+
+                <!-- Stat block -->
+                <div class="stat-block">
+                    <div class="stat-big-row">
+                        <span class="stat-value" id="statValue">0</span>
+                        <span class="stat-label" id="statLabel">FREE</span>
                     </div>
                 </div>
-                <button class="btn-settings-header" id="settingsBtn" title="Settings">
+
+                <!-- Refresh + Live pill + Settings stacked -->
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+                    <span id="nextRefresh" style="font-family:'Roboto Mono',monospace;font-size:11px;color:var(--fg-tertiary);letter-spacing:.08em;"></span>
+                    <div class="live-pill">
+                        <span class="live-dot"></span>
+                        <span class="live-label">LIVE · <span id="lastUpdated">--:--</span></span>
+                    </div>
+                    <button class="btn-settings-header" id="settingsBtn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"/>
                         <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
                     </svg>
+                    Settings
                 </button>
+                </div>
             </div>
         </header>
-        <div class="section-title">All Desks</div>
-        <div class="desk-grid" id="deskGrid"></div>
+
+        <!-- Grid section -->
+        <div class="grid-section">
+            <div class="desk-grid" id="deskGrid"></div>
+        </div>
+
     </div>
 
     <script>
@@ -767,16 +666,14 @@
             locationName: localStorage.getItem('eden_location_name') || '',
             dashboardTitle: localStorage.getItem('eden_dashboard_title') || '',
             refreshInterval: parseInt(localStorage.getItem('eden_refresh_interval')) || 120,
-            deskNameSize: parseInt(localStorage.getItem('eden_desk_name_size')) || 43,
-            occupantNameSize: parseInt(localStorage.getItem('eden_occupant_name_size')) || 22,
+            textSize: localStorage.getItem('eden_text_size') || 'medium',
             cardWidth: localStorage.getItem('eden_card_width') || 'medium',
             showMode: localStorage.getItem('eden_show_mode') || 'all',
             hideNonDesks: parseInt(localStorage.getItem('eden_hide_non_desks')) || 0,
-            themeMode: localStorage.getItem('eden_theme_mode') || 'dark',
             showWaitingList: localStorage.getItem('eden_show_waiting_list') || 'off',
             showApiIssueMessage: localStorage.getItem('eden_show_api_issue_message') === 'true',
             locations: [], desks: [], reservations: [],
-            refreshTimer: null, countdownTimer: null, nextRefreshTime: null
+            refreshTimer: null, countdownTimer: null, waitingListTimer: null, nextRefreshTime: null
         };
 
         const $ = id => document.getElementById(id);
@@ -784,20 +681,23 @@
         const apiTokenInput = $('apiToken'), locationSelect = $('locationSelect');
         const dashboardTitleInput = $('dashboardTitle');
         const refreshIntervalSelect = $('refreshInterval'), startBtn = $('startBtn');
-        const themeModeSelect = $('themeMode');
-        const deskNameSizeSlider = $('deskNameSize'), deskNameSizeValue = $('deskNameSizeValue');
-        const occupantNameSizeSlider = $('occupantNameSize'), occupantNameSizeValue = $('occupantNameSizeValue');
+        const textSizeSelect = $('textSize');
         const cardWidthSelect = $('cardWidth');
         const showModeSelect = $('showMode'), hideNonDesksSelect = $('hideNonDesks');
         const showWaitingListSelect = $('showWaitingList');
         const showApiIssueMessageSelect = $('showApiIssueMessage');
         const errorMessage = $('errorMessage'), locationNameEl = $('locationName');
         const lastUpdatedEl = $('lastUpdated');
-        const capacityBarFill = $('capacityBarFill');
-        const occupiedCountEl = $('occupiedCount'), totalCountEl = $('totalCount');
+        const statValueEl = $('statValue'), statLabelEl = $('statLabel');
         const deskGrid = $('deskGrid');
         const settingsBtn = $('settingsBtn');
         const nextRefreshEl = $('nextRefresh');
+        nextRefreshEl.style.cursor = 'pointer';
+        nextRefreshEl.addEventListener('click', async () => {
+            await refreshData();
+            await updateWaitingListQueue();
+            startAutoRefresh();
+        });
 
         const API_BASE = '/api';
 
@@ -820,13 +720,11 @@
         async function fetchDesks(locationId) {
             try {
                 const data = await apiRequest(`/locations?type=desks&parent_id=${locationId}`);
-                if (data.message === "No items found") {
-                    return [];
-                }
+                if (data.message === "No items found") return [];
                 return Array.isArray(data) ? data : [];
-            } catch (e) { 
-                console.error('Error fetching desks - will preserve existing data:', e); 
-                return null; // Return null to indicate error
+            } catch (e) {
+                console.error('Error fetching desks - will preserve existing data:', e);
+                return null;
             }
         }
 
@@ -834,56 +732,36 @@
             const today = new Date().toISOString().split('T')[0];
             let allReservations = [];
             let page = 1;
-            
             try {
-                // Fetch all pages of reservations
                 while (true) {
                     const data = await apiRequest(`/cola_reservations?date=${today}&page=${page}`);
-                    console.log(`Reservations page ${page}:`, data);
-                    
-                    if (data.message === "No items found") {
-                        break;
-                    }
-                    
-                    if (!Array.isArray(data) || data.length === 0) {
-                        break;
-                    }
-                    
+                    if (data.message === "No items found") break;
+                    if (!Array.isArray(data) || data.length === 0) break;
                     allReservations = allReservations.concat(data);
-                    
-                    // If we got less than 25, we've reached the last page
                     if (data.length < 25) break;
                     page++;
-                    
-                    // Safety limit
                     if (page > 50) break;
                 }
-                
-                console.log(`Total reservations fetched: ${allReservations.length}`);
                 return allReservations;
-            } catch (e) { 
-                console.error('Error fetching reservations - will preserve existing data:', e); 
-                return null; // Return null to indicate error
+            } catch (e) {
+                console.error('Error fetching reservations - will preserve existing data:', e);
+                return null;
             }
         }
 
         function showError(msg) { errorMessage.textContent = msg; errorMessage.style.display = 'block'; }
-        function hideError() { errorMessage.style.display = 'none'; }
+        function hideError()    { errorMessage.style.display = 'none'; }
 
         async function loadLocations() {
             state.apiToken = apiTokenInput.value.trim();
             if (!state.apiToken || state.apiToken.length < 10) return;
-
             locationSelect.innerHTML = '<option value="">Loading...</option>';
             hideError();
-
             try {
                 const locations = await fetchLocations();
-
                 state.locations = locations;
                 const locs = state.locations.filter(l => ['floor','address','room','building'].includes(l.location_type?.toLowerCase()));
                 const show = locs.length ? locs : state.locations;
-                
                 if (!show.length) {
                     locationSelect.innerHTML = '<option value="">No locations found</option>';
                 } else {
@@ -894,10 +772,7 @@
                         opt.textContent = l.title + (l.location_type ? ` (${l.location_type})` : '');
                         locationSelect.appendChild(opt);
                     });
-                    // Pre-select if we have a saved location
-                    if (state.locationId) {
-                        locationSelect.value = state.locationId;
-                    }
+                    if (state.locationId) locationSelect.value = state.locationId;
                 }
             } catch (e) {
                 showError(e.message);
@@ -912,27 +787,10 @@
             updateStartButton();
         });
 
-        deskNameSizeSlider.addEventListener('input', () => {
-            state.deskNameSize = parseInt(deskNameSizeSlider.value);
-            deskNameSizeValue.textContent = state.deskNameSize + 'px';
-        });
-
-        occupantNameSizeSlider.addEventListener('input', () => {
-            state.occupantNameSize = parseInt(occupantNameSizeSlider.value);
-            occupantNameSizeValue.textContent = state.occupantNameSize === 0 ? 'Hidden' : state.occupantNameSize + 'px';
-        });
-
-        refreshIntervalSelect.addEventListener('change', () => {
-            state.refreshInterval = parseInt(refreshIntervalSelect.value);
-        });
-
-        cardWidthSelect.addEventListener('change', () => {
-            state.cardWidth = cardWidthSelect.value;
-        });
-
-        showModeSelect.addEventListener('change', () => {
-            state.showMode = showModeSelect.value;
-        });
+        textSizeSelect.addEventListener('change', () => { state.textSize = textSizeSelect.value; });
+        refreshIntervalSelect.addEventListener('change', () => { state.refreshInterval = parseInt(refreshIntervalSelect.value); });
+        cardWidthSelect.addEventListener('change',       () => { state.cardWidth = cardWidthSelect.value; });
+        showModeSelect.addEventListener('change',        () => { state.showMode = showModeSelect.value; });
 
         showWaitingListSelect.addEventListener('change', () => {
             state.showWaitingList = showWaitingListSelect.value;
@@ -943,10 +801,8 @@
         showApiIssueMessageSelect.addEventListener('change', () => {
             state.showApiIssueMessage = showApiIssueMessageSelect.value === 'true';
             localStorage.setItem('eden_show_api_issue_message', state.showApiIssueMessage);
-            console.log('API Issue Message setting changed to:', state.showApiIssueMessage);
         });
 
-        // Nickname add button
         $('addNicknameBtn').addEventListener('click', async () => {
             const fullName = $('nicknameFullName').value.trim();
             const nickname = $('nicknameNickname').value.trim();
@@ -958,7 +814,6 @@
             }
         });
 
-        // Waiting list event listeners
         $('joinWaitingListBtn').addEventListener('click', () => {
             $('waitingListForm').classList.add('active');
             $('joinWaitingListBtn').style.display = 'none';
@@ -975,395 +830,286 @@
 
         $('waitingListSubmit').addEventListener('click', async () => {
             const name = $('waitingListName').value.trim();
+            const email = $('waitingListEmail').value.trim();
+            const date = $('waitingListDate').value;
             if (name) {
-                const success = await addToWaitingList(name);
+                const success = await addToWaitingList(name, email, date);
                 if (success) {
                     $('waitingListName').value = '';
+                    $('waitingListEmail').value = '';
+                    $('waitingListDate').value = '';
                     $('waitingListForm').classList.remove('active');
-                    $('waitingListSuccess').classList.add('show');
+                    $('joinWaitingListBtn').style.display = 'inline-block';
+                    $('waitingListQueue').style.display = 'block';
                     await updateWaitingListQueue();
-                    setTimeout(() => {
-                        $('waitingListSuccess').classList.remove('show');
-                        $('joinWaitingListBtn').style.display = 'inline-block';
-                        $('waitingListQueue').style.display = 'block';
-                    }, 2000);
                 }
             }
         });
 
-        $('waitingListName').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                $('waitingListSubmit').click();
-            }
-        });
+        $('waitingListName').addEventListener('keypress', e => { if (e.key === 'Enter') $('waitingListSubmit').click(); });
 
         function updateStartButton() { startBtn.disabled = !state.apiToken || !state.locationId; }
 
         function applyDisplaySettings() {
-            // Card width settings
             const widthMap = { small: '140px', medium: '200px', large: '280px' };
             deskGrid.style.gridTemplateColumns = `repeat(auto-fill, minmax(${widthMap[state.cardWidth]}, 1fr))`;
-            
-            // Apply font sizes via CSS custom properties
-            document.documentElement.style.setProperty('--desk-name-size', state.deskNameSize + 'px');
-            if (state.occupantNameSize === 0) {
-                document.documentElement.style.setProperty('--occupant-name-display', 'none');
-                document.documentElement.style.setProperty('--occupant-name-size', '0px');
-            } else {
-                document.documentElement.style.setProperty('--occupant-name-display', 'block');
-                document.documentElement.style.setProperty('--occupant-name-size', state.occupantNameSize + 'px');
-            }
-            
-            // Apply theme
-            if (state.themeMode === 'light') {
-                document.body.classList.add('light-mode');
-            } else {
-                document.body.classList.remove('light-mode');
-            }
+            const textMap = {
+                small:  { id: '22px', occupant: '14px', label: '15px' },
+                medium: { id: '31px', occupant: '19px', label: '21px' },
+                large:  { id: '42px', occupant: '26px', label: '28px' },
+            };
+            const t = textMap[state.textSize] || textMap.medium;
+            document.documentElement.style.setProperty('--text-size-id',      t.id);
+            document.documentElement.style.setProperty('--text-size-occupant', t.occupant);
+            document.documentElement.style.setProperty('--text-size-label',   t.label);
         }
 
-        // Waiting list functions (using Cloudflare KV)
+        /* Waiting list (Cloudflare KV) */
         async function getWaitingList() {
             try {
-                const response = await fetch(`/waitinglist/get?locationId=${encodeURIComponent(state.locationId)}`);
-                const result = await response.json();
-                return result.list || [];
-            } catch (e) {
-                console.log('Failed to get waiting list:', e.message);
-                return [];
-            }
+                const r = await fetch(`/waitinglist/get?locationId=${encodeURIComponent(state.locationId)}`);
+                return (await r.json()).list || [];
+            } catch (e) { return []; }
         }
 
-        async function addToWaitingList(name) {
+        async function addToWaitingList(name, email, date) {
             try {
-                const response = await fetch('/waitinglist/add', {
+                const r = await fetch('/waitinglist/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ locationId: state.locationId, name })
+                    body: JSON.stringify({ locationId: state.locationId, name, email, desired_date: date || null })
                 });
-                const result = await response.json();
-                return result.success;
-            } catch (e) {
-                console.log('Failed to add to waiting list:', e.message);
-                return false;
-            }
+                return (await r.json()).success;
+            } catch (e) { return false; }
+        }
+
+        function notifyWaitingList(locationName, deskName) {
+            fetch('/waitinglist/notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ locationId: state.locationId, locationName, deskName, today: todayDate() })
+            }).catch(() => {});
         }
 
         async function removeFromWaitingList(name) {
             try {
-                const response = await fetch('/waitinglist/remove', {
+                const r = await fetch('/waitinglist/remove', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ locationId: state.locationId, name })
                 });
-                const result = await response.json();
-                return result.success;
-            } catch (e) {
-                console.log('Failed to remove from waiting list:', e.message);
-                return false;
-            }
+                return (await r.json()).success;
+            } catch (e) { return false; }
+        }
+
+        function todayDate() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function isForToday(entry) {
+            return !entry.desired_date || entry.desired_date === todayDate();
         }
 
         async function updateWaitingListQueue() {
             const queueEl = $('waitingListQueue');
-            const list = await getWaitingList();
+            const list = (await getWaitingList()).filter(isForToday);
             if (list.length > 0) {
-                queueEl.innerHTML = `<strong>${list.length}</strong> ${list.length === 1 ? 'person' : 'people'} waiting: ${list.map(e => e.name).join(', ')}`;
+                const top = list.slice(0, 3);
+                const extra = list.length - top.length;
+                queueEl.innerHTML = top.map(e => `<div style="font-size:12px;color:var(--fg-secondary);line-height:1.5;">${esc(e.name)}</div>`).join('')
+                    + (extra > 0 ? `<div style="font-size:11px;color:var(--fg-tertiary);">+${extra} more</div>` : '');
             } else {
-                queueEl.innerHTML = 'No one currently waiting';
+                queueEl.innerHTML = '';
             }
         }
 
         async function checkAndRemoveBookedFromWaitingList(deskRes) {
-            // Get current waiting list
-            const waitingList = await getWaitingList();
+            const today = todayDate();
+            const waitingList = (await getWaitingList()).filter(e => e.desired_date === today);
             if (waitingList.length === 0) return;
-            
-            // Get all names from current reservations
             const bookedNames = new Set();
-            deskRes.forEach(reservation => {
-                if (reservation.owner?.name) {
-                    bookedNames.add(reservation.owner.name.toLowerCase().trim());
-                }
-            });
-            
-            // Check each waiting list entry against booked names
+            deskRes.forEach(r => { if (r.owner?.name) bookedNames.add(r.owner.name.toLowerCase().trim()); });
             for (const entry of waitingList) {
-                const entryName = entry.name.toLowerCase().trim();
-                // Also check first name only match
-                const firstName = entryName.split(' ')[0];
-                
-                for (const bookedName of bookedNames) {
-                    const bookedFirstName = bookedName.split(' ')[0];
-                    if (entryName === bookedName || firstName === bookedFirstName) {
-                        console.log(`Removing ${entry.name} from waiting list - they booked a desk`);
-                        await removeFromWaitingList(entry.name);
-                        break;
-                    }
+                const en = entry.name.toLowerCase().trim();
+                for (const bn of bookedNames) {
+                    if (en === bn) { await removeFromWaitingList(entry.name); break; }
                 }
             }
         }
 
-        // Nickname functions
+        /* Nicknames */
         let nicknamesMap = {};
 
         async function loadNicknames() {
             try {
-                const response = await fetch('/nicknames/get');
-                const result = await response.json();
-                if (result.nicknames) {
-                    nicknamesMap = result.nicknames;
-                    console.log('Loaded nicknames:', Object.keys(nicknamesMap).length);
-                }
+                const r = await fetch('/nicknames/get');
+                const result = await r.json();
+                if (result.nicknames) nicknamesMap = result.nicknames;
                 return result.list || [];
-            } catch (e) {
-                console.log('Failed to load nicknames:', e.message);
-                return [];
-            }
+            } catch (e) { return []; }
         }
 
         async function setNickname(fullName, nickname) {
             try {
-                const response = await fetch('/nicknames/set', {
+                const r = await fetch('/nicknames/set', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ fullName, nickname })
                 });
-                const result = await response.json();
-                if (result.success) {
-                    nicknamesMap[fullName.toLowerCase()] = nickname;
-                }
+                const result = await r.json();
+                if (result.success) nicknamesMap[fullName.toLowerCase()] = nickname;
                 return result.success;
-            } catch (e) {
-                console.log('Failed to set nickname:', e.message);
-                return false;
-            }
+            } catch (e) { return false; }
         }
 
         async function deleteNickname(fullName) {
             try {
-                const response = await fetch('/nicknames/delete', {
+                const r = await fetch('/nicknames/delete', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ fullName })
                 });
-                const result = await response.json();
-                if (result.success) {
-                    delete nicknamesMap[fullName.toLowerCase()];
-                }
+                const result = await r.json();
+                if (result.success) delete nicknamesMap[fullName.toLowerCase()];
                 return result.success;
-            } catch (e) {
-                console.log('Failed to delete nickname:', e.message);
-                return false;
-            }
+            } catch (e) { return false; }
         }
 
         function getDisplayName(fullName) {
             if (!fullName) return 'Unknown';
-            const nickname = nicknamesMap[fullName.toLowerCase()];
-            return nickname || fullName;
+            return nicknamesMap[fullName.toLowerCase()] || fullName;
         }
 
         async function renderWaitingListManagement() {
             const container = $('waitingListManageContainer');
-            const managementSection = $('waitingListManagement');
-            
-            // Only show if waiting list is enabled and we have a location
-            if (state.showWaitingList === 'off' || !state.locationId) {
-                managementSection.style.display = 'none';
-                return;
-            }
-            
-            managementSection.style.display = 'block';
+            const section   = $('waitingListManagement');
+            if (state.showWaitingList === 'off' || !state.locationId) { section.style.display = 'none'; return; }
+            section.style.display = 'block';
             container.innerHTML = '<p class="form-caption">Loading...</p>';
-            
             const list = await getWaitingList();
-            
-            if (list.length === 0) {
-                container.innerHTML = '<p class="waiting-list-manage-empty">No one on the waiting list</p>';
-                return;
-            }
-            
-            container.innerHTML = list.map(entry => {
-                const timeAgo = formatTimeAgo(entry.timestamp);
-                return `
-                    <div class="waiting-list-manage-item">
-                        <div>
-                            <span class="waiting-list-manage-name">${esc(entry.name)}</span>
-                            <span class="waiting-list-manage-time">${timeAgo}</span>
-                        </div>
-                        <button class="waiting-list-manage-remove" data-name="${esc(entry.name)}">Remove</button>
+            if (list.length === 0) { container.innerHTML = '<p class="waiting-list-manage-empty">No one on the waiting list</p>'; return; }
+            container.innerHTML = list.map(entry => `
+                <div class="waiting-list-manage-item">
+                    <div>
+                        <span class="waiting-list-manage-name">${esc(entry.name)}</span>
+                        <span class="waiting-list-manage-time">${entry.desired_date || 'Any day'} · ${formatTimeAgo(entry.timestamp)}</span>
                     </div>
-                `;
-            }).join('');
-            
-            // Add click handlers for remove buttons
+                    <button class="waiting-list-manage-remove" data-name="${esc(entry.name)}">Remove</button>
+                </div>`).join('');
             container.querySelectorAll('.waiting-list-manage-remove').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const name = e.target.dataset.name;
-                    await removeFromWaitingList(name);
+                btn.addEventListener('click', async e => {
+                    await removeFromWaitingList(e.target.dataset.name);
                     renderWaitingListManagement();
                 });
             });
         }
 
-        function formatTimeAgo(timestamp) {
-            const seconds = Math.floor((Date.now() - timestamp) / 1000);
-            if (seconds < 60) return 'just now';
-            const minutes = Math.floor(seconds / 60);
-            if (minutes < 60) return `${minutes}m ago`;
-            const hours = Math.floor(minutes / 60);
-            return `${hours}h ago`;
+        function formatTimeAgo(ts) {
+            const s = Math.floor((Date.now() - ts) / 1000);
+            if (s < 60) return 'just now';
+            const m = Math.floor(s / 60);
+            if (m < 60) return `${m}m ago`;
+            return `${Math.floor(m / 60)}h ago`;
         }
 
         async function renderNicknamesList() {
             const container = $('nicknamesListContainer');
             container.innerHTML = '<p class="form-caption">Loading...</p>';
-            
             const list = await loadNicknames();
-            
-            if (list.length === 0) {
-                container.innerHTML = '<p class="nicknames-list-empty">No nicknames configured</p>';
-                return;
-            }
-            
-            container.innerHTML = list.map(entry => `
+            if (list.length === 0) { container.innerHTML = '<p class="nicknames-list-empty">No nicknames configured</p>'; return; }
+            container.innerHTML = list.map(e => `
                 <div class="nickname-item">
                     <div class="nickname-item-names">
-                        <span class="nickname-item-full">${esc(entry.full_name)}</span>
+                        <span class="nickname-item-full">${esc(e.full_name)}</span>
                         <span class="nickname-item-arrow">→</span>
-                        <span class="nickname-item-nick">${esc(entry.nickname)}</span>
+                        <span class="nickname-item-nick">${esc(e.nickname)}</span>
                     </div>
-                    <button class="nickname-item-remove" data-name="${esc(entry.full_name)}">Remove</button>
-                </div>
-            `).join('');
-            
-            // Add click handlers for remove buttons
+                    <button class="nickname-item-remove" data-name="${esc(e.full_name)}">Remove</button>
+                </div>`).join('');
             container.querySelectorAll('.nickname-item-remove').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const name = e.target.dataset.name;
-                    await deleteNickname(name);
+                btn.addEventListener('click', async e => {
+                    await deleteNickname(e.target.dataset.name);
                     renderNicknamesList();
                 });
             });
         }
 
         startBtn.addEventListener('click', async () => {
-            // Read current values from form elements
-            state.apiToken = apiTokenInput.value.trim();
-            state.locationId = locationSelect.value;
-            state.locationName = locationSelect.options[locationSelect.selectedIndex]?.textContent || '';
-            state.dashboardTitle = dashboardTitleInput.value.trim();
-            state.refreshInterval = parseInt(refreshIntervalSelect.value);
-            state.themeMode = themeModeSelect.value;
-            state.deskNameSize = parseInt(deskNameSizeSlider.value);
-            state.occupantNameSize = parseInt(occupantNameSizeSlider.value);
-            state.cardWidth = cardWidthSelect.value;
-            state.showMode = showModeSelect.value;
-            state.hideNonDesks = parseInt(hideNonDesksSelect.value);
-            state.showWaitingList = showWaitingListSelect.value;
+            state.apiToken          = apiTokenInput.value.trim();
+            state.locationId        = locationSelect.value;
+            state.locationName      = locationSelect.options[locationSelect.selectedIndex]?.textContent || '';
+            state.dashboardTitle    = dashboardTitleInput.value.trim();
+            state.refreshInterval   = parseInt(refreshIntervalSelect.value);
+            state.textSize          = textSizeSelect.value;
+            state.cardWidth         = cardWidthSelect.value;
+            state.showMode          = showModeSelect.value;
+            state.hideNonDesks      = parseInt(hideNonDesksSelect.value);
+            state.showWaitingList   = showWaitingListSelect.value;
             state.showApiIssueMessage = showApiIssueMessageSelect.value === 'true';
-            
-            console.log('Launch clicked - state.showMode:', state.showMode);
-            
-            localStorage.setItem('eden_api_token', state.apiToken);
-            localStorage.setItem('eden_location_id', state.locationId);
-            localStorage.setItem('eden_location_name', state.locationName);
-            localStorage.setItem('eden_dashboard_title', state.dashboardTitle);
+
+            localStorage.setItem('eden_api_token',            state.apiToken);
+            localStorage.setItem('eden_location_id',          state.locationId);
+            localStorage.setItem('eden_location_name',        state.locationName);
+            localStorage.setItem('eden_dashboard_title',      state.dashboardTitle);
             localStorage.setItem('eden_refresh_interval', state.refreshInterval);
-            localStorage.setItem('eden_theme_mode', state.themeMode);
-            localStorage.setItem('eden_desk_name_size', state.deskNameSize);
-            localStorage.setItem('eden_occupant_name_size', state.occupantNameSize);
-            localStorage.setItem('eden_card_width', state.cardWidth);
-            localStorage.setItem('eden_show_mode', state.showMode);
-            localStorage.setItem('eden_hide_non_desks', state.hideNonDesks);
-            localStorage.setItem('eden_show_waiting_list', state.showWaitingList);
+            localStorage.setItem('eden_text_size',        state.textSize);
+            localStorage.setItem('eden_card_width',       state.cardWidth);
+            localStorage.setItem('eden_show_mode',            state.showMode);
+            localStorage.setItem('eden_hide_non_desks',       state.hideNonDesks);
+            localStorage.setItem('eden_show_waiting_list',    state.showWaitingList);
             localStorage.setItem('eden_show_api_issue_message', state.showApiIssueMessage);
-            
-            // Update URL with all parameters
+
             const url = new URL(window.location);
             url.searchParams.set('location', state.locationId);
             url.searchParams.set('name', state.locationName);
-            url.searchParams.set('theme', state.themeMode);
-            url.searchParams.set('deskNameSize', state.deskNameSize);
-            url.searchParams.set('occupantNameSize', state.occupantNameSize);
+            url.searchParams.set('textSize', state.textSize);
             url.searchParams.set('cardWidth', state.cardWidth);
             url.searchParams.set('showMode', state.showMode);
-            if (state.hideNonDesks > 0) {
-                url.searchParams.set('hideNonDesks', state.hideNonDesks);
-            } else {
-                url.searchParams.delete('hideNonDesks');
-            }
-            if (state.showWaitingList !== 'off') {
-                url.searchParams.set('waitingList', state.showWaitingList);
-            } else {
-                url.searchParams.delete('waitingList');
-            }
-            if (state.showApiIssueMessage) {
-                url.searchParams.set('apiIssue', 'true');
-            } else {
-                url.searchParams.delete('apiIssue');
-            }
-            if (state.dashboardTitle) {
-                url.searchParams.set('title', state.dashboardTitle);
-            } else {
-                url.searchParams.delete('title');
-            }
+            state.hideNonDesks > 0 ? url.searchParams.set('hideNonDesks', state.hideNonDesks) : url.searchParams.delete('hideNonDesks');
+            state.showWaitingList !== 'off' ? url.searchParams.set('waitingList', state.showWaitingList) : url.searchParams.delete('waitingList');
+            state.showApiIssueMessage ? url.searchParams.set('apiIssue', 'true') : url.searchParams.delete('apiIssue');
+            state.dashboardTitle ? url.searchParams.set('title', state.dashboardTitle) : url.searchParams.delete('title');
             window.history.replaceState({}, '', url);
-            
+
             configScreen.classList.add('hidden');
-            dashboard.style.display = 'block';
-            locationNameEl.textContent = state.dashboardTitle || state.locationName;
+            dashboard.style.display = 'flex';
+            setHeaderLocation();
             applyDisplaySettings();
-            
-            // Check if location changed - compare with previously loaded data
-            const locationChanged = state.desks.length > 0 && 
-                state.desks[0]?.parent_id !== state.locationId;
-            
-            // If location changed, clear old data and fetch new
-            if (locationChanged) {
-                state.desks = [];
-                state.reservations = [];
-            }
-            
-            // If we already have data for this location, just re-render with new settings
-            if (state.desks.length > 0) {
-                await loadNicknames();
-                renderDashboard();
-                startAutoRefresh();
-            } else {
-                // Load nicknames first
-                await loadNicknames();
-                await refreshData();
-                startAutoRefresh();
-            }
+
+            const locationChanged = state.desks.length > 0 && state.desks[0]?.parent_id !== state.locationId;
+            if (locationChanged) { state.desks = []; state.reservations = []; }
+
+            await loadNicknames();
+            if (state.desks.length > 0) { renderDashboard(); startAutoRefresh(); }
+            else { await refreshData(); startAutoRefresh(); }
         });
 
         settingsBtn.addEventListener('click', () => {
             clearInterval(state.refreshTimer);
             clearInterval(state.countdownTimer);
+            clearInterval(state.waitingListTimer);
             dashboard.style.display = 'none';
             configScreen.classList.remove('hidden');
-            apiTokenInput.value = state.apiToken;
-            dashboardTitleInput.value = state.dashboardTitle;
-            refreshIntervalSelect.value = state.refreshInterval;
-            themeModeSelect.value = state.themeMode;
-            deskNameSizeSlider.value = state.deskNameSize;
-            deskNameSizeValue.textContent = state.deskNameSize + 'px';
-            occupantNameSizeSlider.value = state.occupantNameSize;
-            occupantNameSizeValue.textContent = state.occupantNameSize === 0 ? 'Hidden' : state.occupantNameSize + 'px';
+            apiTokenInput.value           = state.apiToken;
+            dashboardTitleInput.value     = state.dashboardTitle;
+            refreshIntervalSelect.value   = state.refreshInterval;
+            textSizeSelect.value  = state.textSize;
             cardWidthSelect.value = state.cardWidth;
-            showModeSelect.value = state.showMode;
-            hideNonDesksSelect.value = state.hideNonDesks;
-            showWaitingListSelect.value = state.showWaitingList;
+            showModeSelect.value          = state.showMode;
+            hideNonDesksSelect.value      = state.hideNonDesks;
+            showWaitingListSelect.value   = state.showWaitingList;
             showApiIssueMessageSelect.value = state.showApiIssueMessage ? 'true' : 'false';
-            // Reload locations when returning to settings
             loadLocations();
-            // Load waiting list management
             renderWaitingListManagement();
-            // Load nicknames list
             renderNicknamesList();
         });
+
+        function setHeaderLocation() {
+            const name = state.dashboardTitle || state.locationName;
+            locationNameEl.textContent = name;
+            $('headerEyebrow').textContent = 'WORKPLACE · ' + name.toUpperCase();
+        }
 
         async function refreshData() {
             try {
@@ -1371,172 +1117,101 @@
                     fetchDesks(state.locationId),
                     fetchReservations(state.locationId)
                 ]);
-                
-                // Only update if we got valid data
-                if (desks && desks.length > 0) {
-                    state.desks = desks;
-                }
-                
-                // Only update reservations if we got a valid response (could be empty array which is valid)
-                if (Array.isArray(reservations)) {
-                    state.reservations = reservations;
-                }
-                
-                // Only render if we have desk data
-                if (state.desks.length > 0) {
-                    renderDashboard();
-                }
-            } catch (e) { 
-                console.error('Refresh error - preserving existing data:', e); 
+                if (desks && desks.length > 0) state.desks = desks;
+                if (Array.isArray(reservations)) state.reservations = reservations;
+                if (state.desks.length > 0) renderDashboard();
+            } catch (e) {
+                console.error('Refresh error - preserving existing data:', e);
             }
         }
 
         function renderDashboard() {
             const now = new Date();
-            
-            // Show API issue message if enabled
+
             if (state.showApiIssueMessage) {
                 deskGrid.innerHTML = `
                     <div style="grid-column:1/-1;text-align:center;padding:80px 20px;">
-                        <div style="background:var(--bg-card);border:2px solid var(--accent-amber);border-radius:16px;padding:40px;max-width:600px;margin:0 auto;">
+                        <div style="background:var(--bg-default);border:2px solid var(--accent-amber);border-radius:12px;padding:40px;max-width:600px;margin:0 auto;">
                             <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
-                            <h2 style="color:var(--accent-amber);font-size:24px;margin-bottom:12px;">Eden API Issue</h2>
-                            <p style="color:var(--text-secondary);font-size:16px;line-height:1.6;">
+                            <h2 style="color:var(--accent-amber);font-size:22px;margin-bottom:10px;font-family:'Roboto Condensed',sans-serif;font-weight:900;">Eden API Issue</h2>
+                            <p style="color:var(--fg-secondary);font-size:15px;line-height:1.6;">
                                 We're experiencing issues with the Eden booking system API.<br>
                                 Desk availability information is temporarily unavailable.
-                            </p>
-                            <p style="color:var(--text-muted);font-size:14px;margin-top:16px;">
-                                We're working to resolve this. Please check back shortly.
                             </p>
                         </div>
                     </div>`;
                 lastUpdatedEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
                 return;
             }
-            
+
             const deskRes = new Map();
             state.reservations.forEach(r => {
                 const start = new Date(r.start_at), end = new Date(r.end_at);
-                
-                // Consider a reservation active if:
-                // 1. Status is 'scheduled' or 'in_progress' (regardless of time, for today's bookings)
-                // 2. OR current time is within the reservation window and not cancelled/finished/released
                 const activeStatuses = ['scheduled', 'in_progress'];
                 const inactiveStatuses = ['cancelled', 'finished', 'released'];
-                
-                const isActiveByStatus = activeStatuses.includes(r.status);
-                const isActiveByTime = now >= start && now <= end && !inactiveStatuses.includes(r.status);
-                const isActive = isActiveByStatus || isActiveByTime;
-                
-                console.log(`Reservation: ${r.location?.title || 'unknown'}, location_id: ${r.location?.location_id}, status: ${r.status}, activeByStatus: ${isActiveByStatus}, activeByTime: ${isActiveByTime}, start: ${r.start_at}, end: ${r.end_at}`);
-                
+                const isActive = activeStatuses.includes(r.status) ||
+                    (now >= start && now <= end && !inactiveStatuses.includes(r.status));
                 if (isActive) {
                     const id = r.location?.location_id;
-                    if (id) {
-                        // Only keep the current/latest reservation for each desk
-                        if (!deskRes.has(id) || new Date(r.start_at) > new Date(deskRes.get(id).start_at)) {
-                            deskRes.set(id, r);
-                            console.log(`  -> Mapped to desk ID: ${id}`);
-                        }
+                    if (id && (!deskRes.has(id) || new Date(r.start_at) > new Date(deskRes.get(id).start_at))) {
+                        deskRes.set(id, r);
                     }
                 }
             });
-            
-            console.log('Desk IDs:', state.desks.map(d => d.location_id));
-            console.log('Reservation desk IDs:', Array.from(deskRes.keys()));
-            console.log('Matched reservations count:', deskRes.size);
 
-            // Filter desks for capacity calculation (same as display filter but without available filter)
             let desksForCapacity = [...state.desks];
-            if (state.hideNonDesks > 0) {
-                desksForCapacity = desksForCapacity.filter(desk => desk.title.length <= state.hideNonDesks);
-            }
-            
+            if (state.hideNonDesks > 0) desksForCapacity = desksForCapacity.filter(d => d.title.length <= state.hideNonDesks);
+
             let avail = 0, occ = 0;
             desksForCapacity.forEach(d => deskRes.has(d.location_id) ? occ++ : avail++);
-
             const total = desksForCapacity.length;
-            const percentage = total > 0 ? (occ / total) * 100 : 0;
-            
-            occupiedCountEl.textContent = occ;
-            totalCountEl.textContent = total;
-            lastUpdatedEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-            
-            // Animate capacity bar
-            capacityBarFill.classList.remove('animate');
-            void capacityBarFill.offsetWidth; // Force reflow
-            capacityBarFill.style.width = percentage + '%';
-            capacityBarFill.classList.add('animate');
-            
-            // Change bar color based on capacity
-            if (percentage < 50) {
-                capacityBarFill.style.background = 'var(--accent-green)';
-            } else if (percentage < 80) {
-                capacityBarFill.style.background = 'linear-gradient(90deg, var(--accent-green), var(--accent-amber))';
-            } else {
-                capacityBarFill.style.background = 'linear-gradient(90deg, var(--accent-amber), var(--accent-red))';
+            const occPct  = total > 0 ? Math.round(occ  / total * 100) : 0;
+            const freePct = total > 0 ? Math.round(avail / total * 100) : 0;
+
+            if (avail > 0 && state.showWaitingList !== 'off') {
+                const firstFreeDesk = desksForCapacity.find(d => !deskRes.has(d.location_id));
+                notifyWaitingList(
+                    state.locationName || state.dashboardTitle || 'the office',
+                    firstFreeDesk ? firstFreeDesk.title : null
+                );
             }
+
+            statValueEl.textContent = avail;
+            statLabelEl.textContent = 'FREE';
+            lastUpdatedEl.textContent   = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
             deskGrid.innerHTML = '';
-            
-            let desksToShow = [...state.desks].sort((a, b) => a.title.localeCompare(b.title, undefined, {numeric: true}));
-            
-            console.log('showMode:', state.showMode);
-            console.log('hideNonDesks:', state.hideNonDesks);
-            console.log('Total desks before filter:', desksToShow.length);
-            
-            // Filter by name length if hideNonDesks is set
-            if (state.hideNonDesks > 0) {
-                desksToShow = desksToShow.filter(desk => desk.title.length <= state.hideNonDesks);
-                console.log('Desks after hideNonDesks filter:', desksToShow.length);
-            }
-            
-            // Filter to available only if showMode is 'available'
-            if (state.showMode === 'available') {
-                desksToShow = desksToShow.filter(desk => !deskRes.has(desk.location_id));
-                console.log('Desks after filtering to available:', desksToShow.length);
-            }
+
+            let desksToShow = [...state.desks].sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }));
+            if (state.hideNonDesks > 0) desksToShow = desksToShow.filter(d => d.title.length <= state.hideNonDesks);
+            if (state.showMode === 'available') desksToShow = desksToShow.filter(d => !deskRes.has(d.location_id));
 
             desksToShow.forEach(desk => {
-                const res = deskRes.get(desk.location_id);
+                const res  = deskRes.get(desk.location_id);
                 const card = document.createElement('div');
                 card.className = `desk-card ${res ? 'occupied' : 'available'}`;
-                
+
                 if (res) {
-                    const o = res.owner || {};
+                    const name = getDisplayName(res.owner?.name);
                     card.innerHTML = `
-                        <div class="desk-row">
-                            <span class="desk-name">${esc(desk.title)}</span>
-                            <span class="occupant-name">${esc(getDisplayName(o.name))}</span>
-                        </div>`;
+                        <span class="desk-id">${esc(desk.title)}</span>
+                        <span class="desk-occupant">${esc(name)}</span>`;
                 } else {
                     card.innerHTML = `
-                        <div class="desk-row">
-                            <span class="desk-name">${esc(desk.title)}</span>
-                            <span class="occupant-name available-text">Available</span>
-                        </div>`;
+                        <span class="desk-id">${esc(desk.title)}</span>
+                        <span class="desk-available-label">Available</span>`;
                 }
                 deskGrid.appendChild(card);
             });
 
-            // Handle waiting list visibility
             const waitingListContainer = $('waitingListContainer');
             const noDesksAvailable = avail === 0;
-            
             if (state.showWaitingList === 'always') {
-                // Always show waiting list
-                waitingListContainer.style.display = 'block';
-                updateWaitingListQueue();
-                // Still check for booked users to remove
-                if (avail > 0) {
-                    checkAndRemoveBookedFromWaitingList(deskRes);
-                }
+                waitingListContainer.style.display = 'flex';
+                if (avail > 0) checkAndRemoveBookedFromWaitingList(deskRes);
             } else if (state.showWaitingList === 'auto' && noDesksAvailable) {
-                // Show only when no desks available
-                waitingListContainer.style.display = 'block';
-                updateWaitingListQueue();
+                waitingListContainer.style.display = 'flex';
             } else if (state.showWaitingList === 'auto' && avail > 0) {
-                // Desks available - check if anyone on waiting list has booked
                 waitingListContainer.style.display = 'none';
                 checkAndRemoveBookedFromWaitingList(deskRes);
             } else {
@@ -1544,11 +1219,9 @@
             }
 
             if (desksToShow.length === 0 && !noDesksAvailable) {
-                const message = state.showMode === 'available' 
-                    ? 'No available desks' 
-                    : 'No desks found for this location';
-                deskGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--text-muted);">
-                    <p style="font-size:18px;">${message}</p>
+                const msg = state.showMode === 'available' ? 'No available desks' : 'No desks found for this location';
+                deskGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--fg-tertiary);">
+                    <p style="font-size:18px;">${msg}</p>
                     <p style="font-size:14px;margin-top:8px;">Try selecting a different location</p></div>`;
             }
         }
@@ -1556,83 +1229,60 @@
         function startAutoRefresh() {
             clearInterval(state.refreshTimer);
             clearInterval(state.countdownTimer);
+            clearInterval(state.waitingListTimer);
             state.nextRefreshTime = Date.now() + state.refreshInterval * 1000;
             state.countdownTimer = setInterval(() => {
                 const rem = Math.max(0, Math.ceil((state.nextRefreshTime - Date.now()) / 1000));
-                nextRefreshEl.textContent = `Next refresh: ${rem}s`;
+                nextRefreshEl.textContent = `Refresh in ${rem}s`;
             }, 1000);
             state.refreshTimer = setInterval(async () => {
                 await refreshData();
                 state.nextRefreshTime = Date.now() + state.refreshInterval * 1000;
             }, state.refreshInterval * 1000);
+            updateWaitingListQueue();
+            state.waitingListTimer = setInterval(updateWaitingListQueue, 30000);
         }
 
         function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-        // Check URL parameters first, then localStorage
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlLocationId = urlParams.get('location');
-        const urlLocationName = urlParams.get('name');
-        const urlTheme = urlParams.get('theme');
-        const urlDeskNameSize = urlParams.get('deskNameSize');
-        const urlOccupantNameSize = urlParams.get('occupantNameSize');
-        const urlCardWidth = urlParams.get('cardWidth');
-        const urlShowMode = urlParams.get('showMode');
-        const urlHideNonDesks = urlParams.get('hideNonDesks');
-        const urlWaitingList = urlParams.get('waitingList');
-        const urlApiIssue = urlParams.get('apiIssue');
-        const urlTitle = urlParams.get('title');
-        
-        if (urlLocationId) {
-            state.locationId = urlLocationId;
-            state.locationName = urlLocationName || urlLocationId;
-        }
-        if (urlTheme) state.themeMode = urlTheme;
-        if (urlDeskNameSize) state.deskNameSize = parseInt(urlDeskNameSize);
-        if (urlOccupantNameSize) state.occupantNameSize = parseInt(urlOccupantNameSize);
+        /* ── Boot: read URL params ──────────────────────────────────── */
+        const urlParams          = new URLSearchParams(window.location.search);
+        const urlLocationId      = urlParams.get('location');
+        const urlLocationName    = urlParams.get('name');
+        const urlTextSize        = urlParams.get('textSize');
+        const urlCardWidth       = urlParams.get('cardWidth');
+        const urlShowMode        = urlParams.get('showMode');
+        const urlHideNonDesks    = urlParams.get('hideNonDesks');
+        const urlWaitingList     = urlParams.get('waitingList');
+        const urlApiIssue        = urlParams.get('apiIssue');
+        const urlTitle           = urlParams.get('title');
+
+        if (urlLocationId)       { state.locationId = urlLocationId; state.locationName = urlLocationName || urlLocationId; }
+        if (urlTextSize)  state.textSize  = urlTextSize;
         if (urlCardWidth) state.cardWidth = urlCardWidth;
-        if (urlShowMode) state.showMode = urlShowMode;
-        if (urlHideNonDesks) state.hideNonDesks = parseInt(urlHideNonDesks);
-        if (urlWaitingList) state.showWaitingList = urlWaitingList;
-        if (urlApiIssue) state.showApiIssueMessage = urlApiIssue === 'true';
-        if (urlTitle) state.dashboardTitle = urlTitle;
-        
-        console.log('URL params - showMode:', urlShowMode);
-        console.log('State showMode after URL parse:', state.showMode);
-        
-        // Apply theme immediately
-        if (state.themeMode === 'light') {
-            document.body.classList.add('light-mode');
-        }
-        
+        if (urlShowMode)         state.showMode        = urlShowMode;
+        if (urlHideNonDesks)     state.hideNonDesks    = parseInt(urlHideNonDesks);
+        if (urlWaitingList)      state.showWaitingList = urlWaitingList;
+        if (urlApiIssue)         state.showApiIssueMessage = urlApiIssue === 'true';
+        if (urlTitle)            state.dashboardTitle  = urlTitle;
+
         if (state.apiToken) apiTokenInput.value = state.apiToken;
         if (state.dashboardTitle) dashboardTitleInput.value = state.dashboardTitle;
-        themeModeSelect.value = state.themeMode;
-        deskNameSizeSlider.value = state.deskNameSize;
-        deskNameSizeValue.textContent = state.deskNameSize + 'px';
-        occupantNameSizeSlider.value = state.occupantNameSize;
-        occupantNameSizeValue.textContent = state.occupantNameSize === 0 ? 'Hidden' : state.occupantNameSize + 'px';
+        textSizeSelect.value  = state.textSize;
         cardWidthSelect.value = state.cardWidth;
-        showModeSelect.value = state.showMode;
-        hideNonDesksSelect.value = state.hideNonDesks;
-        showWaitingListSelect.value = state.showWaitingList;
+        showModeSelect.value          = state.showMode;
+        hideNonDesksSelect.value      = state.hideNonDesks;
+        showWaitingListSelect.value   = state.showWaitingList;
         showApiIssueMessageSelect.value = state.showApiIssueMessage ? 'true' : 'false';
-        refreshIntervalSelect.value = state.refreshInterval;
-        
-        // Auto-start if location is in URL (skip settings entirely)
+        refreshIntervalSelect.value   = state.refreshInterval;
+
         if (urlLocationId && state.apiToken) {
             configScreen.classList.add('hidden');
-            dashboard.style.display = 'block';
-            locationNameEl.textContent = state.dashboardTitle || state.locationName;
+            dashboard.style.display = 'flex';
+            setHeaderLocation();
             applyDisplaySettings();
-            
-            // Load nicknames then data
-            loadNicknames().then(() => {
-                refreshData().then(() => startAutoRefresh());
-            });
-        }
-        // Show settings page and load locations
-        else {
+            loadNicknames().then(() => refreshData().then(() => startAutoRefresh()));
+        } else {
             loadLocations();
             renderNicknamesList();
         }
