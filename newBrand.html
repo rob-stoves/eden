@@ -439,7 +439,7 @@
 
         .desk-id {
             font-family: 'Roboto Mono', monospace;
-            font-size: 31px; line-height: 1;
+            font-size: var(--text-size-id, 31px); line-height: 1;
             min-width: 42px; flex-shrink: 0;
         }
 
@@ -447,7 +447,7 @@
         .desk-card.occupied  .desk-id  { font-weight: 500; color: var(--fg-tertiary); }
 
         .desk-occupant {
-            font-size: 19px; font-weight: 500;
+            font-size: var(--text-size-occupant, 19px); font-weight: 500;
             color: var(--fg-default);
             flex: 1; min-width: 0;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -455,7 +455,7 @@
 
         .desk-card.available .desk-available-label {
             font-family: 'Roboto Condensed', sans-serif;
-            font-weight: 900; font-size: 21px;
+            font-weight: 900; font-size: var(--text-size-label, 21px);
             text-transform: uppercase; letter-spacing: .01em;
             color: var(--brand-ink);
         }
@@ -499,13 +499,12 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Desk Name Size: <span id="deskNameSizeValue">43px</span></label>
-                        <input type="range" class="form-range" id="deskNameSize" min="10" max="50" value="43">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Occupant Name Size: <span id="occupantNameSizeValue">22px</span></label>
-                        <input type="range" class="form-range" id="occupantNameSize" min="0" max="30" value="22">
-                        <p class="form-caption">Set to 0 to hide occupant names</p>
+                        <label class="form-label">Text Size</label>
+                        <select class="form-select" id="textSize">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                        </select>
                     </div>
                 </div>
 
@@ -656,8 +655,7 @@
             locationName: localStorage.getItem('eden_location_name') || '',
             dashboardTitle: localStorage.getItem('eden_dashboard_title') || '',
             refreshInterval: parseInt(localStorage.getItem('eden_refresh_interval')) || 120,
-            deskNameSize: parseInt(localStorage.getItem('eden_desk_name_size')) || 43,
-            occupantNameSize: parseInt(localStorage.getItem('eden_occupant_name_size')) || 22,
+            textSize: localStorage.getItem('eden_text_size') || 'medium',
             cardWidth: localStorage.getItem('eden_card_width') || 'medium',
             showMode: localStorage.getItem('eden_show_mode') || 'all',
             hideNonDesks: parseInt(localStorage.getItem('eden_hide_non_desks')) || 0,
@@ -672,8 +670,7 @@
         const apiTokenInput = $('apiToken'), locationSelect = $('locationSelect');
         const dashboardTitleInput = $('dashboardTitle');
         const refreshIntervalSelect = $('refreshInterval'), startBtn = $('startBtn');
-        const deskNameSizeSlider = $('deskNameSize'), deskNameSizeValue = $('deskNameSizeValue');
-        const occupantNameSizeSlider = $('occupantNameSize'), occupantNameSizeValue = $('occupantNameSizeValue');
+        const textSizeSelect = $('textSize');
         const cardWidthSelect = $('cardWidth');
         const showModeSelect = $('showMode'), hideNonDesksSelect = $('hideNonDesks');
         const showWaitingListSelect = $('showWaitingList');
@@ -774,16 +771,7 @@
             updateStartButton();
         });
 
-        deskNameSizeSlider.addEventListener('input', () => {
-            state.deskNameSize = parseInt(deskNameSizeSlider.value);
-            deskNameSizeValue.textContent = state.deskNameSize + 'px';
-        });
-
-        occupantNameSizeSlider.addEventListener('input', () => {
-            state.occupantNameSize = parseInt(occupantNameSizeSlider.value);
-            occupantNameSizeValue.textContent = state.occupantNameSize === 0 ? 'Hidden' : state.occupantNameSize + 'px';
-        });
-
+        textSizeSelect.addEventListener('change', () => { state.textSize = textSizeSelect.value; });
         refreshIntervalSelect.addEventListener('change', () => { state.refreshInterval = parseInt(refreshIntervalSelect.value); });
         cardWidthSelect.addEventListener('change',       () => { state.cardWidth = cardWidthSelect.value; });
         showModeSelect.addEventListener('change',        () => { state.showMode = showModeSelect.value; });
@@ -849,14 +837,15 @@
         function applyDisplaySettings() {
             const widthMap = { small: '140px', medium: '200px', large: '280px' };
             deskGrid.style.gridTemplateColumns = `repeat(auto-fill, minmax(${widthMap[state.cardWidth]}, 1fr))`;
-            document.documentElement.style.setProperty('--desk-name-size', state.deskNameSize + 'px');
-            if (state.occupantNameSize === 0) {
-                document.documentElement.style.setProperty('--occupant-name-display', 'none');
-                document.documentElement.style.setProperty('--occupant-name-size', '0px');
-            } else {
-                document.documentElement.style.setProperty('--occupant-name-display', 'block');
-                document.documentElement.style.setProperty('--occupant-name-size', state.occupantNameSize + 'px');
-            }
+            const textMap = {
+                small:  { id: '22px', occupant: '14px', label: '15px' },
+                medium: { id: '31px', occupant: '19px', label: '21px' },
+                large:  { id: '42px', occupant: '26px', label: '28px' },
+            };
+            const t = textMap[state.textSize] || textMap.medium;
+            document.documentElement.style.setProperty('--text-size-id',      t.id);
+            document.documentElement.style.setProperty('--text-size-occupant', t.occupant);
+            document.documentElement.style.setProperty('--text-size-label',   t.label);
         }
 
         /* Waiting list (Cloudflare KV) */
@@ -1013,8 +1002,7 @@
             state.locationName      = locationSelect.options[locationSelect.selectedIndex]?.textContent || '';
             state.dashboardTitle    = dashboardTitleInput.value.trim();
             state.refreshInterval   = parseInt(refreshIntervalSelect.value);
-            state.deskNameSize      = parseInt(deskNameSizeSlider.value);
-            state.occupantNameSize  = parseInt(occupantNameSizeSlider.value);
+            state.textSize          = textSizeSelect.value;
             state.cardWidth         = cardWidthSelect.value;
             state.showMode          = showModeSelect.value;
             state.hideNonDesks      = parseInt(hideNonDesksSelect.value);
@@ -1025,10 +1013,9 @@
             localStorage.setItem('eden_location_id',          state.locationId);
             localStorage.setItem('eden_location_name',        state.locationName);
             localStorage.setItem('eden_dashboard_title',      state.dashboardTitle);
-            localStorage.setItem('eden_refresh_interval',     state.refreshInterval);
-            localStorage.setItem('eden_desk_name_size',       state.deskNameSize);
-            localStorage.setItem('eden_occupant_name_size',   state.occupantNameSize);
-            localStorage.setItem('eden_card_width',           state.cardWidth);
+            localStorage.setItem('eden_refresh_interval', state.refreshInterval);
+            localStorage.setItem('eden_text_size',        state.textSize);
+            localStorage.setItem('eden_card_width',       state.cardWidth);
             localStorage.setItem('eden_show_mode',            state.showMode);
             localStorage.setItem('eden_hide_non_desks',       state.hideNonDesks);
             localStorage.setItem('eden_show_waiting_list',    state.showWaitingList);
@@ -1037,8 +1024,7 @@
             const url = new URL(window.location);
             url.searchParams.set('location', state.locationId);
             url.searchParams.set('name', state.locationName);
-            url.searchParams.set('deskNameSize', state.deskNameSize);
-            url.searchParams.set('occupantNameSize', state.occupantNameSize);
+            url.searchParams.set('textSize', state.textSize);
             url.searchParams.set('cardWidth', state.cardWidth);
             url.searchParams.set('showMode', state.showMode);
             state.hideNonDesks > 0 ? url.searchParams.set('hideNonDesks', state.hideNonDesks) : url.searchParams.delete('hideNonDesks');
@@ -1068,11 +1054,8 @@
             apiTokenInput.value           = state.apiToken;
             dashboardTitleInput.value     = state.dashboardTitle;
             refreshIntervalSelect.value   = state.refreshInterval;
-            deskNameSizeSlider.value      = state.deskNameSize;
-            deskNameSizeValue.textContent = state.deskNameSize + 'px';
-            occupantNameSizeSlider.value  = state.occupantNameSize;
-            occupantNameSizeValue.textContent = state.occupantNameSize === 0 ? 'Hidden' : state.occupantNameSize + 'px';
-            cardWidthSelect.value         = state.cardWidth;
+            textSizeSelect.value  = state.textSize;
+            cardWidthSelect.value = state.cardWidth;
             showModeSelect.value          = state.showMode;
             hideNonDesksSelect.value      = state.hideNonDesks;
             showWaitingListSelect.value   = state.showWaitingList;
@@ -1219,8 +1202,7 @@
         const urlParams          = new URLSearchParams(window.location.search);
         const urlLocationId      = urlParams.get('location');
         const urlLocationName    = urlParams.get('name');
-        const urlDeskNameSize    = urlParams.get('deskNameSize');
-        const urlOccupantNameSize = urlParams.get('occupantNameSize');
+        const urlTextSize        = urlParams.get('textSize');
         const urlCardWidth       = urlParams.get('cardWidth');
         const urlShowMode        = urlParams.get('showMode');
         const urlHideNonDesks    = urlParams.get('hideNonDesks');
@@ -1229,9 +1211,8 @@
         const urlTitle           = urlParams.get('title');
 
         if (urlLocationId)       { state.locationId = urlLocationId; state.locationName = urlLocationName || urlLocationId; }
-        if (urlDeskNameSize)     state.deskNameSize    = parseInt(urlDeskNameSize);
-        if (urlOccupantNameSize) state.occupantNameSize = parseInt(urlOccupantNameSize);
-        if (urlCardWidth)        state.cardWidth       = urlCardWidth;
+        if (urlTextSize)  state.textSize  = urlTextSize;
+        if (urlCardWidth) state.cardWidth = urlCardWidth;
         if (urlShowMode)         state.showMode        = urlShowMode;
         if (urlHideNonDesks)     state.hideNonDesks    = parseInt(urlHideNonDesks);
         if (urlWaitingList)      state.showWaitingList = urlWaitingList;
@@ -1240,11 +1221,8 @@
 
         if (state.apiToken) apiTokenInput.value = state.apiToken;
         if (state.dashboardTitle) dashboardTitleInput.value = state.dashboardTitle;
-        deskNameSizeSlider.value      = state.deskNameSize;
-        deskNameSizeValue.textContent = state.deskNameSize + 'px';
-        occupantNameSizeSlider.value  = state.occupantNameSize;
-        occupantNameSizeValue.textContent = state.occupantNameSize === 0 ? 'Hidden' : state.occupantNameSize + 'px';
-        cardWidthSelect.value         = state.cardWidth;
+        textSizeSelect.value  = state.textSize;
+        cardWidthSelect.value = state.cardWidth;
         showModeSelect.value          = state.showMode;
         hideNonDesksSelect.value      = state.hideNonDesks;
         showWaitingListSelect.value   = state.showWaitingList;
