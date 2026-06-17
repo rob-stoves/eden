@@ -12,6 +12,9 @@ export default {
     if (url.pathname === '/waitinglist/remove') {
       return handleWaitingListRemove(request, env);
     }
+    if (url.pathname === '/waitinglist/notify') {
+      return handleWaitingListNotify(request, env);
+    }
     
     // Handle nickname endpoints
     if (url.pathname === '/nicknames/get') {
@@ -70,14 +73,20 @@ async function initDB(db) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       location_id TEXT,
       name TEXT,
-      timestamp INTEGER
+      email TEXT,
+      timestamp INTEGER,
+      notified INTEGER DEFAULT 0
     )
   `).run();
-  
+
+  // Migrate existing tables — D1 throws if column already exists, so catch silently
+  try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN email TEXT').run(); } catch(e) {}
+  try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN notified INTEGER DEFAULT 0').run(); } catch(e) {}
+
   await db.prepare(`
     CREATE INDEX IF NOT EXISTS idx_waiting_list_location ON waiting_list(location_id)
   `).run();
-  
+
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS nicknames (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -115,11 +124,12 @@ async function handleWaitingListGet(request, env) {
 
     // Get current list
     const results = await env.EDEN_DB.prepare(
-      'SELECT name, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
+      'SELECT name, email, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
     ).bind(locationId).all();
-    
+
     const list = results.results.map(row => ({
       name: row.name,
+      email: row.email,
       timestamp: row.timestamp
     }));
 
@@ -144,26 +154,27 @@ async function handleWaitingListAdd(request, env) {
     await initDB(env.EDEN_DB);
 
     const body = await request.json();
-    const { locationId, name } = body;
-    
+    const { locationId, name, email } = body;
+
     if (!locationId || !name) {
       return jsonResponse({ error: 'locationId and name required' }, 400);
     }
 
     const timestamp = Date.now();
-    
+
     await env.EDEN_DB.prepare(`
-      INSERT INTO waiting_list (location_id, name, timestamp)
-      VALUES (?, ?, ?)
-    `).bind(locationId, name.trim(), timestamp).run();
+      INSERT INTO waiting_list (location_id, name, email, timestamp, notified)
+      VALUES (?, ?, ?, ?, 0)
+    `).bind(locationId, name.trim(), (email || '').trim(), timestamp).run();
 
     // Get updated list
     const results = await env.EDEN_DB.prepare(
-      'SELECT name, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
+      'SELECT name, email, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
     ).bind(locationId).all();
-    
+
     const list = results.results.map(row => ({
       name: row.name,
+      email: row.email,
       timestamp: row.timestamp
     }));
 
@@ -201,11 +212,12 @@ async function handleWaitingListRemove(request, env) {
 
     // Get updated list
     const results = await env.EDEN_DB.prepare(
-      'SELECT name, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
+      'SELECT name, email, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
     ).bind(locationId).all();
-    
+
     const list = results.results.map(row => ({
       name: row.name,
+      email: row.email,
       timestamp: row.timestamp
     }));
 
@@ -213,6 +225,88 @@ async function handleWaitingListRemove(request, env) {
   } catch (error) {
     console.error('Waiting list remove error:', error);
     return jsonResponse({ error: error.message }, 500);
+  }
+}
+
+// Notify the first un-notified waiting list person if desks are available
+async function handleWaitingListNotify(request, env) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
+  try {
+    if (!env.EDEN_DB) {
+      return jsonResponse({ notified: false, reason: 'D1 not configured' });
+    }
+
+    await initDB(env.EDEN_DB);
+
+    const body = await request.json();
+    const { locationId, locationName } = body;
+
+    if (!locationId) {
+      return jsonResponse({ error: 'locationId required' }, 400);
+    }
+
+    // Find first un-notified entry that has an email address
+    const entry = await env.EDEN_DB.prepare(
+      `SELECT id, name, email FROM waiting_list
+       WHERE location_id = ? AND notified = 0 AND email IS NOT NULL AND email != ''
+       ORDER BY timestamp ASC LIMIT 1`
+    ).bind(locationId).first();
+
+    if (!entry) {
+      return jsonResponse({ notified: false, reason: 'No un-notified entries with email' });
+    }
+
+    const sent = await sendEmail(env, {
+      to: entry.email,
+      name: entry.name,
+      locationName: locationName || 'the office'
+    });
+
+    if (sent) {
+      await env.EDEN_DB.prepare(
+        'UPDATE waiting_list SET notified = 1 WHERE id = ?'
+      ).bind(entry.id).run();
+      return jsonResponse({ notified: true, name: entry.name });
+    }
+
+    return jsonResponse({ notified: false, reason: 'Email send failed' });
+  } catch (error) {
+    console.error('Waiting list notify error:', error);
+    return jsonResponse({ error: error.message }, 500);
+  }
+}
+
+async function sendEmail(env, { to, name, locationName }) {
+  const apiKey = env.RESEND_API_KEY;
+  if (!apiKey) return false;
+
+  const from = env.RESEND_FROM_EMAIL || 'noreply@optimizely.com';
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject: 'A desk is now available!',
+        html: `<p>Hi ${name},</p>
+<p>A desk has just become available at <strong>${locationName}</strong>.</p>
+<p>You're first on the waiting list — head in now to grab a spot.</p>
+<br>
+<p style="color:#666;font-size:12px;">Optimizely Desk Availability</p>`
+      })
+    });
+    return res.ok;
+  } catch (e) {
+    console.error('Email send error:', e);
+    return false;
   }
 }
 

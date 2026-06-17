@@ -601,6 +601,7 @@
                     <button class="waiting-list-btn-small" id="joinWaitingListBtn">Join Waitlist</button>
                     <div class="waiting-list-form-inline" id="waitingListForm">
                         <input type="text" class="waiting-list-input-small" id="waitingListName" placeholder="Your name">
+                        <input type="email" class="waiting-list-input-small" id="waitingListEmail" placeholder="Email (optional, for notification)" style="margin-top:4px;">
                         <button class="waiting-list-submit-small" id="waitingListSubmit">✓</button>
                         <button class="waiting-list-cancel-small" id="waitingListCancel">✕</button>
                     </div>
@@ -806,10 +807,12 @@
 
         $('waitingListSubmit').addEventListener('click', async () => {
             const name = $('waitingListName').value.trim();
+            const email = $('waitingListEmail').value.trim();
             if (name) {
-                const success = await addToWaitingList(name);
+                const success = await addToWaitingList(name, email);
                 if (success) {
                     $('waitingListName').value = '';
+                    $('waitingListEmail').value = '';
                     $('waitingListForm').classList.remove('active');
                     $('waitingListSuccess').classList.add('show');
                     await updateWaitingListQueue();
@@ -848,15 +851,23 @@
             } catch (e) { return []; }
         }
 
-        async function addToWaitingList(name) {
+        async function addToWaitingList(name, email) {
             try {
                 const r = await fetch('/waitinglist/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ locationId: state.locationId, name })
+                    body: JSON.stringify({ locationId: state.locationId, name, email })
                 });
                 return (await r.json()).success;
             } catch (e) { return false; }
+        }
+
+        function notifyWaitingList(locationName) {
+            fetch('/waitinglist/notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ locationId: state.locationId, locationName })
+            }).catch(() => {});
         }
 
         async function removeFromWaitingList(name) {
@@ -1124,6 +1135,10 @@
             const total = desksForCapacity.length;
             const occPct  = total > 0 ? Math.round(occ  / total * 100) : 0;
             const freePct = total > 0 ? Math.round(avail / total * 100) : 0;
+
+            if (avail > 0 && state.showWaitingList !== 'off') {
+                notifyWaitingList(state.locationName || state.dashboardTitle || 'the office');
+            }
 
             statValueEl.textContent = avail;
             statLabelEl.textContent = 'FREE';
