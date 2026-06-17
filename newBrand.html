@@ -878,11 +878,11 @@
             } catch (e) { return false; }
         }
 
-        function notifyWaitingList(locationName) {
+        function notifyWaitingList(locationName, deskName) {
             fetch('/waitinglist/notify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ locationId: state.locationId, locationName })
+                body: JSON.stringify({ locationId: state.locationId, locationName, deskName })
             }).catch(() => {});
         }
 
@@ -1153,7 +1153,11 @@
             const freePct = total > 0 ? Math.round(avail / total * 100) : 0;
 
             if (avail > 0 && state.showWaitingList !== 'off') {
-                notifyWaitingList(state.locationName || state.dashboardTitle || 'the office');
+                const firstFreeDesk = desksForCapacity.find(d => !deskRes.has(d.location_id));
+                notifyWaitingList(
+                    state.locationName || state.dashboardTitle || 'the office',
+                    firstFreeDesk ? firstFreeDesk.title : null
+                );
             }
 
             statValueEl.textContent = avail;

@@ -15,6 +15,9 @@ export default {
     if (url.pathname === '/waitinglist/notify') {
       return handleWaitingListNotify(request, env);
     }
+    if (url.pathname === '/waitinglist/unsubscribe') {
+      return handleWaitingListUnsubscribe(request, env);
+    }
     
     // Handle nickname endpoints
     if (url.pathname === '/nicknames/get') {
@@ -75,13 +78,15 @@ async function initDB(db) {
       name TEXT,
       email TEXT,
       timestamp INTEGER,
-      notified INTEGER DEFAULT 0
+      notified INTEGER DEFAULT 0,
+      token TEXT
     )
   `).run();
 
   // Migrate existing tables — D1 throws if column already exists, so catch silently
   try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN email TEXT').run(); } catch(e) {}
   try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN notified INTEGER DEFAULT 0').run(); } catch(e) {}
+  try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN token TEXT').run(); } catch(e) {}
 
   await db.prepare(`
     CREATE INDEX IF NOT EXISTS idx_waiting_list_location ON waiting_list(location_id)
@@ -161,11 +166,12 @@ async function handleWaitingListAdd(request, env) {
     }
 
     const timestamp = Date.now();
+    const token = crypto.randomUUID();
 
     await env.EDEN_DB.prepare(`
-      INSERT INTO waiting_list (location_id, name, email, timestamp, notified)
-      VALUES (?, ?, ?, ?, 0)
-    `).bind(locationId, name.trim(), (email || '').trim(), timestamp).run();
+      INSERT INTO waiting_list (location_id, name, email, timestamp, notified, token)
+      VALUES (?, ?, ?, ?, 0, ?)
+    `).bind(locationId, name.trim(), (email || '').trim(), timestamp, token).run();
 
     // Get updated list
     const results = await env.EDEN_DB.prepare(
@@ -248,9 +254,11 @@ async function handleWaitingListNotify(request, env) {
       return jsonResponse({ error: 'locationId required' }, 400);
     }
 
+    const { deskName } = body;
+
     // Find first un-notified entry that has an email address
     const entry = await env.EDEN_DB.prepare(
-      `SELECT id, name, email FROM waiting_list
+      `SELECT id, name, email, token FROM waiting_list
        WHERE location_id = ? AND notified = 0 AND email IS NOT NULL AND email != ''
        ORDER BY timestamp ASC LIMIT 1`
     ).bind(locationId).first();
@@ -259,10 +267,15 @@ async function handleWaitingListNotify(request, env) {
       return jsonResponse({ notified: false, reason: 'No un-notified entries with email' });
     }
 
+    const origin = new URL(request.url).origin;
+    const unsubscribeUrl = `${origin}/waitinglist/unsubscribe?token=${entry.token}`;
+
     const sent = await sendEmail(env, {
       to: entry.email,
       name: entry.name,
-      locationName: locationName || 'the office'
+      locationName: locationName || 'the office',
+      deskName: deskName || null,
+      unsubscribeUrl
     });
 
     if (sent) {
@@ -279,11 +292,14 @@ async function handleWaitingListNotify(request, env) {
   }
 }
 
-async function sendEmail(env, { to, name, locationName }) {
+async function sendEmail(env, { to, name, locationName, deskName, unsubscribeUrl }) {
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) return false;
 
   const from = env.RESEND_FROM_EMAIL || 'noreply@optimizely.com';
+  const deskLine = deskName
+    ? `<p><strong>Desk ${deskName}</strong> is free — head in now to grab it.</p>`
+    : `<p>A desk has just become available — head in now to grab a spot.</p>`;
 
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -295,12 +311,14 @@ async function sendEmail(env, { to, name, locationName }) {
       body: JSON.stringify({
         from,
         to: [to],
-        subject: 'A desk is now available!',
+        subject: deskName ? `Desk ${deskName} is free at ${locationName}!` : `A desk is free at ${locationName}!`,
         html: `<p>Hi ${name},</p>
-<p>A desk has just become available at <strong>${locationName}</strong>.</p>
-<p>You're first on the waiting list — head in now to grab a spot.</p>
+<p>Good news — a desk has just become available at <strong>${locationName}</strong>.</p>
+${deskLine}
+<p>You're first on the waiting list.</p>
 <br>
-<p style="color:#666;font-size:12px;">Optimizely Desk Availability</p>`
+<p><a href="${unsubscribeUrl}" style="color:#666;font-size:12px;">Remove me from the waiting list</a></p>
+<p style="color:#999;font-size:11px;">Optimizely Desk Availability</p>`
       })
     });
     return res.ok;
@@ -308,6 +326,61 @@ async function sendEmail(env, { to, name, locationName }) {
     console.error('Email send error:', e);
     return false;
   }
+}
+
+// Remove from waiting list via one-click token link
+async function handleWaitingListUnsubscribe(request, env) {
+  try {
+    const url = new URL(request.url);
+    const token = url.searchParams.get('token');
+
+    if (!token) {
+      return new Response('Invalid link.', { status: 400, headers: { 'Content-Type': 'text/plain' } });
+    }
+
+    if (!env.EDEN_DB) {
+      return new Response('Service unavailable.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+    }
+
+    await initDB(env.EDEN_DB);
+
+    const entry = await env.EDEN_DB.prepare(
+      'SELECT id, name FROM waiting_list WHERE token = ?'
+    ).bind(token).first();
+
+    if (!entry) {
+      return new Response(unsubscribePage('This link has already been used or has expired.'), {
+        status: 200, headers: { 'Content-Type': 'text/html' }
+      });
+    }
+
+    await env.EDEN_DB.prepare('DELETE FROM waiting_list WHERE token = ?').bind(token).run();
+
+    return new Response(unsubscribePage(`You've been removed from the waiting list, ${entry.name}.`), {
+      status: 200, headers: { 'Content-Type': 'text/html' }
+    });
+  } catch (error) {
+    console.error('Unsubscribe error:', error);
+    return new Response('Something went wrong.', { status: 500, headers: { 'Content-Type': 'text/plain' } });
+  }
+}
+
+function unsubscribePage(message) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Waiting List</title>
+<style>
+  body { font-family: 'Roboto', sans-serif; background: #252825; color: #d2dec2;
+         display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+  .card { background: #2b2e2b; border: 1px solid #3a3e3a; border-radius: 12px;
+          padding: 40px 48px; max-width: 420px; text-align: center; }
+  h2 { color: #abff44; font-size: 22px; margin-bottom: 12px; }
+  p  { color: #8a9e8a; font-size: 15px; line-height: 1.6; }
+</style></head><body>
+<div class="card">
+  <h2>Waiting List</h2>
+  <p>${message}</p>
+</div>
+</body></html>`;
 }
 
 // Get all nicknames
