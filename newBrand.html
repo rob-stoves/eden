@@ -617,6 +617,7 @@
                         <div class="waiting-list-inputs">
                             <input type="text" class="waiting-list-input-small" id="waitingListName" placeholder="Your name">
                             <input type="email" class="waiting-list-input-small" id="waitingListEmail" placeholder="Email (optional)">
+                            <input type="date" class="waiting-list-input-small" id="waitingListDate">
                         </div>
                         <button class="waiting-list-submit-small" id="waitingListSubmit">✓</button>
                         <button class="waiting-list-cancel-small" id="waitingListCancel">✕</button>
@@ -672,7 +673,7 @@
             showWaitingList: localStorage.getItem('eden_show_waiting_list') || 'off',
             showApiIssueMessage: localStorage.getItem('eden_show_api_issue_message') === 'true',
             locations: [], desks: [], reservations: [],
-            refreshTimer: null, countdownTimer: null, nextRefreshTime: null
+            refreshTimer: null, countdownTimer: null, waitingListTimer: null, nextRefreshTime: null
         };
 
         const $ = id => document.getElementById(id);
@@ -824,11 +825,13 @@
         $('waitingListSubmit').addEventListener('click', async () => {
             const name = $('waitingListName').value.trim();
             const email = $('waitingListEmail').value.trim();
+            const date = $('waitingListDate').value;
             if (name) {
-                const success = await addToWaitingList(name, email);
+                const success = await addToWaitingList(name, email, date);
                 if (success) {
                     $('waitingListName').value = '';
                     $('waitingListEmail').value = '';
+                    $('waitingListDate').value = '';
                     $('waitingListForm').classList.remove('active');
                     $('joinWaitingListBtn').style.display = 'inline-block';
                     $('waitingListQueue').style.display = 'block';
@@ -863,12 +866,12 @@
             } catch (e) { return []; }
         }
 
-        async function addToWaitingList(name, email) {
+        async function addToWaitingList(name, email, date) {
             try {
                 const r = await fetch('/waitinglist/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ locationId: state.locationId, name, email })
+                    body: JSON.stringify({ locationId: state.locationId, name, email, desired_date: date || null })
                 });
                 return (await r.json()).success;
             } catch (e) { return false; }
@@ -1070,6 +1073,7 @@
         settingsBtn.addEventListener('click', () => {
             clearInterval(state.refreshTimer);
             clearInterval(state.countdownTimer);
+            clearInterval(state.waitingListTimer);
             dashboard.style.display = 'none';
             configScreen.classList.remove('hidden');
             apiTokenInput.value           = state.apiToken;
@@ -1189,11 +1193,9 @@
             const noDesksAvailable = avail === 0;
             if (state.showWaitingList === 'always') {
                 waitingListContainer.style.display = 'flex';
-                updateWaitingListQueue();
                 if (avail > 0) checkAndRemoveBookedFromWaitingList(deskRes);
             } else if (state.showWaitingList === 'auto' && noDesksAvailable) {
                 waitingListContainer.style.display = 'flex';
-                updateWaitingListQueue();
             } else if (state.showWaitingList === 'auto' && avail > 0) {
                 waitingListContainer.style.display = 'none';
                 checkAndRemoveBookedFromWaitingList(deskRes);
@@ -1212,6 +1214,7 @@
         function startAutoRefresh() {
             clearInterval(state.refreshTimer);
             clearInterval(state.countdownTimer);
+            clearInterval(state.waitingListTimer);
             state.nextRefreshTime = Date.now() + state.refreshInterval * 1000;
             state.countdownTimer = setInterval(() => {
                 const rem = Math.max(0, Math.ceil((state.nextRefreshTime - Date.now()) / 1000));
@@ -1221,6 +1224,8 @@
                 await refreshData();
                 state.nextRefreshTime = Date.now() + state.refreshInterval * 1000;
             }, state.refreshInterval * 1000);
+            updateWaitingListQueue();
+            state.waitingListTimer = setInterval(updateWaitingListQueue, 30000);
         }
 
         function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }

@@ -79,7 +79,8 @@ async function initDB(db) {
       email TEXT,
       timestamp INTEGER,
       notified INTEGER DEFAULT 0,
-      token TEXT
+      token TEXT,
+      desired_date TEXT
     )
   `).run();
 
@@ -87,6 +88,7 @@ async function initDB(db) {
   try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN email TEXT').run(); } catch(e) {}
   try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN notified INTEGER DEFAULT 0').run(); } catch(e) {}
   try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN token TEXT').run(); } catch(e) {}
+  try { await db.prepare('ALTER TABLE waiting_list ADD COLUMN desired_date TEXT').run(); } catch(e) {}
 
   await db.prepare(`
     CREATE INDEX IF NOT EXISTS idx_waiting_list_location ON waiting_list(location_id)
@@ -123,12 +125,13 @@ async function handleWaitingListGet(request, env) {
 
     // Get current list
     const results = await env.EDEN_DB.prepare(
-      'SELECT name, email, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
+      'SELECT name, email, desired_date, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
     ).bind(locationId).all();
 
     const list = results.results.map(row => ({
       name: row.name,
       email: row.email,
+      desired_date: row.desired_date,
       timestamp: row.timestamp
     }));
 
@@ -153,7 +156,7 @@ async function handleWaitingListAdd(request, env) {
     await initDB(env.EDEN_DB);
 
     const body = await request.json();
-    const { locationId, name, email } = body;
+    const { locationId, name, email, desired_date } = body;
 
     if (!locationId || !name) {
       return jsonResponse({ error: 'locationId and name required' }, 400);
@@ -163,18 +166,19 @@ async function handleWaitingListAdd(request, env) {
     const token = crypto.randomUUID();
 
     await env.EDEN_DB.prepare(`
-      INSERT INTO waiting_list (location_id, name, email, timestamp, notified, token)
-      VALUES (?, ?, ?, ?, 0, ?)
-    `).bind(locationId, name.trim(), (email || '').trim(), timestamp, token).run();
+      INSERT INTO waiting_list (location_id, name, email, timestamp, notified, token, desired_date)
+      VALUES (?, ?, ?, ?, 0, ?, ?)
+    `).bind(locationId, name.trim(), (email || '').trim(), timestamp, token, desired_date || null).run();
 
     // Get updated list
     const results = await env.EDEN_DB.prepare(
-      'SELECT name, email, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
+      'SELECT name, email, desired_date, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
     ).bind(locationId).all();
 
     const list = results.results.map(row => ({
       name: row.name,
       email: row.email,
+      desired_date: row.desired_date,
       timestamp: row.timestamp
     }));
 
@@ -212,12 +216,13 @@ async function handleWaitingListRemove(request, env) {
 
     // Get updated list
     const results = await env.EDEN_DB.prepare(
-      'SELECT name, email, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
+      'SELECT name, email, desired_date, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
     ).bind(locationId).all();
 
     const list = results.results.map(row => ({
       name: row.name,
       email: row.email,
+      desired_date: row.desired_date,
       timestamp: row.timestamp
     }));
 
