@@ -121,12 +121,6 @@ async function handleWaitingListGet(request, env) {
 
     await initDB(env.EDEN_DB);
 
-    // Delete old entries (older than 8 hours)
-    const cutoff = Date.now() - (8 * 60 * 60 * 1000);
-    await env.EDEN_DB.prepare(
-      'DELETE FROM waiting_list WHERE timestamp < ?'
-    ).bind(cutoff).run();
-
     // Get current list
     const results = await env.EDEN_DB.prepare(
       'SELECT name, email, timestamp FROM waiting_list WHERE location_id = ? ORDER BY timestamp ASC'
