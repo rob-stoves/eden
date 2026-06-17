@@ -925,7 +925,8 @@
         }
 
         async function checkAndRemoveBookedFromWaitingList(deskRes) {
-            const waitingList = (await getWaitingList()).filter(isForToday);
+            const today = todayDate();
+            const waitingList = (await getWaitingList()).filter(e => e.desired_date === today);
             if (waitingList.length === 0) return;
             const bookedNames = new Set();
             deskRes.forEach(r => { if (r.owner?.name) bookedNames.add(r.owner.name.toLowerCase().trim()); });
