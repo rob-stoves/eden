@@ -259,44 +259,57 @@ async function handleWaitingListNotify(request, env) {
 
     const oneHourAgo = Date.now() - 3600000;
 
-    // Find first entry eligible for notification: has email, never notified or last notified over an hour ago
-    const entry = await env.EDEN_DB.prepare(
+    // Find all entries eligible for notification: have email, never notified or last notified over an hour ago
+    const results = await env.EDEN_DB.prepare(
       `SELECT id, name, email, token FROM waiting_list
        WHERE location_id = ? AND email IS NOT NULL AND email != ''
          AND (last_notified_at IS NULL OR last_notified_at < ?)
-       ORDER BY timestamp ASC LIMIT 1`
-    ).bind(locationId, oneHourAgo).first();
+       ORDER BY timestamp ASC`
+    ).bind(locationId, oneHourAgo).all();
 
-    if (!entry) {
-      return jsonResponse({ notified: false, reason: 'No un-notified entries with email' });
+    const entries = results.results;
+
+    if (entries.length === 0) {
+      return jsonResponse({ notified: false, reason: 'No eligible entries with email' });
     }
 
     const origin = new URL(request.url).origin;
-    const unsubscribeUrl = `${origin}/waitinglist/unsubscribe?token=${entry.token}`;
+    const now = Date.now();
+    const notifiedNames = [];
 
-    const sent = await sendEmail(env, {
-      to: entry.email,
-      name: entry.name,
-      locationName: locationName || 'the office',
-      deskName: deskName || null,
-      unsubscribeUrl
-    });
+    for (const entry of entries) {
+      const otherNames = entries.filter(e => e.id !== entry.id).map(e => e.name);
+      const unsubscribeUrl = `${origin}/waitinglist/unsubscribe?token=${entry.token}`;
 
-    if (sent) {
-      await env.EDEN_DB.prepare(
-        'UPDATE waiting_list SET notified = 1, last_notified_at = ? WHERE id = ?'
-      ).bind(Date.now(), entry.id).run();
-      return jsonResponse({ notified: true, name: entry.name });
+      const sent = await sendEmail(env, {
+        to: entry.email,
+        name: entry.name,
+        locationName: locationName || 'the office',
+        deskName: deskName || null,
+        otherNames,
+        unsubscribeUrl
+      });
+
+      if (sent) {
+        await env.EDEN_DB.prepare(
+          'UPDATE waiting_list SET notified = 1, last_notified_at = ? WHERE id = ?'
+        ).bind(now, entry.id).run();
+        notifiedNames.push(entry.name);
+      }
     }
 
-    return jsonResponse({ notified: false, reason: 'Email send failed' });
+    if (notifiedNames.length > 0) {
+      return jsonResponse({ notified: true, names: notifiedNames });
+    }
+
+    return jsonResponse({ notified: false, reason: 'All email sends failed' });
   } catch (error) {
     console.error('Waiting list notify error:', error);
     return jsonResponse({ error: error.message }, 500);
   }
 }
 
-async function sendEmail(env, { to, name, locationName, deskName, unsubscribeUrl }) {
+async function sendEmail(env, { to, name, locationName, deskName, otherNames, unsubscribeUrl }) {
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) return false;
 
@@ -304,6 +317,14 @@ async function sendEmail(env, { to, name, locationName, deskName, unsubscribeUrl
   const deskLine = deskName
     ? `<p>Desk ${deskName} is free — head in to Eden now to grab it.</p>`
     : `<p>Head in to Eden now to grab a spot.</p>`;
+
+  let raceLine = '';
+  if (otherNames && otherNames.length > 0) {
+    const nameList = otherNames.length === 1
+      ? otherNames[0]
+      : otherNames.slice(0, -1).join(', ') + ' and ' + otherNames[otherNames.length - 1];
+    raceLine = `<p>This email has also been sent to <strong>${nameList}</strong> — it's a race to book a desk!</p>`;
+  }
 
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -319,6 +340,7 @@ async function sendEmail(env, { to, name, locationName, deskName, unsubscribeUrl
         html: `<p>Hi ${name},</p>
 <p>Good news — a desk has just become available at ${locationName}.</p>
 ${deskLine}
+${raceLine}
 <p><strong>What to do next:</strong></p>
 <ol>
   <li>Log in to Eden via Okta to book your desk</li>
