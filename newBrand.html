@@ -379,11 +379,10 @@
         .waiting-list-input-small {
             padding: 6px 10px;
             background: var(--bg-page);
-            border: 1px solid var(--border-tertiary);
+            border: 1px solid #e4f0da;
             border-radius: 6px; color: var(--fg-default);
             font-size: 12px; width: 120px;
         }
-        .waiting-list-input-small { border-color: #e4f0da; }
         .waiting-list-input-small:focus { outline: none; border-color: #e4f0da; box-shadow: 0 0 0 3px rgba(228,240,218,.2); }
         .waiting-list-submit-small,
         .waiting-list-cancel-small {
@@ -538,15 +537,6 @@
                         <p class="form-caption">Hides desks with names over the selected number of characters</p>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Waiting List</label>
-                        <select class="form-select" id="showWaitingList">
-                            <option value="off" selected>Hide waiting list</option>
-                            <option value="auto">Show when no desks available</option>
-                            <option value="always">Always show waiting list</option>
-                        </select>
-                        <p class="form-caption">Shows a button to join the waiting list when no desks are available</p>
-                    </div>
-                    <div class="form-group">
                         <label class="form-label">API Issue Message</label>
                         <select class="form-select" id="showApiIssueMessage">
                             <option value="false" selected>Disabled</option>
@@ -557,6 +547,15 @@
                 </div>
 
                 <div class="settings-column">
+                    <div class="form-group">
+                        <label class="form-label">Waiting List</label>
+                        <select class="form-select" id="showWaitingList">
+                            <option value="off" selected>Hide waiting list</option>
+                            <option value="auto">Show when no desks available</option>
+                            <option value="always">Always show waiting list</option>
+                        </select>
+                        <p class="form-caption">Shows a button to join the waiting list when no desks are available</p>
+                    </div>
                     <div class="form-group" id="waitingListManagement" style="display:none;">
                         <label class="form-label">Manage Waiting List</label>
                         <div class="waiting-list-manage" id="waitingListManageContainer">
