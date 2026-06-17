@@ -692,6 +692,12 @@
         const deskGrid = $('deskGrid');
         const settingsBtn = $('settingsBtn');
         const nextRefreshEl = $('nextRefresh');
+        nextRefreshEl.style.cursor = 'pointer';
+        nextRefreshEl.addEventListener('click', async () => {
+            await refreshData();
+            await updateWaitingListQueue();
+            startAutoRefresh();
+        });
 
         const API_BASE = '/api';
 
