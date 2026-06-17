@@ -347,7 +347,7 @@ ${raceLine}
   <li>If you continue to get this email, you may have entered your name differently to how it's stored in Eden — you can manually remove yourself from the waiting list below</li>
 </ol>
 <p><a href="${unsubscribeUrl}">Remove me from the waiting list</a></p>
-<p style="color:#999;font-size:12px;">(Hopefully if Eden update their API we can make step 2 automatic)</p>`
+<p style="color:#999;font-size:12px;">(Hopefully if Eden update their API we automatically book you a desk when it becomes available)</p>`
       })
     });
     return res.ok;
