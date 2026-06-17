@@ -1,1299 +1,836 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Desk Availability — Optimizely</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Roboto+Condensed:wght@900&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Desk Availability Display</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Condensed:wght@900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --brand:           #ABFF44;
-            --brand-ink:       #08251A;
-            --bg-page:         #252825;
-            --bg-default:      #2B2E2B;
-            --bg-secondary:    #202320;
-            --border-tertiary: #383E38;
-            --border-default:  #484E46;
-            --fg-default:      #D2DEC2;
-            --fg-secondary:    #B2BD9E;
-            --fg-tertiary:     #A1AC8D;
-            --duration-sm:     150ms;
+            --bg-dark: #252825;
+            --bg-card: #2B2E2B;
+            --bg-card-hover: #323532;
+            --accent-green: #ABFF44;
+            --accent-red: #ff4466;
+            --accent-amber: #ffaa00;
+            --text-primary: #D2DEC2;
+            --text-secondary: #B2BD9E;
+            --text-muted: #A1AC8D;
+            --border-subtle: #383E38;
+            --glow-green: rgba(171, 255, 68, 0.15);
+            --glow-red: rgba(255, 68, 102, 0.15);
         }
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
-            font-family: "Roboto", sans-serif;
-            background: var(--bg-page);
-            color: var(--fg-default);
-            color-scheme: dark;
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* ── CONFIG / SETTINGS SCREEN ────────────────────────────────── */
+        .bg-pattern {
+            display: none;
+        }
+
+        .grid-overlay {
+            display: none;
+        }
+
         .config-screen {
-            position: fixed; inset: 0;
-            display: flex; align-items: flex-start; justify-content: center;
-            background: var(--bg-page);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             z-index: 100;
             padding: 40px;
-            overflow-y: auto;
         }
 
         .config-card {
-            background: var(--bg-default);
-            border: 1px solid var(--border-tertiary);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
             border-radius: 12px;
             padding: 48px;
-            max-width: 560px;
+            max-width: 600px;
             width: 100%;
-            margin: auto;
+            position: relative;
+            animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .config-logo { height: 48px; margin-bottom: 28px; display: block; }
-
-        .config-title {
-            font-family: "Roboto Condensed", sans-serif;
-            font-weight: 900;
-            font-size: 30px;
-            letter-spacing: -0.025em;
-            color: var(--fg-default);
-            margin-bottom: 6px;
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .config-subtitle {
+        .config-card::before {
+            display: none;
+        }
+
+        .logo {
+            font-family: 'Roboto Mono', monospace;
             font-size: 14px;
-            color: var(--fg-tertiary);
-            margin-bottom: 36px;
-        }
-
-        /* ── Section headings ── */
-        .settings-section { margin-bottom: 8px; }
-
-        .settings-rule {
-            border: none;
-            border-top: 1px solid var(--border-tertiary);
-            margin: 24px 0 20px;
-        }
-
-        .settings-section-heading {
-            font-family: "Roboto Mono", monospace;
-            font-size: 11px;
-            letter-spacing: .12em;
+            color: var(--accent-green);
+            letter-spacing: 4px;
             text-transform: uppercase;
-            color: var(--fg-tertiary);
-            margin-bottom: 16px;
-        }
-
-        .form-group { margin-bottom: 20px; }
-
-        .form-label {
-            display: block;
-            font-family: "Roboto Mono", monospace;
-            font-size: 11px;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-            color: var(--fg-tertiary);
             margin-bottom: 8px;
         }
 
-        .form-input, .form-select, .form-textarea {
+        .config-title {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -0.025em;
+            margin-bottom: 8px;
+        }
+
+        .config-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            margin-bottom: 10px;
+        }
+
+        .form-input {
             width: 100%;
-            padding: 12px 16px;
-            background: var(--bg-page);
-            border: 1px solid var(--border-default);
+            padding: 16px 20px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
             border-radius: 8px;
-            color: var(--fg-default);
-            font-size: 14px;
-            font-family: "Roboto Mono", monospace;
-            transition: border-color var(--duration-sm);
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: 'Roboto Mono', monospace;
+            transition: all 0.3s ease;
         }
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
+
+        .form-input:focus {
             outline: none;
-            border-color: var(--brand);
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 4px var(--glow-green);
         }
-        .form-input::placeholder, .form-textarea::placeholder { color: var(--fg-tertiary); }
-        .form-textarea {
-            resize: vertical;
-            min-height: 80px;
-            font-size: 13px;
+
+        .form-input::placeholder {
+            color: var(--text-muted);
         }
+
         .form-select {
-            font-family: "Roboto", sans-serif;
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: 'Roboto', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23A1AC8D' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238888aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 12px center;
-        }
-        .form-select option { background: var(--bg-default); }
-
-        .form-input-sm {
-            width: auto;
-            padding: 8px 12px;
-            background: var(--bg-page);
-            border: 1px solid var(--border-default);
-            border-radius: 8px;
-            color: var(--fg-default);
-            font-size: 14px;
-            font-family: "Roboto Mono", monospace;
-            transition: border-color var(--duration-sm);
-        }
-        .form-input-sm:focus { outline: none; border-color: var(--brand); }
-
-        /* ── Toggle (pill) ── */
-        .toggle-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-        .toggle-row-label {
-            font-size: 14px;
-            color: var(--fg-default);
-            flex: 1;
-        }
-        .toggle-row-desc {
-            font-size: 12px;
-            color: var(--fg-tertiary);
-            margin-top: 2px;
+            background-position: right 16px center;
         }
 
-        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .toggle-track {
-            position: absolute; inset: 0;
-            background: var(--border-default);
-            border-radius: 9999px;
-            cursor: pointer;
-            transition: background var(--duration-sm);
-        }
-        .toggle-track::before {
-            content: '';
-            position: absolute;
-            width: 18px; height: 18px;
-            left: 3px; top: 3px;
-            background: var(--fg-tertiary);
-            border-radius: 50%;
-            transition: transform var(--duration-sm), background var(--duration-sm);
-        }
-        .toggle-switch input:checked + .toggle-track { background: var(--brand); }
-        .toggle-switch input:checked + .toggle-track::before {
-            transform: translateX(20px);
-            background: var(--brand-ink);
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 4px var(--glow-green);
         }
 
-        /* ── Segmented control ── */
-        .segmented {
-            display: inline-flex;
-            background: var(--bg-page);
-            border: 1px solid var(--border-default);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .segmented input[type="radio"] { display: none; }
-        .segmented label {
-            padding: 8px 18px;
-            font-family: "Roboto Mono", monospace;
-            font-size: 12px;
-            letter-spacing: .06em;
-            color: var(--fg-secondary);
-            cursor: pointer;
-            border-right: 1px solid var(--border-default);
-            transition: background var(--duration-sm), color var(--duration-sm);
-            user-select: none;
-        }
-        .segmented label:last-of-type { border-right: none; }
-        .segmented input[type="radio"]:checked + label {
-            background: var(--brand);
-            color: var(--brand-ink);
-            font-weight: 700;
+        .form-select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
         }
 
-        /* ── Metric focus radio ── */
-        .radio-group { display: flex; gap: 20px; }
-        .radio-row {
-            display: flex; align-items: center; gap: 8px;
-            font-size: 14px; color: var(--fg-default); cursor: pointer;
-        }
-        .radio-row input[type="radio"] { accent-color: var(--brand); width: 16px; height: 16px; cursor: pointer; }
-
-        /* ── Number input row ── */
-        .inline-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .inline-row .form-label { margin-bottom: 0; }
-        .inline-row input[type="number"] {
-            width: 80px;
-            padding: 8px 12px;
-            background: var(--bg-page);
-            border: 1px solid var(--border-default);
-            border-radius: 8px;
-            color: var(--fg-default);
-            font-size: 14px;
-            font-family: "Roboto Mono", monospace;
-        }
-        .inline-row input[type="number"]:focus { outline: none; border-color: var(--brand); }
-
-        /* ── Buttons ── */
         .btn-primary {
             width: 100%;
-            padding: 14px;
-            background: var(--brand);
-            color: var(--brand-ink);
+            padding: 18px 32px;
+            background: var(--accent-green);
+            color: var(--bg-dark);
             border: none;
-            border-radius: 8px;
-            font-size: 13px;
+            border-radius: 12px;
+            font-size: 16px;
             font-weight: 700;
-            font-family: "Roboto Condensed", sans-serif;
-            text-transform: uppercase;
-            letter-spacing: .06em;
+            font-family: 'Roboto', sans-serif;
             cursor: pointer;
-            margin-top: 8px;
-            transition: opacity var(--duration-sm);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 16px;
         }
-        .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px var(--glow-green);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
 
         .btn-secondary {
             width: 100%;
-            padding: 12px;
+            padding: 14px 24px;
             background: transparent;
-            color: var(--fg-secondary);
-            border: 1px solid var(--border-default);
-            border-radius: 8px;
-            font-size: 13px;
-            font-family: "Roboto", sans-serif;
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Roboto', sans-serif;
             cursor: pointer;
-            margin-bottom: 20px;
-            transition: border-color var(--duration-sm), color var(--duration-sm);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .btn-secondary:hover:not(:disabled) { border-color: var(--brand); color: var(--brand); }
-        .btn-secondary:disabled { opacity: .4; cursor: not-allowed; }
 
-        .btn-small {
-            padding: 7px 14px;
-            background: transparent;
-            color: var(--fg-secondary);
-            border: 1px solid var(--border-default);
-            border-radius: 6px;
-            font-size: 12px;
-            font-family: "Roboto Mono", monospace;
-            cursor: pointer;
-            transition: border-color var(--duration-sm), color var(--duration-sm);
-            white-space: nowrap;
+        .btn-secondary:hover {
+            background: var(--glow-green);
         }
-        .btn-small:hover { border-color: var(--brand); color: var(--brand); }
-        .btn-small.btn-danger:hover { border-color: #ff4466; color: #ff4466; }
-        .btn-small.btn-accent {
-            background: var(--brand);
-            color: var(--brand-ink);
-            border-color: var(--brand);
-            font-weight: 700;
-        }
-        .btn-small.btn-accent:hover { opacity: .85; }
 
-        /* ── Error ── */
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .error-message {
-            background: rgba(255,68,102,.08);
-            border: 1px solid rgba(255,68,102,.35);
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            color: #ff8099;
-            font-size: 13px;
+            background: var(--glow-red);
+            border: 1px solid var(--accent-red);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: var(--accent-red);
+            font-size: 14px;
             display: none;
         }
 
-        /* ── Spinner ── */
         .loading-spinner {
             display: inline-block;
-            width: 13px; height: 13px;
+            width: 20px;
+            height: 20px;
             border: 2px solid transparent;
             border-top-color: currentColor;
             border-radius: 50%;
-            animation: spin .8s linear infinite;
-            margin-right: 6px;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
             vertical-align: middle;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ── Waiting list manage ── */
-        .waiting-manage {
-            background: var(--bg-page);
-            border: 1px solid var(--border-tertiary);
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 8px;
-        }
-        .waiting-list-items { list-style: none; margin-bottom: 12px; }
-        .waiting-list-items li {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid var(--border-tertiary);
-            font-size: 14px; color: var(--fg-default);
-        }
-        .waiting-list-items li:last-child { border-bottom: none; }
-        .waiting-list-empty {
-            font-size: 13px; color: var(--fg-tertiary);
-            font-family: "Roboto Mono", monospace;
-            margin-bottom: 12px;
-        }
-        .waiting-add-row { display: flex; gap: 8px; }
-        .waiting-add-row input {
-            flex: 1;
-            padding: 8px 12px;
-            background: var(--bg-default);
-            border: 1px solid var(--border-default);
-            border-radius: 6px;
-            color: var(--fg-default);
-            font-size: 14px;
-            font-family: "Roboto", sans-serif;
-        }
-        .waiting-add-row input:focus { outline: none; border-color: var(--brand); }
-
-        /* ── Nicknames table ── */
-        .nicknames-note {
-            font-size: 13px; color: var(--fg-tertiary);
-            font-family: "Roboto Mono", monospace;
-            font-style: italic;
-        }
-        .nicknames-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-        }
-        .nicknames-table th {
-            font-family: "Roboto Mono", monospace;
-            font-size: 10px;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-            color: var(--fg-tertiary);
-            text-align: left;
-            padding: 0 8px 8px 0;
-            border-bottom: 1px solid var(--border-tertiary);
-        }
-        .nicknames-table td {
-            padding: 6px 8px 6px 0;
-            border-bottom: 1px solid var(--border-tertiary);
-            font-size: 13px;
-            color: var(--fg-secondary);
-            vertical-align: middle;
-        }
-        .nicknames-table tr:last-child td { border-bottom: none; }
-        .nicknames-table input {
-            width: 100%;
-            padding: 6px 10px;
-            background: var(--bg-page);
-            border: 1px solid var(--border-default);
-            border-radius: 6px;
-            color: var(--fg-default);
-            font-size: 13px;
-            font-family: "Roboto", sans-serif;
-        }
-        .nicknames-table input:focus { outline: none; border-color: var(--brand); }
-
-        /* ── Form helper note ── */
-        .form-note {
-            font-size: 12px;
-            color: var(--fg-tertiary);
-            margin-top: 6px;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        /* ── DASHBOARD ──────────────────────────────────────────────── */
         .dashboard {
             display: none;
-            flex-direction: column;
-            width: 100vw;
-            height: 100vh;
-            background: var(--bg-page);
-            overflow: hidden;
+            min-height: 100vh;
+            padding: 40px;
+            position: relative;
+            z-index: 1;
         }
 
-        /* Header */
-        .header {
+        .dashboard-header {
             display: flex;
-            align-items: center;
-            gap: 28px;
-            padding: 24px 52px 16px;
-            flex-shrink: 0;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 48px;
+            flex-wrap: wrap;
+            gap: 24px;
         }
 
-        .header-left {
+        .location-info {
             flex: 1;
-            min-width: 0;
-            display: flex;
+            min-width: 300px;
+        }
+
+        .location-badge {
+            display: inline-flex;
             align-items: center;
-            gap: 18px;
-        }
-
-        .header-logo { height: 38px; flex-shrink: 0; }
-
-        .header-divider {
-            width: 1px; height: 30px;
-            background: var(--border-default);
-            flex-shrink: 0;
-        }
-
-        .header-eyebrow {
-            font-family: "Roboto Mono", monospace;
-            font-size: 12px;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-            color: var(--fg-tertiary);
-            margin-bottom: 4px;
-        }
-
-        .header-title {
-            font-family: "Roboto Condensed", sans-serif;
-            font-weight: 900;
-            font-size: 42px;
-            line-height: .92;
-            letter-spacing: -0.028em;
-            color: var(--fg-default);
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 28px;
-        }
-
-        .live-pill {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 100px;
             padding: 8px 16px;
-            border: 1px solid var(--border-default);
-            border-radius: 9999px;
-            flex-shrink: 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
         }
 
-        .live-dot {
-            width: 9px; height: 9px;
+        .location-badge .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
             border-radius: 50%;
-            background: var(--brand);
-            animation: livePulse 2.2s ease-in-out infinite;
-            flex-shrink: 0;
+            animation: pulse 2s ease-in-out infinite;
         }
 
-        @keyframes livePulse {
+        @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50%       { opacity: .35; transform: scale(.78); }
+            50% { opacity: 0.5; transform: scale(0.8); }
         }
 
-        .live-label {
-            font-family: "Roboto Mono", monospace;
-            font-size: 12px;
-            letter-spacing: .1em;
-            color: var(--fg-secondary);
-            white-space: nowrap;
+        .location-name {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: -0.025em;
+            line-height: 1.1;
+            margin-bottom: 8px;
         }
 
-        .stat-block { text-align: right; }
+        .last-updated {
+            color: var(--text-muted);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 13px;
+        }
 
-        .stat-big-row {
+        .stats-row {
             display: flex;
-            align-items: baseline;
-            gap: 12px;
-            justify-content: flex-end;
+            gap: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 24px 32px;
+            min-width: 180px;
+        }
+
+        .stat-card.available {
+            border-color: var(--accent-green);
+            background: linear-gradient(135deg, var(--bg-card), rgba(171, 255, 68, 0.06));
+        }
+
+        .stat-card.occupied {
+            border-color: var(--accent-red);
+            background: linear-gradient(135deg, var(--bg-card), rgba(255, 68, 102, 0.05));
         }
 
         .stat-value {
-            font-family: "Roboto Mono", monospace;
+            font-size: 42px;
             font-weight: 700;
-            font-size: 68px;
-            line-height: .85;
-            color: var(--brand);
+            font-family: 'Roboto Mono', monospace;
+            line-height: 1;
         }
+
+        .stat-card.available .stat-value { color: var(--accent-green); }
+        .stat-card.occupied .stat-value { color: var(--accent-red); }
 
         .stat-label {
-            font-family: "Roboto Condensed", sans-serif;
-            font-weight: 900;
-            font-size: 30px;
-            text-transform: uppercase;
-            letter-spacing: -0.01em;
-            color: var(--fg-default);
-        }
-
-        .stat-sub {
-            font-family: "Roboto Mono", monospace;
-            font-size: 12px;
-            color: var(--fg-tertiary);
-            margin-top: 6px;
-        }
-
-        .capacity-bar-track {
-            width: 300px;
-            height: 7px;
-            background: var(--bg-secondary);
-            border-radius: 9999px;
-            overflow: hidden;
-            margin-top: 9px;
-            margin-left: auto;
-        }
-
-        .capacity-bar-fill {
-            height: 100%;
-            background: var(--brand);
-            border-radius: 9999px;
-            transition: width var(--duration-sm);
-        }
-
-        /* Grid section */
-        .grid-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            padding: 2px 52px 0;
-            min-height: 0;
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            border-top: 1px solid var(--border-tertiary);
-            padding-top: 14px;
-            flex-shrink: 0;
-        }
-
-        .section-eyebrow {
-            font-family: "Roboto Mono", monospace;
-            font-size: 12px;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-            color: var(--fg-tertiary);
-        }
-
-        .section-spacer { flex: 1; }
-
-        .legend {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 9px;
             font-size: 13px;
-            color: var(--fg-secondary);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
         }
 
-        .legend-swatch {
-            width: 14px; height: 14px;
-            border-radius: 4px;
-            flex-shrink: 0;
-        }
-        .legend-swatch.available { background: var(--brand); }
-        .legend-swatch.occupied  { background: var(--bg-default); border: 1px solid var(--border-default); }
-
-        /* Desk grid */
         .desk-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 12px;
-            flex: 1;
-            grid-auto-rows: 1fr;
-            min-height: 0;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .desk-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            position: relative;
             overflow: hidden;
         }
 
-        /* Desk card */
-        .desk-card {
+        .desk-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-green);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .desk-card.available::before {
+            transform: scaleX(1);
+            background: var(--accent-green);
+            height: 4px;
+        }
+
+        .desk-card.occupied::before {
+            transform: scaleX(1);
+            background: var(--accent-red);
+        }
+
+        .desk-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-4px);
+        }
+
+        .desk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .desk-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .desk-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .desk-status.available {
+            background: var(--glow-green);
+            color: var(--accent-green);
+        }
+
+        .desk-status.occupied {
+            background: var(--glow-red);
+            color: var(--accent-red);
+        }
+
+        .desk-status .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .occupant-info {
             display: flex;
             align-items: center;
-            gap: 14px;
-            border-radius: 8px;
-            padding: 0 18px;
-            min-height: 74px;
-            transition: background var(--duration-sm), box-shadow var(--duration-sm);
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-subtle);
         }
 
-        .desk-card.available {
-            background: var(--brand);
-            box-shadow: 0 0 26px -4px rgba(171,255,68,.45);
-        }
-
-        .desk-card.occupied {
-            background: var(--bg-default);
-            border: 1px solid var(--border-tertiary);
-        }
-
-        .desk-number {
-            font-family: "Roboto Mono", monospace;
-            font-size: 31px;
-            min-width: 42px;
+        .occupant-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-amber));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--bg-dark);
             flex-shrink: 0;
         }
-        .desk-card.available .desk-number { font-weight: 600; color: var(--brand-ink); }
-        .desk-card.occupied  .desk-number { font-weight: 500; color: var(--fg-tertiary); }
 
-        .desk-occupant {
+        .occupant-details {
             flex: 1;
             min-width: 0;
+        }
+
+        .occupant-name {
+            font-weight: 600;
+            font-size: 15px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .desk-card.available .desk-occupant {
-            font-family: "Roboto Condensed", sans-serif;
-            font-weight: 900;
-            font-size: 21px;
-            text-transform: uppercase;
-            letter-spacing: .01em;
-            color: var(--brand-ink);
-        }
-        .desk-card.occupied .desk-occupant {
-            font-size: 19px;
-            font-weight: 500;
-            color: var(--fg-default);
+
+        .occupant-time {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-family: 'Roboto Mono', monospace;
+            margin-top: 2px;
         }
 
-        /* Waiting list footer band */
-        .waiting-footer {
-            flex-shrink: 0;
-            border-top: 1px solid var(--border-tertiary);
-            padding: 10px 52px;
+        .empty-desk-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--glow-green);
             display: flex;
             align-items: center;
-            gap: 20px;
-            background: var(--bg-secondary);
-        }
-        .waiting-footer-label {
-            font-family: "Roboto Mono", monospace;
-            font-size: 11px;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-            color: var(--fg-tertiary);
-            flex-shrink: 0;
-        }
-        .waiting-footer-names {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .waiting-chip {
-            padding: 4px 12px;
-            border: 1px solid var(--border-default);
-            border-radius: 9999px;
-            font-size: 13px;
-            color: var(--fg-secondary);
-            font-family: "Roboto", sans-serif;
+            justify-content: center;
         }
 
-        /* Settings button */
-        .settings-btn {
+        .empty-desk-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--accent-green);
+        }
+
+        .btn-settings {
             position: fixed;
-            bottom: 20px; right: 20px;
-            display: flex; align-items: center; gap: 8px;
-            padding: 10px 16px;
-            background: var(--bg-default);
-            border: 1px solid var(--border-default);
+            bottom: 32px;
+            right: 32px;
+            width: 56px;
+            height: 56px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
             border-radius: 8px;
-            color: var(--fg-secondary);
-            font-family: "Roboto Mono", monospace;
-            font-size: 11px;
-            letter-spacing: .1em;
-            text-transform: uppercase;
+            color: var(--text-secondary);
             cursor: pointer;
-            transition: border-color var(--duration-sm), color var(--duration-sm);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             z-index: 50;
         }
-        .settings-btn:hover { border-color: var(--brand); color: var(--brand); }
-        .settings-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+        .btn-settings:hover {
+            background: var(--bg-card-hover);
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .btn-settings svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        @media (min-width: 1920px) {
+            .location-name { font-size: 64px; }
+            .stat-value { font-size: 56px; }
+            .desk-grid {
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: 28px;
+            }
+            .desk-card { padding: 32px; }
+            .desk-name { font-size: 22px; }
+        }
 
         .hidden { display: none !important; }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-subtle);
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            top: 32px;
+            right: 32px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 100px;
+            padding: 10px 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: 'Roboto Mono', monospace;
+            z-index: 50;
+        }
+
+        .refresh-icon {
+            width: 16px;
+            height: 16px;
+            animation: spin 2s linear infinite;
+        }
+
+        .refresh-icon.paused {
+            animation-play-state: paused;
+        }
     </style>
 </head>
 <body>
+    <div class="bg-pattern"></div>
+    <div class="grid-overlay"></div>
 
-    <!-- ── CONFIG / SETTINGS SCREEN ──────────────────────────────────── -->
+    <!-- Configuration Screen -->
     <div class="config-screen" id="configScreen">
         <div class="config-card">
-            <img class="config-logo" src="Optimizely_Primary-Logo_Medium_Green_RGB.svg" alt="Optimizely">
-
+            <img src="Optimizely_Primary-Logo_Medium_Green_RGB.svg" alt="Optimizely" style="height:40px;display:block;margin-bottom:24px;">
             <h1 class="config-title">Desk Availability</h1>
             <p class="config-subtitle">Configure your office display settings</p>
 
             <div class="error-message" id="errorMessage"></div>
 
-            <!-- ── 1. CONNECTION ─────────────────────────────────────── -->
-            <div class="settings-section">
-                <div class="settings-section-heading">Connection</div>
-
-                <div class="form-group">
-                    <label class="form-label">API Token</label>
-                    <input type="password" class="form-input" id="apiToken" placeholder="Enter your Eden API token" value="Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl">
-                </div>
-
-                <button class="btn-secondary" id="loadLocationsBtn">
-                    <span id="loadBtnText">Load Locations</span>
-                </button>
-
-                <div class="form-group">
-                    <label class="form-label">Select Office Location</label>
-                    <select class="form-select" id="locationSelect" disabled>
-                        <option value="">Click "Load Locations" first…</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Auto-Refresh Interval</label>
-                    <select class="form-select" id="refreshInterval">
-                        <option value="30">Every 30 seconds</option>
-                        <option value="60" selected>Every 1 minute</option>
-                        <option value="120">Every 2 minutes</option>
-                        <option value="300">Every 5 minutes</option>
-                    </select>
-                </div>
+            <div class="form-group">
+                <label class="form-label">API Token</label>
+                <input type="password" class="form-input" id="apiToken" placeholder="Enter your Eden API token" value="Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl">
             </div>
 
-            <hr class="settings-rule">
+            <button class="btn-secondary" id="loadLocationsBtn" style="margin-bottom: 24px;">
+                <span id="loadBtnText">Load Locations</span>
+            </button>
 
-            <!-- ── 2. DISPLAY ────────────────────────────────────────── -->
-            <div class="settings-section">
-                <div class="settings-section-heading">Display</div>
-
-                <div class="form-group">
-                    <label class="form-label" for="dashboardTitle">Dashboard Title</label>
-                    <input type="text" class="form-input" id="dashboardTitle" placeholder="e.g. London Office">
-                    <div class="form-note">If set, replaces the location name in the header.</div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Display Mode</label>
-                    <div class="toggle-row" style="margin-bottom:12px;">
-                        <div>
-                            <div class="toggle-row-label">Show occupant names</div>
-                            <div class="toggle-row-desc">When off, occupied cards show "Occupied"</div>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="showNamesToggle" checked>
-                            <span class="toggle-track"></span>
-                        </label>
-                    </div>
-                    <label class="form-label" style="margin-bottom:8px;">Metric focus</label>
-                    <div class="radio-group">
-                        <label class="radio-row">
-                            <input type="radio" name="metricFocus" id="metricFree" value="free" checked>
-                            Free desks
-                        </label>
-                        <label class="radio-row">
-                            <input type="radio" name="metricFocus" id="metricOccupied" value="occupied">
-                            Occupied desks
-                        </label>
-                    </div>
-                </div>
-
-                <div class="toggle-row">
-                    <div>
-                        <div class="toggle-row-label">Hide non-desks</div>
-                        <div class="toggle-row-desc">Filter out items where location_type is not "desk"</div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="hideNonDesksToggle">
-                        <span class="toggle-track"></span>
-                    </label>
-                </div>
+            <div class="form-group">
+                <label class="form-label">Select Office Location</label>
+                <select class="form-select" id="locationSelect" disabled>
+                    <option value="">Click "Load Locations" first...</option>
+                </select>
             </div>
 
-            <hr class="settings-rule">
-
-            <!-- ── 3. APPEARANCE ─────────────────────────────────────── -->
-            <div class="settings-section">
-                <div class="settings-section-heading">Appearance</div>
-
-                <div class="form-group">
-                    <label class="form-label">Desk name size</label>
-                    <div class="segmented" id="deskNameSizeControl">
-                        <input type="radio" name="deskNameSize" id="dnskSm" value="sm">
-                        <label for="dnskSm">S</label>
-                        <input type="radio" name="deskNameSize" id="dnskMd" value="md" checked>
-                        <label for="dnskMd">M</label>
-                        <input type="radio" name="deskNameSize" id="dnskLg" value="lg">
-                        <label for="dnskLg">L</label>
-                    </div>
-                    <div class="form-note">S = 20px · M = 31px · L = 42px</div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Occupant name size</label>
-                    <div class="segmented" id="occupantNameSizeControl">
-                        <input type="radio" name="occupantNameSize" id="onSm" value="sm">
-                        <label for="onSm">S</label>
-                        <input type="radio" name="occupantNameSize" id="onMd" value="md" checked>
-                        <label for="onMd">M</label>
-                        <input type="radio" name="occupantNameSize" id="onLg" value="lg">
-                        <label for="onLg">L</label>
-                    </div>
-                    <div class="form-note">S = 14px · M = 19px · L = 26px</div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="gridColumns">Grid columns</label>
-                    <div class="inline-row">
-                        <input type="number" id="gridColumns" min="4" max="10" value="7" class="form-input-sm">
-                        <span style="font-size:13px;color:var(--fg-tertiary);">columns (4–10)</span>
-                    </div>
-                </div>
+            <div class="form-group">
+                <label class="form-label">Auto-Refresh Interval</label>
+                <select class="form-select" id="refreshInterval">
+                    <option value="30">Every 30 seconds</option>
+                    <option value="60" selected>Every 1 minute</option>
+                    <option value="120">Every 2 minutes</option>
+                    <option value="300">Every 5 minutes</option>
+                </select>
             </div>
 
-            <hr class="settings-rule">
-
-            <!-- ── 4. WAITING LIST ───────────────────────────────────── -->
-            <div class="settings-section">
-                <div class="settings-section-heading">Waiting List</div>
-
-                <div class="toggle-row">
-                    <div>
-                        <div class="toggle-row-label">Enable waiting list</div>
-                        <div class="toggle-row-desc">Shows a footer band on the dashboard</div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="waitingListToggle">
-                        <span class="toggle-track"></span>
-                    </label>
-                </div>
-
-                <div id="waitingManage" class="waiting-manage hidden">
-                    <label class="form-label" style="margin-bottom:10px;">Manage waiting list</label>
-                    <ul class="waiting-list-items" id="waitingListItems"></ul>
-                    <div class="waiting-list-empty hidden" id="waitingListEmpty">No one on the waiting list yet.</div>
-                    <div class="waiting-add-row">
-                        <input type="text" id="waitingAddInput" placeholder="Add person…">
-                        <button class="btn-small btn-accent" id="waitingAddBtn">Add</button>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="settings-rule">
-
-            <!-- ── 5. CONTENT ────────────────────────────────────────── -->
-            <div class="settings-section">
-                <div class="settings-section-heading">Content</div>
-
-                <div class="form-group">
-                    <label class="form-label" for="apiIssueMsg">API issue message</label>
-                    <textarea class="form-textarea" id="apiIssueMsg" placeholder="Custom message shown when data fails to load…"></textarea>
-                    <div class="form-note">Shown in the desk grid when the API fails (leave blank for the default message).</div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Manage desk nicknames</label>
-                    <div id="nicknamesArea">
-                        <div class="nicknames-note" id="nicknamesNote">Load a location first to manage nicknames.</div>
-                        <table class="nicknames-table hidden" id="nicknamesTable">
-                            <thead>
-                                <tr>
-                                    <th>Desk</th>
-                                    <th>Nickname (optional)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="nicknamesTbody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="settings-rule">
-
-            <button class="btn-primary" id="startBtn" disabled>Launch Display</button>
+            <button class="btn-primary" id="startBtn" disabled>
+                Launch Display
+            </button>
         </div>
     </div>
 
-    <!-- ── DASHBOARD ─────────────────────────────────────────────── -->
+    <!-- Dashboard Screen -->
     <div class="dashboard" id="dashboard">
+        <div class="refresh-indicator">
+            <svg class="refresh-icon" id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+            </svg>
+            <span id="nextRefresh">Refreshing...</span>
+        </div>
 
-        <header class="header">
-            <div class="header-left">
-                <img class="header-logo" src="Optimizely_Primary-Logo_Medium_Green_RGB.svg" alt="Optimizely">
-                <div class="header-divider"></div>
-                <div>
-                    <div class="header-eyebrow" id="headerEyebrow">WORKPLACE · LONDON</div>
-                    <div class="header-title" id="headerTitle">London office</div>
+        <header class="dashboard-header">
+            <div class="location-info">
+                <div class="location-badge">
+                    <span class="dot"></span>
+                    <span>Live</span>
                 </div>
+                <h1 class="location-name" id="locationName">Loading...</h1>
+                <p class="last-updated">Last updated: <span id="lastUpdated">--:--</span></p>
             </div>
-
-            <div class="header-right">
-                <div class="live-pill">
-                    <div class="live-dot"></div>
-                    <span class="live-label">LIVE · <span id="lastUpdated">--:--</span></span>
+            <div class="stats-row">
+                <div class="stat-card available">
+                    <div class="stat-value" id="availableCount">--</div>
+                    <div class="stat-label">Available</div>
                 </div>
-
-                <div class="stat-block">
-                    <div class="stat-big-row">
-                        <span class="stat-value" id="statValue">--</span>
-                        <span class="stat-label" id="statLabel">FREE</span>
-                    </div>
-                    <div class="stat-sub" id="statSub">Loading…</div>
-                    <div class="capacity-bar-track">
-                        <div class="capacity-bar-fill" id="capacityBar" style="width:0%"></div>
-                    </div>
+                <div class="stat-card occupied">
+                    <div class="stat-value" id="occupiedCount">--</div>
+                    <div class="stat-label">Occupied</div>
                 </div>
             </div>
         </header>
 
-        <div class="grid-section">
-            <div class="section-header">
-                <span class="section-eyebrow">ALL DESKS</span>
-                <div class="section-spacer"></div>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-swatch available"></div>
-                        Available
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-swatch occupied"></div>
-                        Occupied
-                    </div>
-                </div>
-            </div>
+        <div class="section-title">All Desks</div>
+        <div class="desk-grid" id="deskGrid"></div>
 
-            <div class="desk-grid" id="deskGrid"></div>
-        </div>
-
-        <!-- Waiting list footer band -->
-        <div class="waiting-footer hidden" id="waitingFooter">
-            <span class="waiting-footer-label">Waiting</span>
-            <div class="waiting-footer-names" id="waitingFooterNames"></div>
-        </div>
-
-        <button class="settings-btn" id="settingsBtn">
+        <button class="btn-settings" id="settingsBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="3"/>
                 <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
             </svg>
             Settings
         </button>
-
     </div>
 
     <script>
-        // ── Helpers ───────────────────────────────────────────────────
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // ── Settings getters/setters with defaults ────────────────────
-        const S = {
-            get apiToken()          { return localStorage.getItem('eden_nb_api_token')          || 'Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl'; },
-            get locationId()        { return localStorage.getItem('eden_nb_location_id')        || ''; },
-            get locationName()      { return localStorage.getItem('eden_nb_location_name')      || ''; },
-            get refreshInterval()   { return parseInt(localStorage.getItem('eden_nb_refresh_interval')) || 60; },
-            get dashboardTitle()    { return localStorage.getItem('eden_nb_dashboard_title')    || ''; },
-            get showNames()         { return localStorage.getItem('eden_nb_show_names')         !== 'false'; },
-            get metricFocus()       { return localStorage.getItem('eden_nb_metric_focus')       || 'free'; },
-            get hideNonDesks()      { return localStorage.getItem('eden_nb_hide_non_desks')     === 'true'; },
-            get deskNameSize()      { return localStorage.getItem('eden_nb_desk_name_size')     || 'md'; },
-            get occupantNameSize()  { return localStorage.getItem('eden_nb_occupant_name_size') || 'md'; },
-            get cardColumns()       { return parseInt(localStorage.getItem('eden_nb_card_columns')) || 7; },
-            get waitingListEnabled(){ return localStorage.getItem('eden_nb_waiting_list_enabled') === 'true'; },
-            get waitingList()       { try { return JSON.parse(localStorage.getItem('eden_nb_waiting_list') || '[]'); } catch { return []; } },
-            get apiIssueMessage()   { return localStorage.getItem('eden_nb_api_issue_message') || ''; },
-            get nicknames()         { try { return JSON.parse(localStorage.getItem('eden_nb_nicknames') || '{}'); } catch { return {}; } },
-        };
-
-        function saveNicknames(obj) { localStorage.setItem('eden_nb_nicknames', JSON.stringify(obj)); }
-        function saveWaitingList(arr){ localStorage.setItem('eden_nb_waiting_list', JSON.stringify(arr)); }
-
-        const DESK_NAME_SIZES     = { sm: '20px', md: '31px', lg: '42px' };
-        const OCCUPANT_NAME_SIZES = { sm: '14px', md: '19px', lg: '26px' };
-
-        // ── State ─────────────────────────────────────────────────────
+        // State
         let state = {
-            locations:    [],
-            desks:        [],
+            apiToken: localStorage.getItem('eden_api_token') || 'Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl',
+            locationId: localStorage.getItem('eden_location_id') || '',
+            locationName: localStorage.getItem('eden_location_name') || '',
+            refreshInterval: parseInt(localStorage.getItem('eden_refresh_interval')) || 60,
+            locations: [],
+            desks: [],
             reservations: [],
             refreshTimer: null,
+            countdownTimer: null,
+            nextRefreshTime: null
         };
 
-        // ── DOM refs — connection ─────────────────────────────────────
-        const configScreen       = document.getElementById('configScreen');
-        const dashboard          = document.getElementById('dashboard');
-        const apiTokenInput      = document.getElementById('apiToken');
-        const locationSelect     = document.getElementById('locationSelect');
-        const refreshIntervalSel = document.getElementById('refreshInterval');
-        const startBtn           = document.getElementById('startBtn');
-        const loadLocationsBtn   = document.getElementById('loadLocationsBtn');
-        const loadBtnText        = document.getElementById('loadBtnText');
-        const errorMessage       = document.getElementById('errorMessage');
+        // DOM Elements
+        const configScreen = document.getElementById('configScreen');
+        const dashboard = document.getElementById('dashboard');
+        const apiTokenInput = document.getElementById('apiToken');
+        const locationSelect = document.getElementById('locationSelect');
+        const refreshIntervalSelect = document.getElementById('refreshInterval');
+        const startBtn = document.getElementById('startBtn');
+        const loadLocationsBtn = document.getElementById('loadLocationsBtn');
+        const loadBtnText = document.getElementById('loadBtnText');
+        const errorMessage = document.getElementById('errorMessage');
+        const locationNameEl = document.getElementById('locationName');
+        const lastUpdatedEl = document.getElementById('lastUpdated');
+        const availableCountEl = document.getElementById('availableCount');
+        const occupiedCountEl = document.getElementById('occupiedCount');
+        const deskGrid = document.getElementById('deskGrid');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const refreshIcon = document.getElementById('refreshIcon');
+        const nextRefreshEl = document.getElementById('nextRefresh');
 
-        // DOM refs — display settings
-        const dashboardTitleInput  = document.getElementById('dashboardTitle');
-        const showNamesToggle      = document.getElementById('showNamesToggle');
-        const metricFreeRadio      = document.getElementById('metricFree');
-        const metricOccupiedRadio  = document.getElementById('metricOccupied');
-        const hideNonDesksToggle   = document.getElementById('hideNonDesksToggle');
+        // API Helper - Uses /api/ path which Cloudflare Functions proxies to Eden
+        const API_BASE = '/api';
 
-        // DOM refs — appearance
-        const gridColumnsInput = document.getElementById('gridColumns');
-
-        // DOM refs — waiting list
-        const waitingListToggle = document.getElementById('waitingListToggle');
-        const waitingManage     = document.getElementById('waitingManage');
-        const waitingListItems  = document.getElementById('waitingListItems');
-        const waitingListEmpty  = document.getElementById('waitingListEmpty');
-        const waitingAddInput   = document.getElementById('waitingAddInput');
-        const waitingAddBtn     = document.getElementById('waitingAddBtn');
-
-        // DOM refs — content
-        const apiIssueMsgArea  = document.getElementById('apiIssueMsg');
-        const nicknamesNote    = document.getElementById('nicknamesNote');
-        const nicknamesTable   = document.getElementById('nicknamesTable');
-        const nicknamesTbody   = document.getElementById('nicknamesTbody');
-
-        // DOM refs — dashboard
-        const headerEyebrow    = document.getElementById('headerEyebrow');
-        const headerTitle      = document.getElementById('headerTitle');
-        const lastUpdatedEl    = document.getElementById('lastUpdated');
-        const statValueEl      = document.getElementById('statValue');
-        const statLabelEl      = document.getElementById('statLabel');
-        const statSubEl        = document.getElementById('statSub');
-        const capacityBarEl    = document.getElementById('capacityBar');
-        const deskGrid         = document.getElementById('deskGrid');
-        const settingsBtn      = document.getElementById('settingsBtn');
-        const waitingFooter    = document.getElementById('waitingFooter');
-        const waitingFooterNames = document.getElementById('waitingFooterNames');
-
-        // ── API helper ────────────────────────────────────────────────
         async function apiRequest(endpoint, options = {}) {
-            const token = apiTokenInput.value.trim() || S.apiToken;
-            const response = await fetch(`/api${endpoint}`, {
-                ...options,
-                headers: {
-                    'Authorization': token,
-                    'Content-Type':  'application/json',
-                    ...options.headers,
-                },
-            });
-            if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                if (response.status === 401) throw new Error('Invalid API token.');
-                if (response.status === 403) throw new Error('Access forbidden. Check token permissions.');
-                throw new Error(err.error || `API Error: ${response.status}`);
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    ...options,
+                    headers: {
+                        'Authorization': state.apiToken,
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    if (response.status === 401) {
+                        throw new Error('Invalid API token. Please check your token and try again.');
+                    } else if (response.status === 403) {
+                        throw new Error('Access forbidden. Your token may not have permission for this endpoint.');
+                    }
+                    throw new Error(errorData.error || `API Error: ${response.status}`);
+                }
+
+                return response.json();
+            } catch (error) {
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    throw new Error('Network error: Unable to reach the API. Please check your connection.');
+                }
+                throw error;
             }
-            return response.json();
         }
 
+        // Fetch locations
         async function fetchLocations() {
-            const data = await apiRequest('/locations?type=all');
-            if (data.message === 'No items found') return [];
-            return Array.isArray(data) ? data : [];
+            try {
+                const data = await apiRequest('/locations?type=all');
+                if (data.message === "No items found") {
+                    return [];
+                }
+                return Array.isArray(data) ? data : [];
+            } catch (error) {
+                throw error;
+            }
         }
 
+        // Fetch desks for a location
         async function fetchDesks(locationId) {
             try {
                 const data = await apiRequest(`/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`);
-                if (data.message === 'No items found') return [];
+                if (data.message === "No items found") {
+                    return [];
+                }
                 return Array.isArray(data) ? data : [];
-            } catch (e) { console.error(e); return []; }
+            } catch (error) {
+                console.error('Error fetching desks:', error);
+                return [];
+            }
         }
 
+        // Fetch reservations for today
         async function fetchReservations(locationId) {
             const today = new Date().toISOString().split('T')[0];
             try {
                 const data = await apiRequest(`/cola_reservations?date=${today}&location_id=${encodeURIComponent(locationId)}`);
-                if (data.message === 'No items found') return [];
+                if (data.message === "No items found") {
+                    return [];
+                }
                 return Array.isArray(data) ? data : [];
-            } catch (e) { console.error(e); return []; }
+            } catch (error) {
+                console.error('Error fetching reservations:', error);
+                return [];
+            }
         }
 
-        // ── Error helpers ─────────────────────────────────────────────
-        function showError(msg) {
-            errorMessage.textContent = msg;
+        // Show/hide error
+        function showError(message) {
+            errorMessage.textContent = message;
             errorMessage.style.display = 'block';
         }
-        function hideError() { errorMessage.style.display = 'none'; }
 
-        function updateStartButton() {
-            const locId = locationSelect.value || S.locationId;
-            const tok   = apiTokenInput.value.trim() || S.apiToken;
-            startBtn.disabled = !tok || !locId;
+        function hideError() {
+            errorMessage.style.display = 'none';
         }
 
-        // ── Populate settings panel from localStorage ─────────────────
-        function populateSettingsPanel() {
-            apiTokenInput.value          = S.apiToken;
-            refreshIntervalSel.value     = String(S.refreshInterval);
-            dashboardTitleInput.value    = S.dashboardTitle;
-            showNamesToggle.checked      = S.showNames;
-            hideNonDesksToggle.checked   = S.hideNonDesks;
-            gridColumnsInput.value       = String(S.cardColumns);
-            waitingListToggle.checked    = S.waitingListEnabled;
-            apiIssueMsgArea.value        = S.apiIssueMessage;
-
-            if (S.metricFocus === 'occupied') {
-                metricOccupiedRadio.checked = true;
-            } else {
-                metricFreeRadio.checked = true;
-            }
-
-            const dnsVal = S.deskNameSize;
-            const dns = document.querySelector(`input[name="deskNameSize"][value="${dnsVal}"]`);
-            if (dns) dns.checked = true;
-
-            const onsVal = S.occupantNameSize;
-            const ons = document.querySelector(`input[name="occupantNameSize"][value="${onsVal}"]`);
-            if (ons) ons.checked = true;
-
-            // Waiting list manage visibility
-            toggleWaitingManage(S.waitingListEnabled);
-            renderWaitingListItems();
-
-            // Nicknames table (only if desks known)
-            renderNicknamesTable();
-        }
-
-        function saveAllSettings() {
-            localStorage.setItem('eden_nb_api_token',         apiTokenInput.value.trim());
-            localStorage.setItem('eden_nb_refresh_interval',  refreshIntervalSel.value);
-            localStorage.setItem('eden_nb_dashboard_title',   dashboardTitleInput.value.trim());
-            localStorage.setItem('eden_nb_show_names',        showNamesToggle.checked ? 'true' : 'false');
-            localStorage.setItem('eden_nb_metric_focus',      document.querySelector('input[name="metricFocus"]:checked')?.value || 'free');
-            localStorage.setItem('eden_nb_hide_non_desks',    hideNonDesksToggle.checked ? 'true' : 'false');
-            localStorage.setItem('eden_nb_desk_name_size',    document.querySelector('input[name="deskNameSize"]:checked')?.value || 'md');
-            localStorage.setItem('eden_nb_occupant_name_size',document.querySelector('input[name="occupantNameSize"]:checked')?.value || 'md');
-            const cols = parseInt(gridColumnsInput.value);
-            localStorage.setItem('eden_nb_card_columns',      (cols >= 4 && cols <= 10) ? cols : 7);
-            localStorage.setItem('eden_nb_waiting_list_enabled', waitingListToggle.checked ? 'true' : 'false');
-            localStorage.setItem('eden_nb_api_issue_message', apiIssueMsgArea.value.trim());
-            // nicknames are saved inline as user types
-        }
-
-        // ── Waiting list UI ───────────────────────────────────────────
-        function toggleWaitingManage(enabled) {
-            if (enabled) {
-                waitingManage.classList.remove('hidden');
-            } else {
-                waitingManage.classList.add('hidden');
-            }
-        }
-
-        function renderWaitingListItems() {
-            const list = S.waitingList;
-            waitingListItems.innerHTML = '';
-            if (list.length === 0) {
-                waitingListEmpty.classList.remove('hidden');
-            } else {
-                waitingListEmpty.classList.add('hidden');
-                list.forEach((name, idx) => {
-                    const li = document.createElement('li');
-                    li.textContent = name;
-                    const btn = document.createElement('button');
-                    btn.className = 'btn-small btn-danger';
-                    btn.textContent = 'Remove';
-                    btn.addEventListener('click', () => {
-                        const updated = S.waitingList.filter((_, i) => i !== idx);
-                        saveWaitingList(updated);
-                        renderWaitingListItems();
-                    });
-                    li.appendChild(btn);
-                    waitingListItems.appendChild(li);
-                });
-            }
-        }
-
-        waitingListToggle.addEventListener('change', () => {
-            toggleWaitingManage(waitingListToggle.checked);
-        });
-
-        waitingAddBtn.addEventListener('click', () => {
-            const name = waitingAddInput.value.trim();
-            if (!name) return;
-            const updated = [...S.waitingList, name];
-            saveWaitingList(updated);
-            waitingAddInput.value = '';
-            renderWaitingListItems();
-        });
-
-        waitingAddInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') waitingAddBtn.click();
-        });
-
-        // ── Nicknames table ───────────────────────────────────────────
-        function renderNicknamesTable() {
-            if (!state.desks || state.desks.length === 0) {
-                nicknamesNote.classList.remove('hidden');
-                nicknamesTable.classList.add('hidden');
-                return;
-            }
-            nicknamesNote.classList.add('hidden');
-            nicknamesTable.classList.remove('hidden');
-
-            const current = S.nicknames;
-            nicknamesTbody.innerHTML = '';
-            const sorted = [...state.desks].sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }));
-            sorted.forEach(desk => {
-                const tr = document.createElement('tr');
-                const tdDesk = document.createElement('td');
-                tdDesk.textContent = desk.title;
-                const tdNick = document.createElement('td');
-                const inp = document.createElement('input');
-                inp.type = 'text';
-                inp.placeholder = 'Nickname…';
-                inp.value = current[desk.location_id] || '';
-                inp.addEventListener('input', () => {
-                    const nn = S.nicknames;
-                    if (inp.value.trim()) {
-                        nn[desk.location_id] = inp.value.trim();
-                    } else {
-                        delete nn[desk.location_id];
-                    }
-                    saveNicknames(nn);
-                });
-                tdNick.appendChild(inp);
-                tr.appendChild(tdDesk);
-                tr.appendChild(tdNick);
-                nicknamesTbody.appendChild(tr);
-            });
-        }
-
-        // ── Load locations ────────────────────────────────────────────
+        // Load locations when button is clicked
         loadLocationsBtn.addEventListener('click', async () => {
-            const tok = apiTokenInput.value.trim();
-            if (!tok || tok.length < 10) {
+            state.apiToken = apiTokenInput.value.trim();
+            
+            if (!state.apiToken || state.apiToken.length < 10) {
                 showError('Please enter a valid API token first.');
                 return;
             }
 
             loadLocationsBtn.disabled = true;
-            loadBtnText.innerHTML = '<span class="loading-spinner"></span>Loading…';
+            loadBtnText.innerHTML = '<span class="loading-spinner"></span>Loading...';
             locationSelect.disabled = true;
-            locationSelect.innerHTML = '<option value="">Loading locations…</option>';
+            locationSelect.innerHTML = '<option value="">Loading locations...</option>';
             hideError();
 
             try {
                 state.locations = await fetchLocations();
-
-                const officeLocations = state.locations.filter(loc =>
+                console.log('Fetched locations:', state.locations);
+                
+                const officeLocations = state.locations.filter(loc => 
                     ['floor', 'address', 'room', 'building'].includes(loc.location_type?.toLowerCase()) ||
                     loc.location_type === undefined
                 );
-                const toShow = officeLocations.length > 0 ? officeLocations : state.locations;
 
-                if (toShow.length === 0) {
+                const locationsToShow = officeLocations.length > 0 ? officeLocations : state.locations;
+
+                if (locationsToShow.length === 0) {
                     locationSelect.innerHTML = '<option value="">No locations found</option>';
-                    showError('No locations found. Check that your token has the correct permissions.');
+                    showError('No locations found. Please check your API token has the correct permissions.');
                 } else {
-                    locationSelect.innerHTML = '<option value="">Select a location…</option>';
-                    toShow.forEach(loc => {
-                        const opt = document.createElement('option');
-                        opt.value = loc.location_id;
+                    locationSelect.innerHTML = '<option value="">Select a location...</option>';
+                    locationsToShow.forEach(loc => {
+                        const option = document.createElement('option');
+                        option.value = loc.location_id;
                         const typeLabel = loc.location_type ? ` (${loc.location_type})` : '';
-                        opt.textContent = loc.title + typeLabel;
-                        locationSelect.appendChild(opt);
+                        option.textContent = loc.title + typeLabel;
+                        option.dataset.type = loc.location_type || '';
+                        locationSelect.appendChild(option);
                     });
                     locationSelect.disabled = false;
                 }
             } catch (error) {
+                console.error('Location fetch error:', error);
                 showError(error.message);
                 locationSelect.innerHTML = '<option value="">Failed to load locations</option>';
             }
@@ -1303,200 +840,229 @@
             updateStartButton();
         });
 
-        locationSelect.addEventListener('change', async () => {
-            const locId   = locationSelect.value;
-            const locName = locationSelect.options[locationSelect.selectedIndex]?.textContent || '';
-            localStorage.setItem('eden_nb_location_id',   locId);
-            localStorage.setItem('eden_nb_location_name', locName);
+        // Handle location selection
+        locationSelect.addEventListener('change', () => {
+            state.locationId = locationSelect.value;
+            state.locationName = locationSelect.options[locationSelect.selectedIndex]?.textContent || '';
             updateStartButton();
-
-            // Pre-fetch desks so nicknames table can be populated while in settings
-            if (locId) {
-                state.desks = await fetchDesks(locId);
-                renderNicknamesTable();
-            }
         });
 
-        refreshIntervalSel.addEventListener('change', () => {
-            localStorage.setItem('eden_nb_refresh_interval', refreshIntervalSel.value);
+        // Handle refresh interval change
+        refreshIntervalSelect.addEventListener('change', () => {
+            state.refreshInterval = parseInt(refreshIntervalSelect.value);
         });
 
-        // ── Launch display ────────────────────────────────────────────
-        startBtn.addEventListener('click', () => {
-            saveAllSettings();
-            launchDashboard();
+        // Update start button state
+        function updateStartButton() {
+            startBtn.disabled = !state.apiToken || !state.locationId;
+        }
+
+        // Start display
+        startBtn.addEventListener('click', async () => {
+            localStorage.setItem('eden_api_token', state.apiToken);
+            localStorage.setItem('eden_location_id', state.locationId);
+            localStorage.setItem('eden_location_name', state.locationName);
+            localStorage.setItem('eden_refresh_interval', state.refreshInterval);
+
+            configScreen.classList.add('hidden');
+            dashboard.style.display = 'block';
+            locationNameEl.textContent = state.locationName;
+
+            await refreshData();
+            startAutoRefresh();
         });
 
+        // Settings button
         settingsBtn.addEventListener('click', () => {
             clearInterval(state.refreshTimer);
+            clearInterval(state.countdownTimer);
             dashboard.style.display = 'none';
-            configScreen.style.display = 'flex';
-            populateSettingsPanel();
-            updateStartButton();
+            configScreen.classList.remove('hidden');
+            
+            apiTokenInput.value = state.apiToken;
+            refreshIntervalSelect.value = state.refreshInterval;
         });
 
-        // ── Dashboard launch ──────────────────────────────────────────
-        function launchDashboard() {
-            const customTitle = S.dashboardTitle;
-            const rawName     = S.locationName.replace(/\s*\([^)]*\)\s*$/, '').trim();
-            const displayName = customTitle || rawName;
-
-            headerEyebrow.textContent = `WORKPLACE · ${displayName.toUpperCase()}`;
-            headerTitle.textContent   = displayName;
-
-            configScreen.style.display = 'none';
-            dashboard.style.display    = 'flex';
-
-            refreshData();
-            const interval = S.refreshInterval;
-            state.refreshTimer = setInterval(refreshData, interval * 1000);
-        }
-
+        // Refresh data
         async function refreshData() {
-            const locId = S.locationId;
-            if (!locId) return;
+            refreshIcon.classList.remove('paused');
+            
             try {
                 const [desks, reservations] = await Promise.all([
-                    fetchDesks(locId),
-                    fetchReservations(locId),
+                    fetchDesks(state.locationId),
+                    fetchReservations(state.locationId)
                 ]);
-                state.desks        = desks;
+
+                state.desks = desks;
                 state.reservations = reservations;
+
                 renderDashboard();
             } catch (error) {
-                console.error('Refresh error:', error);
-                const msg = S.apiIssueMessage;
-                deskGrid.innerHTML = `
-                    <div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--fg-tertiary);font-family:'Roboto Mono',monospace;font-size:13px;letter-spacing:.08em;">
-                        ${escapeHtml(msg || 'FAILED TO LOAD DATA — RETRYING…')}
-                    </div>
-                `;
+                console.error('Error refreshing data:', error);
             }
+
+            refreshIcon.classList.add('paused');
         }
 
+        // Render dashboard
         function renderDashboard() {
-            const now         = new Date();
-            const showNames   = S.showNames;
-            const metricFocus = S.metricFocus;
-            const hideNonDesk = S.hideNonDesks;
-            const deskNSz     = DESK_NAME_SIZES[S.deskNameSize]     || '31px';
-            const occNSz      = OCCUPANT_NAME_SIZES[S.occupantNameSize] || '19px';
-            const columns     = S.cardColumns;
-            const nicknames   = S.nicknames;
-
-            // Apply grid columns
-            deskGrid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
-
-            // Build active-reservation map
-            const activeRes = new Map();
+            const now = new Date();
+            
+            const deskReservations = new Map();
             state.reservations.forEach(res => {
-                if (res.status === 'cancelled') return;
-                const start = new Date(res.start_at);
-                const end   = new Date(res.end_at);
-                if (now >= start && now <= end) {
+                const startTime = new Date(res.start_at);
+                const endTime = new Date(res.end_at);
+                
+                if (now >= startTime && now <= endTime && res.status !== 'cancelled') {
                     const deskId = res.location?.location_id;
-                    if (deskId) activeRes.set(deskId, res);
+                    if (deskId) {
+                        deskReservations.set(deskId, res);
+                    }
                 }
             });
 
-            // Filter desks
-            let desks = state.desks;
-            if (hideNonDesk) {
-                desks = desks.filter(d => (d.location_type || '').toLowerCase() === 'desk');
-            }
+            let availableCount = 0;
+            let occupiedCount = 0;
 
-            const total    = desks.length;
-            const occupied = desks.filter(d => activeRes.has(d.location_id)).length;
-            const free     = total - occupied;
-            const freePct  = total > 0 ? Math.round((free     / total) * 100) : 0;
-            const occPct   = total > 0 ? Math.round((occupied / total) * 100) : 0;
+            state.desks.forEach(desk => {
+                if (deskReservations.has(desk.location_id)) {
+                    occupiedCount++;
+                } else {
+                    availableCount++;
+                }
+            });
 
-            // Header stat
-            if (metricFocus === 'occupied') {
-                statValueEl.textContent   = occupied;
-                statLabelEl.textContent   = 'IN USE';
-                statSubEl.textContent     = `${free} of ${total} desks free · ${freePct}% occupied`;
-                capacityBarEl.style.width = `${occPct}%`;
-            } else {
-                statValueEl.textContent   = free;
-                statLabelEl.textContent   = 'FREE';
-                statSubEl.textContent     = `${occupied} of ${total} desks occupied · ${occPct}% full`;
-                capacityBarEl.style.width = `${freePct}%`;
-            }
-
+            availableCountEl.textContent = availableCount;
+            occupiedCountEl.textContent = occupiedCount;
             lastUpdatedEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
-            // Desk grid
-            const sorted = [...desks].sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }));
-
             deskGrid.innerHTML = '';
-            sorted.forEach((desk, idx) => {
-                const reservation = activeRes.get(desk.location_id);
-                const isOccupied  = !!reservation;
 
-                // Display title: nickname > title stripping prefix > fallback index
-                const rawNum     = desk.title.replace(/^[A-Za-z\s]+/, '').trim() || String(idx + 1);
-                const deskLabel  = nicknames[desk.location_id] || rawNum;
+            const sortedDesks = [...state.desks].sort((a, b) => {
+                const aOccupied = deskReservations.has(a.location_id);
+                const bOccupied = deskReservations.has(b.location_id);
+                if (aOccupied === bOccupied) return a.title.localeCompare(b.title);
+                return aOccupied ? 1 : -1;
+            });
 
-                let occupantLabel;
-                if (isOccupied) {
-                    occupantLabel = (!showNames) ? 'Occupied' : escapeHtml(reservation.owner?.name || 'Occupied');
-                } else {
-                    occupantLabel = 'AVAILABLE';
-                }
-
+            sortedDesks.forEach(desk => {
+                const reservation = deskReservations.get(desk.location_id);
+                const isOccupied = !!reservation;
+                
                 const card = document.createElement('div');
                 card.className = `desk-card ${isOccupied ? 'occupied' : 'available'}`;
-                card.innerHTML = `
-                    <span class="desk-number" style="font-size:${deskNSz}">${escapeHtml(deskLabel)}</span>
-                    <span class="desk-occupant" style="font-size:${isOccupied ? occNSz : ''}">${occupantLabel}</span>
-                `;
+                
+                if (isOccupied) {
+                    const owner = reservation.owner || {};
+                    const initials = getInitials(owner.name || 'Unknown');
+                    const startTime = new Date(reservation.start_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                    const endTime = new Date(reservation.end_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                    
+                    card.innerHTML = `
+                        <div class="desk-header">
+                            <span class="desk-name">${escapeHtml(desk.title)}</span>
+                            <span class="desk-status occupied">
+                                <span class="status-dot"></span>
+                                Occupied
+                            </span>
+                        </div>
+                        <div class="occupant-info">
+                            <div class="occupant-avatar">${initials}</div>
+                            <div class="occupant-details">
+                                <div class="occupant-name">${escapeHtml(owner.name || 'Unknown')}</div>
+                                <div class="occupant-time">${startTime} - ${endTime}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="desk-header">
+                            <span class="desk-name">${escapeHtml(desk.title)}</span>
+                            <span class="desk-status available">
+                                <span class="status-dot"></span>
+                                Available
+                            </span>
+                        </div>
+                        <div class="occupant-info">
+                            <div class="empty-desk-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                            </div>
+                            <div class="occupant-details">
+                                <div class="occupant-name" style="color: var(--accent-green); font-weight: 600;">Ready to book</div>
+                                <div class="occupant-time">All day available</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 deskGrid.appendChild(card);
             });
 
-            if (desks.length === 0) {
-                const msg = S.apiIssueMessage;
+            if (state.desks.length === 0) {
                 deskGrid.innerHTML = `
-                    <div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--fg-tertiary);font-family:'Roboto Mono',monospace;font-size:13px;letter-spacing:.08em;">
-                        ${escapeHtml(msg || 'NO DESKS FOUND FOR THIS LOCATION')}
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 80px 20px; color: var(--text-muted);">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 20px; display: block; opacity: 0.5;">
+                            <rect x="2" y="7" width="20" height="14" rx="2"/>
+                            <path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/>
+                        </svg>
+                        <p style="font-size: 18px;">No desks found for this location</p>
+                        <p style="font-size: 14px; margin-top: 8px;">Try selecting a different location or check your API permissions</p>
                     </div>
                 `;
             }
-
-            // Waiting list footer
-            const wlEnabled = S.waitingListEnabled;
-            const wlList    = S.waitingList;
-            if (wlEnabled && wlList.length > 0) {
-                waitingFooterNames.innerHTML = '';
-                wlList.forEach(name => {
-                    const chip = document.createElement('span');
-                    chip.className = 'waiting-chip';
-                    chip.textContent = name;
-                    waitingFooterNames.appendChild(chip);
-                });
-                waitingFooter.classList.remove('hidden');
-            } else {
-                waitingFooter.classList.add('hidden');
-            }
         }
 
-        // ── Auto-launch if saved config exists ────────────────────────
-        populateSettingsPanel();
+        // Start auto-refresh
+        function startAutoRefresh() {
+            clearInterval(state.refreshTimer);
+            clearInterval(state.countdownTimer);
 
-        if (S.apiToken && S.locationId) {
-            apiTokenInput.value = S.apiToken;
-            setTimeout(() => {
-                locationSelect.innerHTML = `<option value="${S.locationId}">${S.locationName}</option>`;
-                locationSelect.value    = S.locationId;
-                locationSelect.disabled = false;
-                updateStartButton();
-                launchDashboard();
-            }, 50);
-        } else if (S.apiToken) {
-            apiTokenInput.value = S.apiToken;
-            updateStartButton();
+            state.nextRefreshTime = Date.now() + (state.refreshInterval * 1000);
+
+            state.countdownTimer = setInterval(() => {
+                const remaining = Math.max(0, Math.ceil((state.nextRefreshTime - Date.now()) / 1000));
+                nextRefreshEl.textContent = `Next refresh: ${remaining}s`;
+            }, 1000);
+
+            state.refreshTimer = setInterval(async () => {
+                await refreshData();
+                state.nextRefreshTime = Date.now() + (state.refreshInterval * 1000);
+            }, state.refreshInterval * 1000);
+        }
+
+        // Utilities
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize
+        if (state.apiToken && state.locationId) {
+            apiTokenInput.value = state.apiToken;
+            refreshIntervalSelect.value = state.refreshInterval;
+            
+            setTimeout(async () => {
+                try {
+                    await fetchLocations();
+                    startBtn.disabled = false;
+                    locationSelect.innerHTML = `<option value="${state.locationId}">${state.locationName}</option>`;
+                    locationSelect.disabled = false;
+                    startBtn.click();
+                } catch (error) {
+                    console.log('Saved token invalid, showing config screen');
+                }
+            }, 100);
+        } else if (state.apiToken) {
+            apiTokenInput.value = state.apiToken;
         }
     </script>
-
 </body>
 </html>
