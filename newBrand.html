@@ -367,13 +367,13 @@
         }
         .waiting-list-btn-small {
             padding: 6px 14px;
-            background: var(--accent-amber); color: var(--bg-page);
+            background: #e4f0da; color: #1a2e14;
             border: none; border-radius: 9999px;
             font-size: 12px; font-weight: 600;
             font-family: 'Roboto Mono', monospace;
             cursor: pointer; white-space: nowrap; transition: opacity .2s;
         }
-        .waiting-list-btn-small:hover { opacity: .9; }
+        .waiting-list-btn-small:hover { opacity: .85; }
         .waiting-list-form-inline { display: none; align-items: center; gap: 4px; }
         .waiting-list-form-inline.active { display: flex; }
         .waiting-list-input-small {
@@ -595,7 +595,7 @@
             <div class="header-right">
                 <!-- Waiting list -->
                 <div class="waiting-list-header" id="waitingListContainer" style="display:none;">
-                    <button class="waiting-list-btn-small" id="joinWaitingListBtn">+ Join Waitlist</button>
+                    <button class="waiting-list-btn-small" id="joinWaitingListBtn">Join Waitlist</button>
                     <div class="waiting-list-form-inline" id="waitingListForm">
                         <input type="text" class="waiting-list-input-small" id="waitingListName" placeholder="Your name">
                         <button class="waiting-list-submit-small" id="waitingListSubmit">✓</button>
@@ -870,9 +870,14 @@
         async function updateWaitingListQueue() {
             const queueEl = $('waitingListQueue');
             const list = await getWaitingList();
-            queueEl.innerHTML = list.length > 0
-                ? `<strong>${list.length}</strong> ${list.length === 1 ? 'person' : 'people'} waiting: ${list.map(e => e.name).join(', ')}`
-                : 'No one currently waiting';
+            if (list.length > 0) {
+                const top = list.slice(0, 3);
+                const extra = list.length - top.length;
+                queueEl.innerHTML = top.map(e => `<div style="font-size:12px;color:var(--fg-secondary);line-height:1.5;">${esc(e.name)}</div>`).join('')
+                    + (extra > 0 ? `<div style="font-size:11px;color:var(--fg-tertiary);">+${extra} more</div>` : '');
+            } else {
+                queueEl.innerHTML = '';
+            }
         }
 
         async function checkAndRemoveBookedFromWaitingList(deskRes) {
