@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desk Availability — Optimizely</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Roboto+Condensed:wght@900&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand:           #ABFF44;
+            --brand-ink:       #08251A;
+            --bg-page:         #252825;
+            --bg-default:      #2B2E2B;
+            --bg-secondary:    #202320;
+            --border-tertiary: #383E38;
+            --border-default:  #484E46;
+            --fg-default:      #D2DEC2;
+            --fg-secondary:    #B2BD9E;
+            --fg-tertiary:     #A1AC8D;
+            --duration-sm:     150ms;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Roboto", sans-serif;
+            background: var(--bg-page);
+            color: var(--fg-default);
+            color-scheme: dark;
+            min-height: 100vh;
+        }
+
+        /* ── CONFIG SCREEN ───────────────────────────────────────────── */
+        .config-screen {
+            position: fixed; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--bg-page);
+            z-index: 100;
+            padding: 40px;
+        }
+
+        .config-card {
+            background: var(--bg-default);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 12px;
+            padding: 48px;
+            max-width: 520px;
+            width: 100%;
+        }
+
+        .config-logo { height: 22px; margin-bottom: 28px; display: block; }
+
+        .config-title {
+            font-family: "Roboto Condensed", sans-serif;
+            font-weight: 900;
+            font-size: 30px;
+            letter-spacing: -0.025em;
+            color: var(--fg-default);
+            margin-bottom: 6px;
+        }
+
+        .config-subtitle {
+            font-size: 14px;
+            color: var(--fg-tertiary);
+            margin-bottom: 36px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        .form-label {
+            display: block;
+            font-family: "Roboto Mono", monospace;
+            font-size: 11px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--fg-tertiary);
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-page);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--fg-default);
+            font-size: 14px;
+            font-family: "Roboto Mono", monospace;
+            transition: border-color var(--duration-sm);
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--brand);
+        }
+        .form-input::placeholder { color: var(--fg-tertiary); }
+        .form-select {
+            font-family: "Roboto", sans-serif;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23A1AC8D' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+        .form-select option { background: var(--bg-default); }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: var(--brand);
+            color: var(--brand-ink);
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: "Roboto Condensed", sans-serif;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: opacity var(--duration-sm);
+        }
+        .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: var(--fg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: "Roboto", sans-serif;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: border-color var(--duration-sm), color var(--duration-sm);
+        }
+        .btn-secondary:hover:not(:disabled) { border-color: var(--brand); color: var(--brand); }
+        .btn-secondary:disabled { opacity: .4; cursor: not-allowed; }
+
+        .error-message {
+            background: rgba(255,68,102,.08);
+            border: 1px solid rgba(255,68,102,.35);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            color: #ff8099;
+            font-size: 13px;
+            display: none;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 13px; height: 13px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── DASHBOARD ──────────────────────────────────────────────── */
+        .dashboard {
+            display: none;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg-page);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            padding: 24px 52px 16px;
+            flex-shrink: 0;
+        }
+
+        .header-left {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .header-logo { height: 26px; flex-shrink: 0; }
+
+        .header-divider {
+            width: 1px; height: 30px;
+            background: var(--border-default);
+            flex-shrink: 0;
+        }
+
+        .header-eyebrow {
+            font-family: "Roboto Mono", monospace;
+            font-size: 12px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--fg-tertiary);
+            margin-bottom: 4px;
+        }
+
+        .header-title {
+            font-family: "Roboto Condensed", sans-serif;
+            font-weight: 900;
+            font-size: 42px;
+            line-height: .92;
+            letter-spacing: -0.028em;
+            color: var(--fg-default);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .live-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            border: 1px solid var(--border-default);
+            border-radius: 9999px;
+            flex-shrink: 0;
+        }
+
+        .live-dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: var(--brand);
+            animation: livePulse 2.2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: .35; transform: scale(.78); }
+        }
+
+        .live-label {
+            font-family: "Roboto Mono", monospace;
+            font-size: 12px;
+            letter-spacing: .1em;
+            color: var(--fg-secondary);
+            white-space: nowrap;
+        }
+
+        .stat-block { text-align: right; }
+
+        .stat-big-row {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .stat-value {
+            font-family: "Roboto Mono", monospace;
+            font-weight: 700;
+            font-size: 68px;
+            line-height: .85;
+            color: var(--brand);
+        }
+
+        .stat-label {
+            font-family: "Roboto Condensed", sans-serif;
+            font-weight: 900;
+            font-size: 30px;
+            text-transform: uppercase;
+            letter-spacing: -0.01em;
+            color: var(--fg-default);
+        }
+
+        .stat-sub {
+            font-family: "Roboto Mono", monospace;
+            font-size: 12px;
+            color: var(--fg-tertiary);
+            margin-top: 6px;
+        }
+
+        .capacity-bar-track {
+            width: 300px;
+            height: 7px;
+            background: var(--bg-secondary);
+            border-radius: 9999px;
+            overflow: hidden;
+            margin-top: 9px;
+            margin-left: auto;
+        }
+
+        .capacity-bar-fill {
+            height: 100%;
+            background: var(--brand);
+            border-radius: 9999px;
+            transition: width var(--duration-sm);
+        }
+
+        /* Grid section */
+        .grid-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 2px 52px 32px;
+            min-height: 0;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-top: 1px solid var(--border-tertiary);
+            padding-top: 14px;
+            flex-shrink: 0;
+        }
+
+        .section-eyebrow {
+            font-family: "Roboto Mono", monospace;
+            font-size: 12px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--fg-tertiary);
+        }
+
+        .section-spacer { flex: 1; }
+
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 13px;
+            color: var(--fg-secondary);
+        }
+
+        .legend-swatch {
+            width: 14px; height: 14px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .legend-swatch.available { background: var(--brand); }
+        .legend-swatch.occupied  { background: var(--bg-default); border: 1px solid var(--border-default); }
+
+        /* Desk grid */
+        .desk-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            flex: 1;
+            grid-auto-rows: 1fr;
+            min-height: 0;
+        }
+
+        /* Desk card */
+        .desk-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-radius: 8px;
+            padding: 0 18px;
+            min-height: 74px;
+            transition: background var(--duration-sm), box-shadow var(--duration-sm);
+        }
+
+        .desk-card.available {
+            background: var(--brand);
+            box-shadow: 0 0 26px -4px rgba(171,255,68,.45);
+        }
+
+        .desk-card.occupied {
+            background: var(--bg-default);
+            border: 1px solid var(--border-tertiary);
+        }
+
+        .desk-number {
+            font-family: "Roboto Mono", monospace;
+            font-size: 31px;
+            min-width: 42px;
+            flex-shrink: 0;
+        }
+        .desk-card.available .desk-number { font-weight: 600; color: var(--brand-ink); }
+        .desk-card.occupied  .desk-number { font-weight: 500; color: var(--fg-tertiary); }
+
+        .desk-occupant {
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .desk-card.available .desk-occupant {
+            font-family: "Roboto Condensed", sans-serif;
+            font-weight: 900;
+            font-size: 21px;
+            text-transform: uppercase;
+            letter-spacing: .01em;
+            color: var(--brand-ink);
+        }
+        .desk-card.occupied .desk-occupant {
+            font-size: 19px;
+            font-weight: 500;
+            color: var(--fg-default);
+        }
+
+        /* Settings button */
+        .settings-btn {
+            position: fixed;
+            bottom: 18px; right: 18px;
+            width: 38px; height: 38px;
+            background: var(--bg-default);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 8px;
+            color: var(--fg-tertiary);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            opacity: .35;
+            transition: opacity var(--duration-sm);
+            z-index: 50;
+        }
+        .settings-btn:hover { opacity: 1; }
+        .settings-btn svg { width: 17px; height: 17px; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- ── CONFIG SCREEN ───────────────────────────────────────────── -->
+    <div class="config-screen" id="configScreen">
+        <div class="config-card">
+            <!-- Optimizely wordmark -->
+            <svg class="config-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 131 33" fill="none" aria-label="Optimizely">
+                <path d="M44.3593 2.56252H38.8362V6.61562H36.8955V10.8256H38.8362V19.1672C38.8362 22.2264 40.0801 23.4817 42.9413 23.4817H46.5239V19.2717H44.9813C44.5583 19.2717 44.3593 19.1148 44.3593 18.6703V10.8256H46.5239V6.6156H44.3593V2.56252Z" fill="#ABFF44"/>
+                <path d="M70.5328 6.32788C69.0648 6.32788 67.6716 6.9293 66.5024 8.18434C65.9548 6.85085 64.8851 6.32788 63.3178 6.32788C61.9741 6.32788 60.7054 6.9293 59.5859 8.18434V6.61552H54.3364V23.4816H59.8595V11.087C60.0337 10.8255 60.3571 10.6686 60.7551 10.6686C61.3024 10.6686 61.5512 10.904 61.5512 11.5054V23.4816H67.0746V11.087C67.2487 10.8255 67.5721 10.6686 67.9702 10.6686C68.5174 10.6686 68.7662 10.904 68.7662 11.5054V23.4816H74.2894V10.6686C74.2894 7.76603 72.9708 6.32788 70.5328 6.32788Z" fill="#ABFF44"/>
+                <path d="M51.0524 0.993652H49.7834C48.5147 0.993652 47.5693 2.03956 47.5693 3.34689C47.5693 4.62812 48.5147 5.70044 49.7834 5.70044H51.0524C52.3212 5.70044 53.2666 4.62812 53.2666 3.34689C53.2666 2.03956 52.3212 0.993652 51.0524 0.993652Z" fill="#ABFF44"/>
+                <path d="M53.1911 6.61572H47.668V23.4818H53.1911V6.61572Z" fill="#ABFF44"/>
+                <path d="M31.1241 6.30176C29.7309 6.30176 28.6112 6.9816 27.8151 8.18437C27.7902 7.60915 27.7405 7.0862 27.6907 6.61555H22.292C22.3417 7.9229 22.3666 9.20412 22.3666 10.5118V28.7898H27.8897V22.3835C28.7107 23.2725 29.7558 23.7431 30.9997 23.7431C34.5326 23.7431 36.5228 20.5791 36.5228 15.114C36.5228 9.57048 34.5823 6.30176 31.1241 6.30176ZM29.3078 19.5854C28.3126 19.5593 27.7653 17.9117 27.7653 15.1662C27.7653 12.3944 28.3126 10.5641 29.3078 10.5641C30.328 10.5379 30.9002 12.3682 30.9002 15.1662C30.9002 17.8856 30.328 19.5593 29.3078 19.5854Z" fill="#ABFF44"/>
+                <path d="M12.6379 2.17041C7.36359 2.17041 3.95508 6.32809 3.95508 12.8914C3.95508 19.5595 7.36359 23.7694 12.6379 23.7694C17.8876 23.7694 21.2959 19.5595 21.2959 12.8914C21.2959 6.32809 17.8876 2.17041 12.6379 2.17041ZM12.613 18.8796C11.0457 18.8796 10.0009 16.5784 10.0009 12.8914C10.0009 9.3089 11.0457 7.06024 12.613 7.06024C14.1557 7.06024 15.2255 9.3089 15.2255 12.8914C15.2255 16.5784 14.1557 18.8796 12.613 18.8796Z" fill="#ABFF44"/>
+                <path d="M80.9567 6.61572H75.4336V23.4818H80.9567V6.61572Z" fill="#ABFF44"/>
+                <path d="M123.252 11.4532L122.68 16.0816L122.008 11.5317L121.013 6.61572H115.39L119.918 23.4295L119.769 24.1094C119.719 24.397 119.52 24.5539 119.271 24.5539H116.236V28.79H120.167C122.903 28.79 124.272 27.5349 124.944 24.8153L129.447 6.61572H124.073L123.252 11.4532Z" fill="#ABFF44"/>
+                <path d="M114.344 2.5625H108.821V23.4817H114.344V2.5625Z" fill="#ABFF44"/>
+                <path d="M100.811 6.30178C96.3572 6.30178 93.3965 9.75353 93.3965 15.0355C93.3965 20.4222 96.2577 23.7692 100.786 23.7692C104.567 23.7692 107.254 21.1281 107.702 17.3626H102.229C102.03 18.8271 101.383 19.69 100.636 19.69C99.6164 19.69 99.0443 18.3827 98.9447 16.0814H107.752C108.374 10.381 105.488 6.30178 100.811 6.30178ZM98.9447 12.9435C99.2184 11.3223 99.8652 10.3549 100.686 10.3549C101.507 10.3549 102.104 11.2962 102.353 12.9435H98.9447Z" fill="#ABFF44"/>
+                <path d="M92.8734 10.6688V6.61572H82.1006V10.8257H86.803L82.1006 19.6117V23.4818H92.9729V19.2718H88.2708L92.8734 10.6688Z" fill="#ABFF44"/>
+                <path d="M78.8171 0.993652H77.5481C76.2793 0.993652 75.334 2.03956 75.334 3.34689C75.334 4.62812 76.2793 5.70044 77.5481 5.70044H78.8171C80.0859 5.70044 81.0312 4.62812 81.0312 3.34689C81.0312 2.03956 80.0859 0.993652 78.8171 0.993652Z" fill="#ABFF44"/>
+                <path d="M129.447 5.62215H124.073C123.725 5.62215 123.551 5.72675 123.377 5.9098L122.132 7.26943L121.958 6.40657C121.834 5.88364 121.51 5.62215 121.013 5.62215H115.291V2.56265C115.291 1.98743 114.818 1.5429 114.345 1.5429H108.822C108.524 1.5429 108.324 1.67365 108.15 1.85667L105.14 5.02052C104.991 5.17765 104.866 5.43911 104.866 5.72675V6.43273C103.796 5.72675 102.378 5.28224 100.811 5.28224C98.3975 5.28224 95.9346 6.11897 93.9939 8.86447L93.8446 9.07362V6.61577C93.8446 6.11897 93.4217 5.62218 92.8744 5.62218H81.1562C81.7035 4.9421 81.9523 4.2361 81.9523 3.34709C81.9523 1.43834 80.5343 0 78.6933 0H77.6482C76.678 0 75.8819 0.392177 75.2102 1.09845L71.9758 4.49759C71.7271 4.75908 71.528 5.0467 71.3788 5.36071C71.13 5.33455 70.8315 5.30842 70.5329 5.30842C69.2142 5.30842 67.8708 5.75295 66.7264 6.72041C65.9301 5.70066 64.8852 5.30842 63.492 5.30842C62.3725 5.30842 61.2777 5.64835 60.3323 6.4589C60.2826 5.85753 60.0338 5.6222 59.5113 5.6222H53.3909C53.9382 4.94212 54.1872 4.23612 54.1872 3.34711C54.1872 1.43836 52.7689 2.12459e-05 50.928 2.12459e-05H49.8829C48.9127 2.12459e-05 48.1166 0.392199 47.4449 1.09847L45.33 3.29484V2.56271C45.33 2.03978 44.9071 1.56912 44.3598 1.56912H38.8367C38.5382 1.56912 38.3142 1.69987 38.165 1.88289L35.1545 5.02059C35.055 5.12542 34.8809 5.43917 34.8809 5.72682V6.79886C33.836 5.77911 32.6167 5.28229 31.1987 5.28229C30.2782 5.28229 29.1585 5.59606 28.3624 6.43277C28.2629 5.75295 28.039 5.62222 27.616 5.62222H22.2919C22.0183 5.62222 21.7944 5.72682 21.6202 5.90986L20.9981 6.56352C19.4059 3.11182 16.3955 1.15076 12.6387 1.15076C10.0265 1.15076 7.7126 2.06593 5.29947 4.57608L3.30899 6.66814C1.09484 8.99524 0 12.2639 0 16.0555C0 23.2205 3.78166 27.9534 9.62843 27.9534C12.2406 27.9534 14.5545 26.9336 16.3457 25.0508L18.4108 22.8544V31.928C18.4108 32.5033 18.8337 32.9478 19.381 32.9478H24.8792C25.2026 32.9478 25.4265 32.817 25.5761 32.6602L28.5614 29.4961C28.7604 29.2869 28.8599 29.0516 28.8599 28.7901V27.8488C30.2036 27.6657 31.2982 27.0905 32.1938 26.0967L34.9057 23.2466C35.2291 26.2012 37.0452 27.6396 40.3542 27.6396H89.9634C90.3117 27.6396 90.5107 27.5089 90.66 27.352L92.1778 25.7306C93.6704 27.2213 95.6111 27.9534 97.8004 27.9534C100.015 27.9534 102.03 27.0644 103.423 25.5999L104.866 24.0572V26.646C104.866 27.1951 105.289 27.6396 105.812 27.6396H112.554V31.928C112.554 32.5032 112.977 32.9478 113.524 32.9478H117.181C118.923 32.9478 120.391 32.3725 121.311 31.4051L124.272 28.2933C124.969 27.535 125.541 26.4627 125.889 25.103L130.392 6.87728C130.566 6.17128 130.243 5.62215 129.447 5.62215Z" fill="#0D3A29"/>
+            </svg>
+
+            <h1 class="config-title">Desk Availability</h1>
+            <p class="config-subtitle">Configure your office display settings</p>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="form-group">
+                <label class="form-label">API Token</label>
+                <input type="password" class="form-input" id="apiToken" placeholder="Enter your Eden API token" value="Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl">
+            </div>
+
+            <button class="btn-secondary" id="loadLocationsBtn">
+                <span id="loadBtnText">Load Locations</span>
+            </button>
+
+            <div class="form-group">
+                <label class="form-label">Select Office Location</label>
+                <select class="form-select" id="locationSelect" disabled>
+                    <option value="">Click "Load Locations" first…</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Auto-Refresh Interval</label>
+                <select class="form-select" id="refreshInterval">
+                    <option value="30">Every 30 seconds</option>
+                    <option value="60" selected>Every 1 minute</option>
+                    <option value="120">Every 2 minutes</option>
+                    <option value="300">Every 5 minutes</option>
+                </select>
+            </div>
+
+            <button class="btn-primary" id="startBtn" disabled>Launch Display</button>
+        </div>
+    </div>
+
+    <!-- ── DASHBOARD ─────────────────────────────────────────────── -->
+    <div class="dashboard" id="dashboard">
+
+        <header class="header">
+            <div class="header-left">
+                <!-- Optimizely wordmark -->
+                <svg class="header-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 131 33" fill="none" aria-label="Optimizely">
+                    <path d="M44.3593 2.56252H38.8362V6.61562H36.8955V10.8256H38.8362V19.1672C38.8362 22.2264 40.0801 23.4817 42.9413 23.4817H46.5239V19.2717H44.9813C44.5583 19.2717 44.3593 19.1148 44.3593 18.6703V10.8256H46.5239V6.6156H44.3593V2.56252Z" fill="#ABFF44"/>
+                    <path d="M70.5328 6.32788C69.0648 6.32788 67.6716 6.9293 66.5024 8.18434C65.9548 6.85085 64.8851 6.32788 63.3178 6.32788C61.9741 6.32788 60.7054 6.9293 59.5859 8.18434V6.61552H54.3364V23.4816H59.8595V11.087C60.0337 10.8255 60.3571 10.6686 60.7551 10.6686C61.3024 10.6686 61.5512 10.904 61.5512 11.5054V23.4816H67.0746V11.087C67.2487 10.8255 67.5721 10.6686 67.9702 10.6686C68.5174 10.6686 68.7662 10.904 68.7662 11.5054V23.4816H74.2894V10.6686C74.2894 7.76603 72.9708 6.32788 70.5328 6.32788Z" fill="#ABFF44"/>
+                    <path d="M51.0524 0.993652H49.7834C48.5147 0.993652 47.5693 2.03956 47.5693 3.34689C47.5693 4.62812 48.5147 5.70044 49.7834 5.70044H51.0524C52.3212 5.70044 53.2666 4.62812 53.2666 3.34689C53.2666 2.03956 52.3212 0.993652 51.0524 0.993652Z" fill="#ABFF44"/>
+                    <path d="M53.1911 6.61572H47.668V23.4818H53.1911V6.61572Z" fill="#ABFF44"/>
+                    <path d="M31.1241 6.30176C29.7309 6.30176 28.6112 6.9816 27.8151 8.18437C27.7902 7.60915 27.7405 7.0862 27.6907 6.61555H22.292C22.3417 7.9229 22.3666 9.20412 22.3666 10.5118V28.7898H27.8897V22.3835C28.7107 23.2725 29.7558 23.7431 30.9997 23.7431C34.5326 23.7431 36.5228 20.5791 36.5228 15.114C36.5228 9.57048 34.5823 6.30176 31.1241 6.30176ZM29.3078 19.5854C28.3126 19.5593 27.7653 17.9117 27.7653 15.1662C27.7653 12.3944 28.3126 10.5641 29.3078 10.5641C30.328 10.5379 30.9002 12.3682 30.9002 15.1662C30.9002 17.8856 30.328 19.5593 29.3078 19.5854Z" fill="#ABFF44"/>
+                    <path d="M12.6379 2.17041C7.36359 2.17041 3.95508 6.32809 3.95508 12.8914C3.95508 19.5595 7.36359 23.7694 12.6379 23.7694C17.8876 23.7694 21.2959 19.5595 21.2959 12.8914C21.2959 6.32809 17.8876 2.17041 12.6379 2.17041ZM12.613 18.8796C11.0457 18.8796 10.0009 16.5784 10.0009 12.8914C10.0009 9.3089 11.0457 7.06024 12.613 7.06024C14.1557 7.06024 15.2255 9.3089 15.2255 12.8914C15.2255 16.5784 14.1557 18.8796 12.613 18.8796Z" fill="#ABFF44"/>
+                    <path d="M80.9567 6.61572H75.4336V23.4818H80.9567V6.61572Z" fill="#ABFF44"/>
+                    <path d="M123.252 11.4532L122.68 16.0816L122.008 11.5317L121.013 6.61572H115.39L119.918 23.4295L119.769 24.1094C119.719 24.397 119.52 24.5539 119.271 24.5539H116.236V28.79H120.167C122.903 28.79 124.272 27.5349 124.944 24.8153L129.447 6.61572H124.073L123.252 11.4532Z" fill="#ABFF44"/>
+                    <path d="M114.344 2.5625H108.821V23.4817H114.344V2.5625Z" fill="#ABFF44"/>
+                    <path d="M100.811 6.30178C96.3572 6.30178 93.3965 9.75353 93.3965 15.0355C93.3965 20.4222 96.2577 23.7692 100.786 23.7692C104.567 23.7692 107.254 21.1281 107.702 17.3626H102.229C102.03 18.8271 101.383 19.69 100.636 19.69C99.6164 19.69 99.0443 18.3827 98.9447 16.0814H107.752C108.374 10.381 105.488 6.30178 100.811 6.30178ZM98.9447 12.9435C99.2184 11.3223 99.8652 10.3549 100.686 10.3549C101.507 10.3549 102.104 11.2962 102.353 12.9435H98.9447Z" fill="#ABFF44"/>
+                    <path d="M92.8734 10.6688V6.61572H82.1006V10.8257H86.803L82.1006 19.6117V23.4818H92.9729V19.2718H88.2708L92.8734 10.6688Z" fill="#ABFF44"/>
+                    <path d="M78.8171 0.993652H77.5481C76.2793 0.993652 75.334 2.03956 75.334 3.34689C75.334 4.62812 76.2793 5.70044 77.5481 5.70044H78.8171C80.0859 5.70044 81.0312 4.62812 81.0312 3.34689C81.0312 2.03956 80.0859 0.993652 78.8171 0.993652Z" fill="#ABFF44"/>
+                    <path d="M129.447 5.62215H124.073C123.725 5.62215 123.551 5.72675 123.377 5.9098L122.132 7.26943L121.958 6.40657C121.834 5.88364 121.51 5.62215 121.013 5.62215H115.291V2.56265C115.291 1.98743 114.818 1.5429 114.345 1.5429H108.822C108.524 1.5429 108.324 1.67365 108.15 1.85667L105.14 5.02052C104.991 5.17765 104.866 5.43911 104.866 5.72675V6.43273C103.796 5.72675 102.378 5.28224 100.811 5.28224C98.3975 5.28224 95.9346 6.11897 93.9939 8.86447L93.8446 9.07362V6.61577C93.8446 6.11897 93.4217 5.62218 92.8744 5.62218H81.1562C81.7035 4.9421 81.9523 4.2361 81.9523 3.34709C81.9523 1.43834 80.5343 0 78.6933 0H77.6482C76.678 0 75.8819 0.392177 75.2102 1.09845L71.9758 4.49759C71.7271 4.75908 71.528 5.0467 71.3788 5.36071C71.13 5.33455 70.8315 5.30842 70.5329 5.30842C69.2142 5.30842 67.8708 5.75295 66.7264 6.72041C65.9301 5.70066 64.8852 5.30842 63.492 5.30842C62.3725 5.30842 61.2777 5.64835 60.3323 6.4589C60.2826 5.85753 60.0338 5.6222 59.5113 5.6222H53.3909C53.9382 4.94212 54.1872 4.23612 54.1872 3.34711C54.1872 1.43836 52.7689 2.12459e-05 50.928 2.12459e-05H49.8829C48.9127 2.12459e-05 48.1166 0.392199 47.4449 1.09847L45.33 3.29484V2.56271C45.33 2.03978 44.9071 1.56912 44.3598 1.56912H38.8367C38.5382 1.56912 38.3142 1.69987 38.165 1.88289L35.1545 5.02059C35.055 5.12542 34.8809 5.43917 34.8809 5.72682V6.79886C33.836 5.77911 32.6167 5.28229 31.1987 5.28229C30.2782 5.28229 29.1585 5.59606 28.3624 6.43277C28.2629 5.75295 28.039 5.62222 27.616 5.62222H22.2919C22.0183 5.62222 21.7944 5.72682 21.6202 5.90986L20.9981 6.56352C19.4059 3.11182 16.3955 1.15076 12.6387 1.15076C10.0265 1.15076 7.7126 2.06593 5.29947 4.57608L3.30899 6.66814C1.09484 8.99524 0 12.2639 0 16.0555C0 23.2205 3.78166 27.9534 9.62843 27.9534C12.2406 27.9534 14.5545 26.9336 16.3457 25.0508L18.4108 22.8544V31.928C18.4108 32.5033 18.8337 32.9478 19.381 32.9478H24.8792C25.2026 32.9478 25.4265 32.817 25.5761 32.6602L28.5614 29.4961C28.7604 29.2869 28.8599 29.0516 28.8599 28.7901V27.8488C30.2036 27.6657 31.2982 27.0905 32.1938 26.0967L34.9057 23.2466C35.2291 26.2012 37.0452 27.6396 40.3542 27.6396H89.9634C90.3117 27.6396 90.5107 27.5089 90.66 27.352L92.1778 25.7306C93.6704 27.2213 95.6111 27.9534 97.8004 27.9534C100.015 27.9534 102.03 27.0644 103.423 25.5999L104.866 24.0572V26.646C104.866 27.1951 105.289 27.6396 105.812 27.6396H112.554V31.928C112.554 32.5032 112.977 32.9478 113.524 32.9478H117.181C118.923 32.9478 120.391 32.3725 121.311 31.4051L124.272 28.2933C124.969 27.535 125.541 26.4627 125.889 25.103L130.392 6.87728C130.566 6.17128 130.243 5.62215 129.447 5.62215Z" fill="#0D3A29"/>
+                </svg>
+
+                <div class="header-divider"></div>
+
+                <div>
+                    <div class="header-eyebrow" id="headerEyebrow">WORKPLACE · LONDON</div>
+                    <div class="header-title" id="headerTitle">London office</div>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="live-pill">
+                    <div class="live-dot"></div>
+                    <span class="live-label">LIVE · <span id="lastUpdated">--:--</span></span>
+                </div>
+
+                <div class="stat-block">
+                    <div class="stat-big-row">
+                        <span class="stat-value" id="statValue">--</span>
+                        <span class="stat-label" id="statLabel">FREE</span>
+                    </div>
+                    <div class="stat-sub" id="statSub">Loading…</div>
+                    <div class="capacity-bar-track">
+                        <div class="capacity-bar-fill" id="capacityBar" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid-section">
+            <div class="section-header">
+                <span class="section-eyebrow">ALL DESKS</span>
+                <div class="section-spacer"></div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-swatch available"></div>
+                        Available
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-swatch occupied"></div>
+                        Occupied
+                    </div>
+                </div>
+            </div>
+
+            <div class="desk-grid" id="deskGrid"></div>
+        </div>
+
+        <button class="settings-btn" id="settingsBtn" title="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+        </button>
+
+    </div>
+
+    <script>
+        // ── Config flags from URL params ──────────────────────────────
+        const urlParams = new URLSearchParams(window.location.search);
+        // showNames: when false, occupied cards show "Occupied" instead of the person's name
+        const SHOW_NAMES   = urlParams.get('showNames')    !== 'false';
+        // metricFocus: "free" (default) or "occupied" controls the big header stat
+        const METRIC_FOCUS = urlParams.get('metricFocus') === 'occupied' ? 'occupied' : 'free';
+
+        // ── State ─────────────────────────────────────────────────────
+        let state = {
+            apiToken:      localStorage.getItem('eden_nb_api_token')      || 'Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl',
+            locationId:    localStorage.getItem('eden_nb_location_id')    || '',
+            locationName:  localStorage.getItem('eden_nb_location_name')  || '',
+            refreshInterval: parseInt(localStorage.getItem('eden_nb_refresh_interval')) || 60,
+            locations:     [],
+            desks:         [],
+            reservations:  [],
+            refreshTimer:  null,
+        };
+
+        // ── DOM refs ──────────────────────────────────────────────────
+        const configScreen       = document.getElementById('configScreen');
+        const dashboard          = document.getElementById('dashboard');
+        const apiTokenInput      = document.getElementById('apiToken');
+        const locationSelect     = document.getElementById('locationSelect');
+        const refreshIntervalSel = document.getElementById('refreshInterval');
+        const startBtn           = document.getElementById('startBtn');
+        const loadLocationsBtn   = document.getElementById('loadLocationsBtn');
+        const loadBtnText        = document.getElementById('loadBtnText');
+        const errorMessage       = document.getElementById('errorMessage');
+        const headerEyebrow      = document.getElementById('headerEyebrow');
+        const headerTitle        = document.getElementById('headerTitle');
+        const lastUpdatedEl      = document.getElementById('lastUpdated');
+        const statValueEl        = document.getElementById('statValue');
+        const statLabelEl        = document.getElementById('statLabel');
+        const statSubEl          = document.getElementById('statSub');
+        const capacityBarEl      = document.getElementById('capacityBar');
+        const deskGrid           = document.getElementById('deskGrid');
+        const settingsBtn        = document.getElementById('settingsBtn');
+
+        // ── API helper ────────────────────────────────────────────────
+        async function apiRequest(endpoint, options = {}) {
+            const response = await fetch(`/api${endpoint}`, {
+                ...options,
+                headers: {
+                    'Authorization': state.apiToken,
+                    'Content-Type':  'application/json',
+                    ...options.headers,
+                },
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                if (response.status === 401) throw new Error('Invalid API token.');
+                if (response.status === 403) throw new Error('Access forbidden. Check token permissions.');
+                throw new Error(err.error || `API Error: ${response.status}`);
+            }
+
+            return response.json();
+        }
+
+        async function fetchLocations() {
+            const data = await apiRequest('/locations?type=all');
+            if (data.message === 'No items found') return [];
+            return Array.isArray(data) ? data : [];
+        }
+
+        async function fetchDesks(locationId) {
+            try {
+                const data = await apiRequest(`/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`);
+                if (data.message === 'No items found') return [];
+                return Array.isArray(data) ? data : [];
+            } catch (e) { console.error(e); return []; }
+        }
+
+        async function fetchReservations(locationId) {
+            const today = new Date().toISOString().split('T')[0];
+            try {
+                const data = await apiRequest(`/cola_reservations?date=${today}&location_id=${encodeURIComponent(locationId)}`);
+                if (data.message === 'No items found') return [];
+                return Array.isArray(data) ? data : [];
+            } catch (e) { console.error(e); return []; }
+        }
+
+        // ── Config screen helpers ─────────────────────────────────────
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorMessage.style.display = 'block';
+        }
+        function hideError() { errorMessage.style.display = 'none'; }
+
+        function updateStartButton() {
+            startBtn.disabled = !state.apiToken || !state.locationId;
+        }
+
+        loadLocationsBtn.addEventListener('click', async () => {
+            state.apiToken = apiTokenInput.value.trim();
+            if (!state.apiToken || state.apiToken.length < 10) {
+                showError('Please enter a valid API token first.');
+                return;
+            }
+
+            loadLocationsBtn.disabled = true;
+            loadBtnText.innerHTML = '<span class="loading-spinner"></span>Loading…';
+            locationSelect.disabled = true;
+            locationSelect.innerHTML = '<option value="">Loading locations…</option>';
+            hideError();
+
+            try {
+                state.locations = await fetchLocations();
+
+                const officeLocations = state.locations.filter(loc =>
+                    ['floor', 'address', 'room', 'building'].includes(loc.location_type?.toLowerCase()) ||
+                    loc.location_type === undefined
+                );
+                const toShow = officeLocations.length > 0 ? officeLocations : state.locations;
+
+                if (toShow.length === 0) {
+                    locationSelect.innerHTML = '<option value="">No locations found</option>';
+                    showError('No locations found. Check that your token has the correct permissions.');
+                } else {
+                    locationSelect.innerHTML = '<option value="">Select a location…</option>';
+                    toShow.forEach(loc => {
+                        const opt = document.createElement('option');
+                        opt.value = loc.location_id;
+                        const typeLabel = loc.location_type ? ` (${loc.location_type})` : '';
+                        opt.textContent = loc.title + typeLabel;
+                        locationSelect.appendChild(opt);
+                    });
+                    locationSelect.disabled = false;
+                }
+            } catch (error) {
+                showError(error.message);
+                locationSelect.innerHTML = '<option value="">Failed to load locations</option>';
+            }
+
+            loadLocationsBtn.disabled = false;
+            loadBtnText.textContent = 'Load Locations';
+            updateStartButton();
+        });
+
+        locationSelect.addEventListener('change', () => {
+            state.locationId   = locationSelect.value;
+            state.locationName = locationSelect.options[locationSelect.selectedIndex]?.textContent || '';
+            updateStartButton();
+        });
+
+        refreshIntervalSel.addEventListener('change', () => {
+            state.refreshInterval = parseInt(refreshIntervalSel.value);
+        });
+
+        startBtn.addEventListener('click', async () => {
+            localStorage.setItem('eden_nb_api_token',      state.apiToken);
+            localStorage.setItem('eden_nb_location_id',    state.locationId);
+            localStorage.setItem('eden_nb_location_name',  state.locationName);
+            localStorage.setItem('eden_nb_refresh_interval', state.refreshInterval);
+            launchDashboard();
+        });
+
+        settingsBtn.addEventListener('click', () => {
+            clearInterval(state.refreshTimer);
+            dashboard.style.display = 'none';
+            configScreen.style.display = 'flex';
+            apiTokenInput.value = state.apiToken;
+            refreshIntervalSel.value = state.refreshInterval;
+        });
+
+        // ── Dashboard ─────────────────────────────────────────────────
+        function launchDashboard() {
+            // Strip type suffix from location name for header display
+            const cleanName = state.locationName.replace(/\s*\([^)]*\)\s*$/, '').trim();
+            headerEyebrow.textContent = `WORKPLACE · ${cleanName.toUpperCase()}`;
+            headerTitle.textContent   = cleanName;
+
+            configScreen.style.display = 'none';
+            dashboard.style.display    = 'flex';
+
+            refreshData();
+            state.refreshTimer = setInterval(refreshData, state.refreshInterval * 1000);
+        }
+
+        async function refreshData() {
+            try {
+                const [desks, reservations] = await Promise.all([
+                    fetchDesks(state.locationId),
+                    fetchReservations(state.locationId),
+                ]);
+                state.desks        = desks;
+                state.reservations = reservations;
+                renderDashboard();
+            } catch (error) {
+                console.error('Refresh error:', error);
+            }
+        }
+
+        function renderDashboard() {
+            const now = new Date();
+
+            // Build active-reservation map keyed by desk location_id
+            const activeRes = new Map();
+            state.reservations.forEach(res => {
+                if (res.status === 'cancelled') return;
+                const start = new Date(res.start_at);
+                const end   = new Date(res.end_at);
+                if (now >= start && now <= end) {
+                    const deskId = res.location?.location_id;
+                    if (deskId) activeRes.set(deskId, res);
+                }
+            });
+
+            const total    = state.desks.length;
+            const occupied = state.desks.filter(d => activeRes.has(d.location_id)).length;
+            const free     = total - occupied;
+            const freePct  = total > 0 ? Math.round((free    / total) * 100) : 0;
+            const occPct   = total > 0 ? Math.round((occupied / total) * 100) : 0;
+
+            // Header stat
+            if (METRIC_FOCUS === 'occupied') {
+                statValueEl.textContent = occupied;
+                statLabelEl.textContent = 'IN USE';
+                statSubEl.textContent   = `${free} of ${total} desks free · ${freePct}% occupied`;
+                capacityBarEl.style.width = `${occPct}%`;
+            } else {
+                statValueEl.textContent = free;
+                statLabelEl.textContent = 'FREE';
+                statSubEl.textContent   = `${occupied} of ${total} desks occupied · ${occPct}% full`;
+                capacityBarEl.style.width = `${freePct}%`;
+            }
+
+            lastUpdatedEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+            // Desk grid — sort alphabetically/numerically by title
+            const sorted = [...state.desks].sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }));
+
+            deskGrid.innerHTML = '';
+            sorted.forEach((desk, idx) => {
+                const reservation = activeRes.get(desk.location_id);
+                const isOccupied  = !!reservation;
+
+                // Derive a short "number" label from the desk title
+                const deskNum = desk.title.replace(/^[A-Za-z\s]+/, '').trim() || String(idx + 1);
+
+                let occupantLabel;
+                if (isOccupied) {
+                    occupantLabel = (!SHOW_NAMES) ? 'Occupied' : escapeHtml(reservation.owner?.name || 'Occupied');
+                } else {
+                    occupantLabel = 'AVAILABLE';
+                }
+
+                const card = document.createElement('div');
+                card.className = `desk-card ${isOccupied ? 'occupied' : 'available'}`;
+                card.innerHTML = `
+                    <span class="desk-number">${escapeHtml(deskNum)}</span>
+                    <span class="desk-occupant">${occupantLabel}</span>
+                `;
+                deskGrid.appendChild(card);
+            });
+
+            if (state.desks.length === 0) {
+                deskGrid.innerHTML = `
+                    <div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--fg-tertiary);font-family:'Roboto Mono',monospace;font-size:13px;letter-spacing:.08em;">
+                        NO DESKS FOUND FOR THIS LOCATION
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ── Auto-launch if saved config exists ────────────────────────
+        if (state.apiToken && state.locationId) {
+            apiTokenInput.value       = state.apiToken;
+            refreshIntervalSel.value  = state.refreshInterval;
+            setTimeout(() => {
+                locationSelect.innerHTML = `<option value="${state.locationId}">${state.locationName}</option>`;
+                locationSelect.disabled  = false;
+                launchDashboard();
+            }, 50);
+        } else if (state.apiToken) {
+            apiTokenInput.value = state.apiToken;
+        }
+    </script>
+
+</body>
+</html>
