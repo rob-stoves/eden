@@ -906,15 +906,16 @@
             }
         }
 
+
         async function checkAndRemoveBookedFromWaitingList(deskRes) {
             const waitingList = await getWaitingList();
             if (waitingList.length === 0) return;
             const bookedNames = new Set();
             deskRes.forEach(r => { if (r.owner?.name) bookedNames.add(r.owner.name.toLowerCase().trim()); });
             for (const entry of waitingList) {
-                const en = entry.name.toLowerCase().trim(), fn = en.split(' ')[0];
+                const en = entry.name.toLowerCase().trim();
                 for (const bn of bookedNames) {
-                    if (en === bn || fn === bn.split(' ')[0]) { await removeFromWaitingList(entry.name); break; }
+                    if (en === bn) { await removeFromWaitingList(entry.name); break; }
                 }
             }
         }
