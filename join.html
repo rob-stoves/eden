@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Desk Waitlist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Condensed:wght@900&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand:        #ABFF44;
+            --brand-ink:    #08251A;
+            --bg-page:      #252825;
+            --bg-default:   #2B2E2B;
+            --bg-secondary: #202320;
+            --bg-hover:     #323532;
+            --border-default:  #484E46;
+            --border-tertiary: #383E38;
+            --fg-default:   #D2DEC2;
+            --fg-secondary: #B2BD9E;
+            --fg-tertiary:  #A1AC8D;
+            --accent-red:   #ff4466;
+            --accent-amber: #ffaa00;
+            --glow-brand:   rgba(171,255,68,.15);
+            --glow-red:     rgba(255,68,102,.15);
+            --glow-amber:   rgba(255,170,0,.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg-page);
+            color: var(--fg-default);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 20px;
+            color-scheme: dark;
+        }
+
+        @media (max-width: 500px) {
+            body { padding: 20px 16px; }
+        }
+
+        /* ─── Card ────────────────────────────────────────────────── */
+
+        .card {
+            background: var(--bg-default);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 12px;
+            padding: 48px;
+            width: 100%;
+            max-width: 480px;
+            animation: slideUp 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 500px) {
+            .card { padding: 28px 24px; }
+        }
+
+        .card-logo {
+            height: 56px;
+            display: block;
+            margin-bottom: 24px;
+        }
+
+        .card-eyebrow {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .12em;
+            color: var(--fg-tertiary);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .card-title {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 30px;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        .card-location {
+            font-size: 14px;
+            color: var(--fg-secondary);
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-location-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--brand);
+            flex-shrink: 0;
+        }
+
+        /* ─── Availability banner ─────────────────────────────────── */
+
+        .avail-banner {
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin-bottom: 24px;
+            display: none;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .avail-banner.state-checking {
+            display: flex;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-tertiary);
+            color: var(--fg-tertiary);
+            font-size: 13px;
+            align-items: center;
+        }
+
+        .avail-banner.state-free {
+            display: flex;
+            background: var(--glow-brand);
+            border: 1px solid var(--brand);
+        }
+
+        .avail-banner.state-full {
+            display: flex;
+            background: var(--glow-red);
+            border: 1px solid var(--accent-red);
+        }
+
+        .avail-banner.state-error {
+            display: flex;
+            background: var(--glow-amber);
+            border: 1px solid var(--accent-amber);
+        }
+
+        .avail-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .avail-body { flex: 1; min-width: 0; }
+
+        .avail-headline {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .avail-banner.state-free  .avail-headline { color: var(--brand); }
+        .avail-banner.state-full  .avail-headline { color: var(--accent-red); }
+        .avail-banner.state-error .avail-headline { color: var(--accent-amber); }
+
+        .avail-sub { font-size: 13px; color: var(--fg-secondary); }
+
+        .btn-book {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 11px 20px;
+            background: var(--brand);
+            color: var(--brand-ink);
+            border-radius: 8px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            text-decoration: none;
+            transition: opacity .2s, transform .15s;
+        }
+        .btn-book:hover { opacity: .88; transform: translateY(-1px); }
+
+        /* ─── Form ────────────────────────────────────────────────── */
+
+        .form-group { margin-bottom: 18px; }
+
+        .form-label {
+            display: block;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--fg-tertiary);
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 13px 16px;
+            background: var(--bg-page);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 8px;
+            color: var(--fg-default);
+            font-size: 15px;
+            font-family: 'Roboto Mono', monospace;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px var(--glow-brand);
+        }
+        .form-input::placeholder { color: var(--fg-tertiary); }
+        .form-input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.7) sepia(1) saturate(2) hue-rotate(60deg);
+            cursor: pointer;
+        }
+
+        .btn-join {
+            width: 100%;
+            padding: 16px 28px;
+            background: var(--brand);
+            color: var(--brand-ink);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Roboto Mono', monospace;
+            cursor: pointer;
+            transition: opacity .2s, transform .15s;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-top: 8px;
+        }
+        .btn-join:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+        .btn-join:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+
+        /* ─── Success state ───────────────────────────────────────── */
+
+        .success-panel {
+            display: none;
+            text-align: center;
+            padding: 16px 0;
+        }
+
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .success-title {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 26px;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+            color: var(--brand);
+        }
+
+        .success-sub {
+            font-size: 14px;
+            color: var(--fg-secondary);
+            line-height: 1.6;
+            max-width: 340px;
+            margin: 0 auto;
+        }
+
+        /* ─── Spinner ─────────────────────────────────────────────── */
+
+        .spinner {
+            width: 16px; height: 16px;
+            border: 2px solid var(--border-default);
+            border-top-color: var(--fg-tertiary);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── Error ───────────────────────────────────────────────── */
+
+        .error-msg {
+            background: var(--glow-red);
+            border: 1px solid var(--accent-red);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+            color: var(--accent-red);
+            font-size: 13px;
+            display: none;
+        }
+
+        /* ─── Divider ─────────────────────────────────────────────── */
+        .divider {
+            height: 1px;
+            background: var(--border-tertiary);
+            margin: 28px 0;
+        }
+
+        /* ─── Config missing ──────────────────────────────────────── */
+        .config-missing {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .config-missing-title {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 22px;
+            color: var(--accent-amber);
+            margin-bottom: 10px;
+        }
+        .config-missing-sub {
+            font-size: 13px;
+            color: var(--fg-tertiary);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <img src="https://assets.optimizely.com/a8d9dc46-7e27-49ad-8c91-bbcd46a1c1a8/af0de7f8-0d28-46ea-84be-7ee4ffdb7e5b/original/optimizely-logo-white.svg"
+         alt="Optimizely" class="card-logo">
+
+    <div id="mainContent">
+        <div class="card-eyebrow">Desk Availability</div>
+        <div class="card-title">Join the Waitlist</div>
+        <div class="card-location">
+            <span class="card-location-dot"></span>
+            <span id="locationLabel">Loading location…</span>
+        </div>
+
+        <div id="configMissing" class="config-missing" style="display:none">
+            <div class="config-missing-title">Configuration missing</div>
+            <div class="config-missing-sub">This page requires a valid link from the desk availability board. Please scan the QR code again or ask your office administrator.</div>
+        </div>
+
+        <div id="formSection" style="display:none">
+
+            <div id="availBanner" class="avail-banner"></div>
+
+            <div id="errorMsg" class="error-msg"></div>
+
+            <!-- Date picker first so checking happens before people fill in details -->
+            <div class="form-group">
+                <label class="form-label" for="joinDate">Date</label>
+                <input type="date" class="form-input" id="joinDate">
+            </div>
+
+            <div class="divider"></div>
+
+            <div id="joinForm">
+                <div class="form-group">
+                    <label class="form-label" for="joinName">Your name</label>
+                    <input type="text" class="form-input" id="joinName" placeholder="First Last" autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="joinEmail">Email address</label>
+                    <input type="email" class="form-input" id="joinEmail" placeholder="you@optimizely.com" autocomplete="email">
+                </div>
+                <button class="btn-join" id="joinBtn" disabled>Join Waitlist</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="successPanel" class="success-panel">
+        <div class="success-icon">&#x2713;</div>
+        <div class="success-title">You're on the list!</div>
+        <div class="success-sub" id="successSub"></div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const params  = new URLSearchParams(location.search);
+    const locId   = params.get('locationId') || '';
+    const locName = params.get('locationName') || '';
+
+    const $ = id => document.getElementById(id);
+
+    // ── Helpers ──────────────────────────────────────────────────────
+
+    function todayDate() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function edenUrl(dateStr) {
+        let url = 'https://optimizely.team.eden.io/reservations/desk';
+        if (dateStr) {
+            const [y, m, d] = dateStr.split('-');
+            url += `?allDay=true&date=${m}-${d}-${y}`;
+        }
+        return url;
+    }
+
+    function showBanner(state, headline, sub, bookingDate) {
+        const el = $('availBanner');
+        el.className = `avail-banner state-${state}`;
+        if (state === 'checking') {
+            el.innerHTML = `<div class="spinner"></div><span>${headline}</span>`;
+        } else {
+            let bookBtn = '';
+            if (state === 'free' && bookingDate) {
+                bookBtn = `<a class="btn-book" href="${edenUrl(bookingDate)}" target="_blank" rel="noopener">Book a desk in Eden &rarr;</a>`;
+            }
+            const icon = state === 'free' ? '&#x2714;' : state === 'full' ? '&#x2715;' : '&#x26A0;';
+            el.innerHTML = `
+                <div class="avail-icon">${icon}</div>
+                <div class="avail-body">
+                    <div class="avail-headline">${headline}</div>
+                    <div class="avail-sub">${sub}</div>
+                    ${bookBtn}
+                </div>`;
+        }
+    }
+
+    function showError(msg) {
+        const el = $('errorMsg');
+        el.textContent = msg;
+        el.style.display = msg ? 'block' : 'none';
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────
+
+    $('locationLabel').textContent = locName || locId || 'Unknown location';
+
+    if (!locId) {
+        $('configMissing').style.display = 'block';
+    } else {
+        $('formSection').style.display = 'block';
+
+        // Pre-populate from localStorage
+        const savedName  = localStorage.getItem('eden_wl_name')  || '';
+        const savedEmail = localStorage.getItem('eden_wl_email') || '';
+        if (savedName)  $('joinName').value  = savedName;
+        if (savedEmail) $('joinEmail').value = savedEmail;
+
+        $('joinDate').value = todayDate();
+        $('joinDate').min   = todayDate();
+
+        checkAvailability($('joinDate').value);
+    }
+
+    // ── Availability check ────────────────────────────────────────────
+
+    let checkTimeout = null;
+
+    $('joinDate').addEventListener('change', () => {
+        clearTimeout(checkTimeout);
+        // Small debounce in case of fast typing in date field
+        checkTimeout = setTimeout(() => checkAvailability($('joinDate').value), 150);
+    });
+
+    async function checkAvailability(date) {
+        if (!date || !locId || !apiToken) return;
+
+        $('joinBtn').disabled = true;
+        showBanner('checking', 'Checking availability…');
+
+        try {
+            const res = await fetch(`/check-availability?locationId=${encodeURIComponent(locId)}&date=${encodeURIComponent(date)}`);
+
+            if (!res.ok) throw new Error('API error');
+
+            const { freeCount } = await res.json();
+
+            if (freeCount > 0) {
+                const plural = freeCount === 1 ? 'desk is' : 'desks are';
+                showBanner(
+                    'free',
+                    `${freeCount} ${plural} available`,
+                    'No need to join the waitlist — you can book directly in Eden.',
+                    date
+                );
+                $('joinBtn').disabled = true;
+            } else {
+                showBanner(
+                    'full',
+                    'No desks available',
+                    'All desks are booked for this date. Join the waitlist and we\'ll email you if one becomes free.'
+                );
+                $('joinBtn').disabled = false;
+            }
+
+        } catch (e) {
+            showBanner(
+                'error',
+                'Could not check availability',
+                'Eden API could not be reached. You can still join the waitlist below.'
+            );
+            $('joinBtn').disabled = false;
+        }
+    }
+
+    // ── Join waitlist ─────────────────────────────────────────────────
+
+    $('joinBtn').addEventListener('click', async () => {
+        const name  = $('joinName').value.trim();
+        const email = $('joinEmail').value.trim();
+        const date  = $('joinDate').value;
+
+        showError('');
+
+        if (!name) { showError('Please enter your name.'); $('joinName').focus(); return; }
+
+        $('joinBtn').disabled = true;
+        $('joinBtn').textContent = 'Joining…';
+
+        try {
+            const r = await fetch('/waitinglist/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ locationId: locId, name, email: email || '', desired_date: date || null })
+            });
+
+            if (!r.ok) throw new Error(await r.text());
+
+            // Save to localStorage for next time
+            localStorage.setItem('eden_wl_name', name);
+            if (email) localStorage.setItem('eden_wl_email', email);
+
+            // Show success
+            $('mainContent').style.display = 'none';
+            const dateLabel = date ? new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : 'today';
+            $('successSub').innerHTML = `You've been added to the waitlist for <strong>${locName || 'the office'}</strong> on <strong>${dateLabel}</strong>.<br><br>${email ? "We'll email you at <strong>" + email + "</strong> if a desk becomes available." : 'Check back on the display board to see your position.'}`;
+            $('successPanel').style.display = 'block';
+
+        } catch (e) {
+            showError('Could not join the waitlist. Please try again.');
+            $('joinBtn').disabled = false;
+            $('joinBtn').textContent = 'Join Waitlist';
+        }
+    });
+
+})();
+</script>
+</body>
+</html>

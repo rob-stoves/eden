@@ -30,13 +30,19 @@ export default {
       return handleNicknamesDelete(request, env);
     }
     
+    // Server-side availability check for join page (uses EDEN_API_TOKEN env var)
+    if (url.pathname === '/check-availability') {
+      return handleCheckAvailability(request, url, env);
+    }
+
     // Handle API proxy requests
     if (url.pathname.startsWith('/api/')) {
       return handleApiProxy(request, url, env);
     }
     
-    // Gate index.html (and root) behind a URL token
-    if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/index') {
+    // Gate index and join pages behind a URL token
+    const gatedPaths = ['/', '/index.html', '/index', '/join', '/join.html'];
+    if (gatedPaths.includes(url.pathname)) {
       const expected = env.DISPLAY_TOKEN;
       if (!expected) {
         return new Response('Display token not configured. Set DISPLAY_TOKEN in Cloudflare Pages environment variables.', {
@@ -48,6 +54,12 @@ export default {
         return new Response('Access denied. A valid ?token= is required.', {
           status: 401, headers: { 'Content-Type': 'text/plain' }
         });
+      }
+      // Serve /join (no extension) as join.html
+      if (url.pathname === '/join') {
+        const joinUrl = new URL(request.url);
+        joinUrl.pathname = '/join.html';
+        return env.ASSETS.fetch(new Request(joinUrl.toString(), request));
       }
     }
 
@@ -511,6 +523,48 @@ async function handleNicknamesDelete(request, env) {
   } catch (error) {
     console.error('Nicknames delete error:', error);
     return jsonResponse({ error: error.message }, 500);
+  }
+}
+
+async function handleCheckAvailability(request, url, env) {
+  const locationId = url.searchParams.get('locationId');
+  const date       = url.searchParams.get('date');
+
+  if (!locationId || !date) {
+    return jsonResponse({ error: 'locationId and date are required' }, 400);
+  }
+
+  const apiToken = env.EDEN_API_TOKEN;
+  if (!apiToken) {
+    return jsonResponse({ error: 'EDEN_API_TOKEN not configured' }, 503);
+  }
+
+  const headers = { 'Authorization': `Bearer ${apiToken}`, 'Content-Type': 'application/json' };
+
+  try {
+    const [desksRes, resvRes] = await Promise.all([
+      fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers }),
+      fetch(`https://public-api.eden.io/cola_reservations?date=${encodeURIComponent(date)}&page=1`, { headers }),
+    ]);
+
+    if (!desksRes.ok || !resvRes.ok) {
+      return jsonResponse({ error: 'Eden API error' }, 502);
+    }
+
+    const desksData = await desksRes.json();
+    const resvData  = await resvRes.json();
+
+    const desks = Array.isArray(desksData)       ? desksData
+                : Array.isArray(desksData?.data) ? desksData.data : [];
+    const reservations = Array.isArray(resvData)       ? resvData
+                       : Array.isArray(resvData?.data) ? resvData.data : [];
+
+    const bookedIds = new Set(reservations.map(r => r.location_id || r.locationId).filter(Boolean));
+    const freeDesks = desks.filter(d => !bookedIds.has(d.id));
+
+    return jsonResponse({ freeCount: freeDesks.length, totalDesks: desks.length });
+  } catch (e) {
+    return jsonResponse({ error: e.message }, 500);
   }
 }
 
