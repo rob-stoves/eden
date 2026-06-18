@@ -102,81 +102,6 @@
             flex-shrink: 0;
         }
 
-        /* ─── Availability banner ─────────────────────────────────── */
-
-        .avail-banner {
-            border-radius: 8px;
-            padding: 16px 18px;
-            margin-bottom: 24px;
-            display: none;
-            align-items: flex-start;
-            gap: 14px;
-        }
-
-        .avail-banner.state-checking {
-            display: flex;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-tertiary);
-            color: var(--fg-tertiary);
-            font-size: 13px;
-            align-items: center;
-        }
-
-        .avail-banner.state-free {
-            display: flex;
-            background: var(--glow-brand);
-            border: 1px solid var(--brand);
-        }
-
-        .avail-banner.state-full {
-            display: flex;
-            background: var(--glow-red);
-            border: 1px solid var(--accent-red);
-        }
-
-        .avail-banner.state-error {
-            display: flex;
-            background: var(--glow-amber);
-            border: 1px solid var(--accent-amber);
-        }
-
-        .avail-icon {
-            font-size: 20px;
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
-
-        .avail-body { flex: 1; min-width: 0; }
-
-        .avail-headline {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-
-        .avail-banner.state-free  .avail-headline { color: var(--brand); }
-        .avail-banner.state-full  .avail-headline { color: var(--accent-red); }
-        .avail-banner.state-error .avail-headline { color: var(--accent-amber); }
-
-        .avail-sub { font-size: 13px; color: var(--fg-secondary); }
-
-        .btn-book {
-            display: inline-block;
-            margin-top: 12px;
-            padding: 11px 20px;
-            background: var(--brand);
-            color: var(--brand-ink);
-            border-radius: 8px;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-            text-decoration: none;
-            transition: opacity .2s, transform .15s;
-        }
-        .btn-book:hover { opacity: .88; transform: translateY(-1px); }
-
         /* ─── Form ────────────────────────────────────────────────── */
 
         .form-group { margin-bottom: 18px; }
@@ -263,18 +188,6 @@
             margin: 0 auto;
         }
 
-        /* ─── Spinner ─────────────────────────────────────────────── */
-
-        .spinner {
-            width: 16px; height: 16px;
-            border: 2px solid var(--border-default);
-            border-top-color: var(--fg-tertiary);
-            border-radius: 50%;
-            animation: spin .8s linear infinite;
-            flex-shrink: 0;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
         /* ─── Error ───────────────────────────────────────────────── */
 
         .error-msg {
@@ -286,13 +199,6 @@
             color: var(--accent-red);
             font-size: 13px;
             display: none;
-        }
-
-        /* ─── Divider ─────────────────────────────────────────────── */
-        .divider {
-            height: 1px;
-            background: var(--border-tertiary);
-            margin: 28px 0;
         }
 
         /* ─── Config missing ──────────────────────────────────────── */
@@ -333,29 +239,21 @@
 
         <div id="formSection" style="display:none">
 
-            <div id="availBanner" class="avail-banner"></div>
-
             <div id="errorMsg" class="error-msg"></div>
 
-            <!-- Date picker first so checking happens before people fill in details -->
+            <div class="form-group">
+                <label class="form-label" for="joinName">Your name</label>
+                <input type="text" class="form-input" id="joinName" placeholder="First Last" autocomplete="name">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="joinEmail">Email address</label>
+                <input type="email" class="form-input" id="joinEmail" placeholder="you@optimizely.com" autocomplete="email">
+            </div>
             <div class="form-group">
                 <label class="form-label" for="joinDate">Date</label>
                 <input type="date" class="form-input" id="joinDate">
             </div>
-
-            <div class="divider"></div>
-
-            <div id="joinForm">
-                <div class="form-group">
-                    <label class="form-label" for="joinName">Your name</label>
-                    <input type="text" class="form-input" id="joinName" placeholder="First Last" autocomplete="name">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="joinEmail">Email address</label>
-                    <input type="email" class="form-input" id="joinEmail" placeholder="you@optimizely.com" autocomplete="email">
-                </div>
-                <button class="btn-join" id="joinBtn" disabled>Join Waitlist</button>
-            </div>
+            <button class="btn-join" id="joinBtn">Join Waitlist</button>
 
         </div>
     </div>
@@ -382,36 +280,6 @@
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
 
-    function edenUrl(dateStr) {
-        let url = 'https://optimizely.team.eden.io/reservations/desk';
-        if (dateStr) {
-            const [y, m, d] = dateStr.split('-');
-            url += `?allDay=true&date=${m}-${d}-${y}`;
-        }
-        return url;
-    }
-
-    function showBanner(state, headline, sub, bookingDate) {
-        const el = $('availBanner');
-        el.className = `avail-banner state-${state}`;
-        if (state === 'checking') {
-            el.innerHTML = `<div class="spinner"></div><span>${headline}</span>`;
-        } else {
-            let bookBtn = '';
-            if (state === 'free' && bookingDate) {
-                bookBtn = `<a class="btn-book" href="${edenUrl(bookingDate)}" target="_blank" rel="noopener">Book a desk in Eden &rarr;</a>`;
-            }
-            const icon = state === 'free' ? '&#x2714;' : state === 'full' ? '&#x2715;' : '&#x26A0;';
-            el.innerHTML = `
-                <div class="avail-icon">${icon}</div>
-                <div class="avail-body">
-                    <div class="avail-headline">${headline}</div>
-                    <div class="avail-sub">${sub}</div>
-                    ${bookBtn}
-                </div>`;
-        }
-    }
-
     function showError(msg) {
         const el = $('errorMsg');
         el.textContent = msg;
@@ -436,58 +304,6 @@
         $('joinDate').value = todayDate();
         $('joinDate').min   = todayDate();
 
-        checkAvailability($('joinDate').value);
-    }
-
-    // ── Availability check ────────────────────────────────────────────
-
-    let checkTimeout = null;
-
-    $('joinDate').addEventListener('change', () => {
-        clearTimeout(checkTimeout);
-        // Small debounce in case of fast typing in date field
-        checkTimeout = setTimeout(() => checkAvailability($('joinDate').value), 150);
-    });
-
-    async function checkAvailability(date) {
-        if (!date || !locId || !apiToken) return;
-
-        $('joinBtn').disabled = true;
-        showBanner('checking', 'Checking availability…');
-
-        try {
-            const res = await fetch(`/check-availability?location=${encodeURIComponent(locId)}&date=${encodeURIComponent(date)}`);
-
-            if (!res.ok) throw new Error('API error');
-
-            const { freeCount } = await res.json();
-
-            if (freeCount > 0) {
-                const plural = freeCount === 1 ? 'desk is' : 'desks are';
-                showBanner(
-                    'free',
-                    `${freeCount} ${plural} available`,
-                    'No need to join the waitlist — you can book directly in Eden.',
-                    date
-                );
-                $('joinBtn').disabled = true;
-            } else {
-                showBanner(
-                    'full',
-                    'No desks available',
-                    'All desks are booked for this date. Join the waitlist and we\'ll email you if one becomes free.'
-                );
-                $('joinBtn').disabled = false;
-            }
-
-        } catch (e) {
-            showBanner(
-                'error',
-                'Could not check availability',
-                'Eden API could not be reached. You can still join the waitlist below.'
-            );
-            $('joinBtn').disabled = false;
-        }
     }
 
     // ── Join waitlist ─────────────────────────────────────────────────
