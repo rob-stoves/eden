@@ -331,10 +331,10 @@ async function sendEmail(env, { to, name, locationName, locationId, deskName, ot
 
   // Build Eden booking URL — date param is MM-DD-YYYY
   let edenUrl = 'https://optimizely.team.eden.io/reservations/desk';
-  if (locationId && today) {
+  if (today) {
     const [year, month, day] = today.split('-');
     const edenDate = `${month}-${day}-${year}`;
-    edenUrl += `?allDay=true&locationId=${encodeURIComponent(locationId)}&date=${edenDate}`;
+    edenUrl += `?allDay=true&date=${edenDate}`;
   }
 
   try {
