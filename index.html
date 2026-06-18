@@ -474,6 +474,16 @@
             color: var(--brand-ink);
         }
 
+        /* Stacked layout */
+        .desk-grid-stacked .desk-card {
+            flex-direction: column; align-items: flex-start;
+            justify-content: center; gap: 2px;
+            padding: 10px 18px;
+        }
+        .desk-grid-stacked .desk-id { font-size: var(--text-size-label, 21px); min-width: unset; }
+        .desk-grid-stacked .desk-occupant { font-size: var(--text-size-occupant, 19px); white-space: normal; }
+        .desk-grid-stacked .desk-available-label { font-size: var(--text-size-label, 21px); }
+
         /* Utilities */
         .hidden { display: none !important; }
     </style>
@@ -490,6 +500,7 @@
 
             <div class="settings-columns">
                 <div class="settings-column">
+                    <p class="form-label" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-tertiary);margin-bottom:16px;">Board Settings</p>
                     <div class="form-group">
                         <label class="form-label">API Token</label>
                         <input type="password" class="form-input" id="apiToken" placeholder="Enter your Eden API token" value="Smilo0IBH1wwVNZUXpGRMFQJWvzLRCOl">
@@ -513,6 +524,18 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label class="form-label">API Issue Message</label>
+                        <select class="form-select" id="showApiIssueMessage">
+                            <option value="false" selected>Disabled</option>
+                            <option value="true">Show issue message when no bookings</option>
+                        </select>
+                        <p class="form-caption">Displays a maintenance message instead of showing all desks as available</p>
+                    </div>
+                </div>
+
+                <div class="settings-column">
+                    <p class="form-label" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-tertiary);margin-bottom:16px;">Display Options</p>
+                    <div class="form-group">
                         <label class="form-label">Text Size</label>
                         <select class="form-select" id="textSize">
                             <option value="small">Small</option>
@@ -520,15 +543,19 @@
                             <option value="large">Large</option>
                         </select>
                     </div>
-                </div>
-
-                <div class="settings-column">
                     <div class="form-group">
                         <label class="form-label">Card Width</label>
                         <select class="form-select" id="cardWidth">
                             <option value="small">Small</option>
                             <option value="medium" selected>Medium</option>
                             <option value="large">Large</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Layout</label>
+                        <select class="form-select" id="cardLayout">
+                            <option value="side-by-side" selected>Side by side</option>
+                            <option value="stacked">Desk name beside occupant</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -550,17 +577,10 @@
                         </select>
                         <p class="form-caption">Hides desks with names over the selected number of characters</p>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">API Issue Message</label>
-                        <select class="form-select" id="showApiIssueMessage">
-                            <option value="false" selected>Disabled</option>
-                            <option value="true">Show issue message when no bookings</option>
-                        </select>
-                        <p class="form-caption">Displays a maintenance message instead of showing all desks as available</p>
-                    </div>
                 </div>
 
                 <div class="settings-column">
+                    <p class="form-label" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-tertiary);margin-bottom:16px;">Customisations</p>
                     <div class="form-group">
                         <label class="form-label">Waiting List</label>
                         <select class="form-select" id="showWaitingList">
@@ -668,6 +688,7 @@
             refreshInterval: parseInt(localStorage.getItem('eden_refresh_interval')) || 120,
             textSize: localStorage.getItem('eden_text_size') || 'medium',
             cardWidth: localStorage.getItem('eden_card_width') || 'medium',
+            cardLayout: localStorage.getItem('eden_card_layout') || 'side-by-side',
             showMode: localStorage.getItem('eden_show_mode') || 'all',
             hideNonDesks: parseInt(localStorage.getItem('eden_hide_non_desks')) || 0,
             showWaitingList: localStorage.getItem('eden_show_waiting_list') || 'off',
@@ -683,6 +704,7 @@
         const refreshIntervalSelect = $('refreshInterval'), startBtn = $('startBtn');
         const textSizeSelect = $('textSize');
         const cardWidthSelect = $('cardWidth');
+        const cardLayoutSelect = $('cardLayout');
         const showModeSelect = $('showMode'), hideNonDesksSelect = $('hideNonDesks');
         const showWaitingListSelect = $('showWaitingList');
         const showApiIssueMessageSelect = $('showApiIssueMessage');
@@ -790,6 +812,7 @@
         textSizeSelect.addEventListener('change', () => { state.textSize = textSizeSelect.value; });
         refreshIntervalSelect.addEventListener('change', () => { state.refreshInterval = parseInt(refreshIntervalSelect.value); });
         cardWidthSelect.addEventListener('change',       () => { state.cardWidth = cardWidthSelect.value; });
+        cardLayoutSelect.addEventListener('change',      () => { state.cardLayout = cardLayoutSelect.value; });
         showModeSelect.addEventListener('change',        () => { state.showMode = showModeSelect.value; });
 
         showWaitingListSelect.addEventListener('change', () => {
@@ -862,6 +885,7 @@
             document.documentElement.style.setProperty('--text-size-id',      t.id);
             document.documentElement.style.setProperty('--text-size-occupant', t.occupant);
             document.documentElement.style.setProperty('--text-size-label',   t.label);
+            deskGrid.classList.toggle('desk-grid-stacked', state.cardLayout === 'stacked');
         }
 
         /* Waiting list (Cloudflare KV) */
@@ -1043,6 +1067,7 @@
             state.refreshInterval   = parseInt(refreshIntervalSelect.value);
             state.textSize          = textSizeSelect.value;
             state.cardWidth         = cardWidthSelect.value;
+            state.cardLayout        = cardLayoutSelect.value;
             state.showMode          = showModeSelect.value;
             state.hideNonDesks      = parseInt(hideNonDesksSelect.value);
             state.showWaitingList   = showWaitingListSelect.value;
@@ -1055,6 +1080,7 @@
             localStorage.setItem('eden_refresh_interval', state.refreshInterval);
             localStorage.setItem('eden_text_size',        state.textSize);
             localStorage.setItem('eden_card_width',       state.cardWidth);
+            localStorage.setItem('eden_card_layout',      state.cardLayout);
             localStorage.setItem('eden_show_mode',            state.showMode);
             localStorage.setItem('eden_hide_non_desks',       state.hideNonDesks);
             localStorage.setItem('eden_show_waiting_list',    state.showWaitingList);
@@ -1065,6 +1091,7 @@
             url.searchParams.set('name', state.locationName);
             url.searchParams.set('textSize', state.textSize);
             url.searchParams.set('cardWidth', state.cardWidth);
+            state.cardLayout !== 'side-by-side' ? url.searchParams.set('layout', state.cardLayout) : url.searchParams.delete('layout');
             url.searchParams.set('showMode', state.showMode);
             state.hideNonDesks > 0 ? url.searchParams.set('hideNonDesks', state.hideNonDesks) : url.searchParams.delete('hideNonDesks');
             state.showWaitingList !== 'off' ? url.searchParams.set('waitingList', state.showWaitingList) : url.searchParams.delete('waitingList');
@@ -1096,6 +1123,7 @@
             refreshIntervalSelect.value   = state.refreshInterval;
             textSizeSelect.value  = state.textSize;
             cardWidthSelect.value = state.cardWidth;
+            cardLayoutSelect.value = state.cardLayout;
             showModeSelect.value          = state.showMode;
             hideNonDesksSelect.value      = state.hideNonDesks;
             showWaitingListSelect.value   = state.showWaitingList;
@@ -1251,6 +1279,7 @@
         const urlLocationName    = urlParams.get('name');
         const urlTextSize        = urlParams.get('textSize');
         const urlCardWidth       = urlParams.get('cardWidth');
+        const urlCardLayout      = urlParams.get('layout');
         const urlShowMode        = urlParams.get('showMode');
         const urlHideNonDesks    = urlParams.get('hideNonDesks');
         const urlWaitingList     = urlParams.get('waitingList');
@@ -1260,6 +1289,7 @@
         if (urlLocationId)       { state.locationId = urlLocationId; state.locationName = urlLocationName || urlLocationId; }
         if (urlTextSize)  state.textSize  = urlTextSize;
         if (urlCardWidth) state.cardWidth = urlCardWidth;
+        if (urlCardLayout)       state.cardLayout      = urlCardLayout;
         if (urlShowMode)         state.showMode        = urlShowMode;
         if (urlHideNonDesks)     state.hideNonDesks    = parseInt(urlHideNonDesks);
         if (urlWaitingList)      state.showWaitingList = urlWaitingList;
