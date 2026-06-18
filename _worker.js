@@ -286,9 +286,11 @@ async function handleWaitingListNotify(request, env) {
         to: entry.email,
         name: entry.name,
         locationName: locationName || 'the office',
+        locationId,
         deskName: deskName || null,
         otherNames,
-        unsubscribeUrl
+        unsubscribeUrl,
+        today
       });
 
       if (sent) {
@@ -310,7 +312,7 @@ async function handleWaitingListNotify(request, env) {
   }
 }
 
-async function sendEmail(env, { to, name, locationName, deskName, otherNames, unsubscribeUrl }) {
+async function sendEmail(env, { to, name, locationName, locationId, deskName, otherNames, unsubscribeUrl, today }) {
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) return false;
 
@@ -325,6 +327,14 @@ async function sendEmail(env, { to, name, locationName, deskName, otherNames, un
       ? otherNames[0]
       : otherNames.slice(0, -1).join(', ') + ' and ' + otherNames[otherNames.length - 1];
     raceLine = `<p>This email has also been sent to <strong>${nameList}</strong> — it's a race to book a desk!</p>`;
+  }
+
+  // Build Eden booking URL — date param is MM-DD-YYYY
+  let edenUrl = 'https://optimizely.team.eden.io/reservations/desk';
+  if (locationId && today) {
+    const [year, month, day] = today.split('-');
+    const edenDate = `${month}-${day}-${year}`;
+    edenUrl += `?allDay=true&locationId=${encodeURIComponent(locationId)}&date=${edenDate}`;
   }
 
   try {
@@ -344,11 +354,10 @@ ${deskLine}
 ${raceLine}
 <p><strong>What to do next:</strong></p>
 <ol>
-  <li>Log in to Eden via Okta to book your desk</li>
-  <li>If you continue to get this email, you may have entered your name differently to how it's stored in Eden — you can manually remove yourself from the waiting list below</li>
+  <li><a href="${edenUrl}">Log in to Eden</a> via Okta to book your desk</li>
+  <li>If you continue to get this email, you may have entered your name differently to how it's stored in Eden — you can manually <a href="${unsubscribeUrl}">remove yourself from the waiting list</a></li>
 </ol>
-<p><a href="${unsubscribeUrl}">Remove me from the waiting list</a></p>
-<p style="color:#999;font-size:12px;">(Hopefully if Eden update their API we automatically book you a desk when it becomes available)</p>`
+<p style="color:#999;font-size:12px;">(Hopefully if Eden update their API we can automatically book you a desk when it becomes available)</p>`
       })
     });
     return res.ok;
