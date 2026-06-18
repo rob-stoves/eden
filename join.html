@@ -370,10 +370,9 @@
 
 <script>
 (function () {
-    const params   = new URLSearchParams(location.search);
-    const locId    = params.get('location') || '';
-    const locName  = params.get('name') || '';
-    const apiToken = params.get('apiToken') || '';
+    const params  = new URLSearchParams(location.search);
+    const locId   = params.get('location') || '';
+    const locName = params.get('name') || '';
 
     const $ = id => document.getElementById(id);
 
@@ -424,7 +423,7 @@
 
     $('locationLabel').textContent = locName || locId || 'Unknown location';
 
-    if (!locId || !apiToken) {
+    if (!locId) {
         $('configMissing').style.display = 'block';
     } else {
         $('formSection').style.display = 'block';
@@ -458,7 +457,7 @@
         showBanner('checking', 'Checking availability…');
 
         try {
-            const res = await fetch(`/check-availability?location=${encodeURIComponent(locId)}&date=${encodeURIComponent(date)}&apiToken=${encodeURIComponent(apiToken)}`);
+            const res = await fetch(`/check-availability?location=${encodeURIComponent(locId)}&date=${encodeURIComponent(date)}`);
 
             if (!res.ok) throw new Error('API error');
 

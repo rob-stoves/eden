@@ -55,12 +55,6 @@ export default {
           status: 401, headers: { 'Content-Type': 'text/plain' }
         });
       }
-      // Serve /join (no extension) as join.html
-      if (url.pathname === '/join') {
-        const joinUrl = new URL(request.url);
-        joinUrl.pathname = '/join.html';
-        return env.ASSETS.fetch(new Request(joinUrl.toString(), request));
-      }
     }
 
     // For all other requests, serve static assets
@@ -529,13 +523,14 @@ async function handleNicknamesDelete(request, env) {
 async function handleCheckAvailability(request, url, env) {
   const locationId = url.searchParams.get('location');
   const date       = url.searchParams.get('date');
-  const apiToken   = url.searchParams.get('apiToken');
 
   if (!locationId || !date) {
     return jsonResponse({ error: 'location and date are required' }, 400);
   }
+
+  const apiToken = env.EDEN_API_TOKEN;
   if (!apiToken) {
-    return jsonResponse({ error: 'apiToken is required' }, 400);
+    return jsonResponse({ error: 'EDEN_API_TOKEN not configured' }, 503);
   }
 
   const headers = { 'Authorization': `Bearer ${apiToken}`, 'Content-Type': 'application/json' };
