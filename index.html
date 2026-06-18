@@ -844,6 +844,9 @@
             $('waitingListForm').classList.add('active');
             $('joinWaitingListBtn').style.display = 'none';
             $('waitingListQueue').style.display = 'none';
+            $('waitingListDate').value = todayDate();
+            $('waitingListName').value = localStorage.getItem('eden_wl_name') || '';
+            $('waitingListEmail').value = localStorage.getItem('eden_wl_email') || '';
             $('waitingListName').focus();
         });
 
@@ -861,6 +864,8 @@
             if (name) {
                 const success = await addToWaitingList(name, email, date);
                 if (success) {
+                    localStorage.setItem('eden_wl_name', name);
+                    if (email) localStorage.setItem('eden_wl_email', email);
                     $('waitingListName').value = '';
                     $('waitingListEmail').value = '';
                     $('waitingListDate').value = '';
