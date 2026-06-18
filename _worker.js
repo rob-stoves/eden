@@ -527,16 +527,15 @@ async function handleNicknamesDelete(request, env) {
 }
 
 async function handleCheckAvailability(request, url, env) {
-  const locationId = url.searchParams.get('locationId');
+  const locationId = url.searchParams.get('location');
   const date       = url.searchParams.get('date');
+  const apiToken   = url.searchParams.get('apiToken');
 
   if (!locationId || !date) {
-    return jsonResponse({ error: 'locationId and date are required' }, 400);
+    return jsonResponse({ error: 'location and date are required' }, 400);
   }
-
-  const apiToken = env.EDEN_API_TOKEN;
   if (!apiToken) {
-    return jsonResponse({ error: 'EDEN_API_TOKEN not configured' }, 503);
+    return jsonResponse({ error: 'apiToken is required' }, 400);
   }
 
   const headers = { 'Authorization': `Bearer ${apiToken}`, 'Content-Type': 'application/json' };
