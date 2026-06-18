@@ -425,49 +425,12 @@
         .btn-settings-header:hover { color: var(--brand); border-color: var(--brand); }
         .btn-settings-header svg   { width: 14px; height: 14px; flex-shrink: 0; }
 
-        /* ─── QR modal ───────────────────────────────────────────── */
-        .qr-modal {
-            display: none; position: fixed; inset: 0; z-index: 200;
-            background: rgba(8,12,8,.75); backdrop-filter: blur(4px);
-            align-items: center; justify-content: center;
+        /* ─── Inline waitlist QR ─────────────────────────────────── */
+        .waitlist-qr {
+            background: #fff; border-radius: 6px;
+            padding: 4px; flex-shrink: 0; line-height: 0;
         }
-        .qr-modal.active { display: flex; }
-        .qr-modal-card {
-            background: var(--bg-default);
-            border: 1px solid var(--border-default);
-            border-radius: 16px; padding: 40px;
-            text-align: center;
-            animation: slideUp .35s cubic-bezier(0.22,1,0.36,1);
-            max-width: 340px; width: 100%; margin: 20px;
-        }
-        .qr-modal-eyebrow {
-            font-family: 'Roboto Mono', monospace; font-size: 11px;
-            letter-spacing: .12em; text-transform: uppercase;
-            color: var(--fg-tertiary); margin-bottom: 6px;
-        }
-        .qr-modal-title {
-            font-family: 'Roboto Condensed', sans-serif;
-            font-weight: 900; font-size: 22px; letter-spacing: -.02em;
-            margin-bottom: 4px;
-        }
-        .qr-modal-sub {
-            font-size: 13px; color: var(--fg-secondary); margin-bottom: 28px;
-        }
-        .qr-code-wrap {
-            background: #fff; border-radius: 10px;
-            padding: 16px; display: inline-block; margin-bottom: 28px;
-        }
-        .qr-code-wrap canvas, .qr-code-wrap img { display: block; }
-        .qr-modal-close {
-            display: flex; align-items: center; gap: 7px;
-            padding: 10px 20px; margin: 0 auto;
-            background: transparent; border: 1px solid var(--border-tertiary);
-            border-radius: 8px; color: var(--fg-secondary);
-            font-family: 'Roboto Mono', monospace; font-size: 11px;
-            letter-spacing: .1em; text-transform: uppercase;
-            cursor: pointer; transition: border-color .2s, color .2s;
-        }
-        .qr-modal-close:hover { color: var(--brand); border-color: var(--brand); }
+        .waitlist-qr canvas, .waitlist-qr img { display: block; }
 
         /* Desk grid */
         .desk-grid {
@@ -679,6 +642,7 @@
             <div class="header-right">
                 <!-- Waiting list -->
                 <div class="waiting-list-header" id="waitingListContainer" style="display:none;">
+                    <div id="waitlistQr" class="waitlist-qr" style="display:none;"></div>
                     <button class="waiting-list-btn-small" id="joinWaitingListBtn">Join Waitlist</button>
                     <div class="waiting-list-form-inline" id="waitingListForm">
                         <div class="waiting-list-inputs">
@@ -708,40 +672,16 @@
                         <span class="live-dot"></span>
                         <span class="live-label">LIVE · <span id="lastUpdated">--:--</span></span>
                     </div>
-                    <div style="display:flex;gap:8px;">
-                        <button class="btn-settings-header" id="qrBtn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                                <rect x="3" y="14" width="7" height="7"/>
-                                <rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/>
-                                <rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/>
-                                <rect x="5" y="16" width="3" height="3" fill="currentColor" stroke="none"/>
-                                <path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 17h0M17 14h3"/>
-                            </svg>
-                            Join QR
-                        </button>
-                        <button class="btn-settings-header" id="settingsBtn">
+                    <button class="btn-settings-header" id="settingsBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="3"/>
                             <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
                         </svg>
                         Settings
                         </button>
-                    </div>
                 </div>
             </div>
         </header>
-
-        <!-- QR modal -->
-        <div class="qr-modal" id="qrModal">
-            <div class="qr-modal-card">
-                <div class="qr-modal-eyebrow">Waitlist</div>
-                <div class="qr-modal-title">Join the Waitlist</div>
-                <div class="qr-modal-sub" id="qrModalSub">Scan to join the waitlist for this location</div>
-                <div class="qr-code-wrap"><div id="qrCode"></div></div>
-                <button class="qr-modal-close" id="qrModalClose">Close</button>
-            </div>
-        </div>
 
         <!-- Grid section -->
         <div class="grid-section">
@@ -1184,23 +1124,20 @@
             if (locationChanged) { state.desks = []; state.reservations = []; }
 
             await loadNicknames();
-            if (state.desks.length > 0) { renderDashboard(); startAutoRefresh(); }
-            else { await refreshData(); startAutoRefresh(); }
+            if (state.desks.length > 0) { renderDashboard(); startAutoRefresh(); updateQrCode(); }
+            else { await refreshData(); startAutoRefresh(); updateQrCode(); }
         });
 
-        // ── QR code modal ─────────────────────────────────────────────
-        $('qrBtn').addEventListener('click', () => {
-            const token    = new URLSearchParams(window.location.search).get('token') || '';
-            const joinUrl  = `${window.location.origin}/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(state.locationId)}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
-            const modal    = $('qrModal');
-            const container = $('qrCode');
-            container.innerHTML = '';
-            new QRCode(container, { text: joinUrl, width: 220, height: 220, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-            $('qrModalSub').textContent = state.locationName || state.dashboardTitle || 'Scan to join the waitlist';
-            modal.classList.add('active');
-        });
-        $('qrModalClose').addEventListener('click', () => $('qrModal').classList.remove('active'));
-        $('qrModal').addEventListener('click', e => { if (e.target === $('qrModal')) $('qrModal').classList.remove('active'); });
+        // ── Inline waitlist QR ────────────────────────────────────────
+        function updateQrCode() {
+            const el = $('waitlistQr');
+            if (!el || !state.locationId || typeof QRCode === 'undefined') return;
+            const token  = new URLSearchParams(window.location.search).get('token') || '';
+            const url    = `${window.location.origin}/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(state.locationId)}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
+            el.innerHTML = '';
+            new QRCode(el, { text: url, width: 72, height: 72, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+            el.style.display = 'block';
+        }
 
         settingsBtn.addEventListener('click', () => {
             clearInterval(state.refreshTimer);
@@ -1401,7 +1338,7 @@
             dashboard.style.display = 'flex';
             setHeaderLocation();
             applyDisplaySettings();
-            loadNicknames().then(() => refreshData().then(() => startAutoRefresh()));
+            loadNicknames().then(() => refreshData().then(() => { startAutoRefresh(); updateQrCode(); }));
         } else {
             loadLocations();
             renderNicknamesList();
