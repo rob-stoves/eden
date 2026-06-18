@@ -371,8 +371,8 @@
 <script>
 (function () {
     const params  = new URLSearchParams(location.search);
-    const locId   = params.get('locationId') || '';
-    const locName = params.get('locationName') || '';
+    const locId   = params.get('location') || '';
+    const locName = params.get('name') || '';
 
     const $ = id => document.getElementById(id);
 
