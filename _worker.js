@@ -550,23 +550,21 @@ async function handlePlannerData(request, url, env) {
 
   const dates = getWorkingDays(5);
 
-  // Step 1: fetch desks for this location (same call as main board counter)
-  const desksRes = await fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers });
+  // Step 1: fetch zones and physical desks in parallel (2 subrequests)
+  // Reservations use zone-level location IDs, not individual desk IDs — so zone fetch drives filtering.
+  // Desk fetch (type=desks) is used only for the total desk count shown in the UI.
+  const [zonesRes, desksRes] = await Promise.all([
+    fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(locationId)}`, { headers }),
+    fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers }),
+  ]);
+  const zonesJson = await zonesRes.json().catch(() => []);
   const desksJson = await desksRes.json().catch(() => []);
+  const zonesRaw = Array.isArray(zonesJson) ? zonesJson : [];
   const desksRaw = Array.isArray(desksJson) ? desksJson : [];
 
-  let deskFilter;
-  if (desksRaw.length > 0) {
-    // Use exact desk IDs from the locations API (matches main board exactly)
-    const deskIds = new Set(desksRaw.map(d => d.location_id).filter(Boolean));
-    deskFilter = r => deskIds.has(r.location?.location_id);
-  } else {
-    // Fallback: fetch sub-locations and use 15-char prefix matching
-    const subRes = await fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(locationId)}`, { headers });
-    const subJson = await subRes.json().catch(() => []);
-    const zonePrefixes = new Set((Array.isArray(subJson) ? subJson : []).map(l => (l.location_id || '').slice(0, 15)).filter(Boolean));
-    deskFilter = r => zonePrefixes.has(r.location?.location_id?.slice(0, 15));
-  }
+  // Match reservations by exact zone location_id (reservations are booked against zones, not individual desks)
+  const zoneIds = new Set(zonesRaw.map(z => z.location_id).filter(Boolean));
+  const deskFilter = r => zoneIds.has(r.location?.location_id);
 
   // Step 2: fetch 8 pages of reservations per day in parallel (8×5+1=41 subrequests, within 50 limit)
   const PAGES_PER_DAY = 8;
@@ -607,11 +605,14 @@ async function handlePlannerData(request, url, env) {
   const _sampleLocKeys = firstResv?.location ? Object.keys(firstResv.location) : [];
   const _sampleLocId = firstResv?.location?.location_id || firstResv?.location_id || 'none';
 
+  // Use physical desks for display/count; fall back to zones, then to whatever was booked
   const desks = desksRaw.length > 0
     ? desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }))
-    : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
+    : zonesRaw.length > 0
+      ? zonesRaw.map(z => ({ id: z.location_id, name: (z.title || '').trim() }))
+      : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
 
-  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, sampleKeys: _sampleKeys, sampleLocKeys: _sampleLocKeys, sampleLocId: _sampleLocId, day0Statuses, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, active: d._activeCount, matched: d.reservations.length })) } });
+  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, zoneCount: zonesRaw.length, sampleLocId: _sampleLocId, day0Statuses, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, active: d._activeCount, matched: d.reservations.length })) } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
