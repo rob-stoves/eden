@@ -564,12 +564,12 @@ async function handlePlannerData(request, url, env) {
   const allDesks = Array.isArray(desksRaw) ? desksRaw : (desksRaw?.data || []);
   // Keep only short desk codes (≤ 3 chars) — filters out rooms, booths etc.
   const desks = allDesks.filter(d => {
-    const name = (d.title || d.name || '').trim();
+    const name = (d.title || '').trim();
     return name.length > 0 && name.length <= 3;
-  }).map(d => ({ id: d.id || d.location_id, name: d.title || d.name }));
+  }).map(d => ({ id: d.location_id, name: d.title }));
 
   const deskIds = new Set(desks.map(d => d.id));
-  const ACTIVE = new Set(['scheduled', 'in_progress', 'checked_in']);
+  const INACTIVE = new Set(['cancelled', 'finished', 'released']);
 
   const days = dates.map((date, i) => {
     const p1 = jsons[1 + i * 2];
@@ -582,7 +582,7 @@ async function handlePlannerData(request, url, env) {
     const reservations = all
       .filter(r => {
         const deskId = r.location?.location_id;
-        return deskIds.has(deskId) && ACTIVE.has(r.status);
+        return deskIds.has(deskId) && !INACTIVE.has(r.status);
       })
       .map(r => ({
         deskId: r.location.location_id,

@@ -361,7 +361,7 @@
         $('loadingState').style.display = 'none';
         $('subtitle').textContent = dateRange(days);
 
-        // Build desk lookup: id → name
+        // Build desk lookup: location_id → title
         const deskMap = {};
         desks.forEach(d => { deskMap[d.id] = d.name; });
 
