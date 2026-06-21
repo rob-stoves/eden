@@ -543,9 +543,8 @@ async function handlePlannerData(request, url, env) {
   const locationId = url.searchParams.get('location');
   if (!locationId) return jsonResponse({ error: 'location required' }, 400);
 
-  // Eden API token passed as a URL param (same pattern as the main board)
-  const rawToken = url.searchParams.get('apiToken') || env.EDEN_API_TOKEN || '';
-  if (!rawToken) return jsonResponse({ error: 'apiToken required' }, 400);
+  const rawToken = env.EDEN_API_TOKEN || '';
+  if (!rawToken) return jsonResponse({ error: 'EDEN_API_TOKEN not configured' }, 503);
   const apiToken = rawToken.replace(/^Bearer\s+/i, '');
   const headers = { 'Authorization': `Bearer ${apiToken}` };
   const dates = getWorkingDays(5);
