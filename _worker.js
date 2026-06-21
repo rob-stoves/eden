@@ -550,23 +550,14 @@ async function handlePlannerData(request, url, env) {
 
   const dates = getWorkingDays(5);
 
-  // Step 1: fetch zones and physical desks in parallel (2 subrequests)
-  // Reservations use zone-level location IDs, not individual desk IDs — so zone fetch drives filtering.
-  // Desk fetch (type=desks) is used only for the total desk count shown in the UI.
-  const [zonesRes, desksRes] = await Promise.all([
-    fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(locationId)}`, { headers }),
-    fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers }),
-  ]);
-  const zonesJson = await zonesRes.json().catch(() => []);
+  // Step 1: fetch desk count for this location (used for occupancy % in the UI)
+  const desksRes = await fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers });
   const desksJson = await desksRes.json().catch(() => []);
-  const zonesRaw = Array.isArray(zonesJson) ? zonesJson : [];
   const desksRaw = Array.isArray(desksJson) ? desksJson : [];
 
-  // Match reservations by checking if the desk's parent zone is under London.
-  // Hierarchy: London → Zone → Desk. Reservations reference individual desks;
-  // r.location.parent_id is the zone, which must be in our London zones set.
-  const zoneIds = new Set(zonesRaw.map(z => z.location_id).filter(Boolean));
-  const deskFilter = r => zoneIds.has(r.location?.parent_id);
+  // No location filtering on reservations — cola_reservations is already org-scoped.
+  // Accept any reservation that has a desk location attached.
+  const deskFilter = r => !!r.location?.location_id;
 
   // Step 2: fetch 8 pages of reservations per day in parallel (8×5+1=41 subrequests, within 50 limit)
   const PAGES_PER_DAY = 8;
@@ -605,14 +596,11 @@ async function handlePlannerData(request, url, env) {
   const _sampleLocId = firstResv?.location?.location_id || 'none';
   const _sampleParentId = firstResv?.location?.parent_id || 'none';
 
-  // Use physical desks for display/count; fall back to zones, then to whatever was booked
   const desks = desksRaw.length > 0
     ? desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }))
-    : zonesRaw.length > 0
-      ? zonesRaw.map(z => ({ id: z.location_id, name: (z.title || '').trim() }))
-      : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
+    : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
 
-  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, zoneCount: zonesRaw.length, sampleLocId: _sampleLocId, sampleParentId: _sampleParentId, day0Statuses, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, matched: d.reservations.length })) } });
+  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, day0Statuses, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, matched: d.reservations.length })) } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
