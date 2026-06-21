@@ -551,7 +551,7 @@ async function handlePlannerData(request, url, env) {
 
   // All Eden location IDs under the same office share a common prefix with their parent.
   // Use the first 16 chars of the London location ID to filter reservations to this office only.
-  const locPrefix = locationId.slice(0, 16);
+  const locPrefix = locationId.slice(0, 14);
 
   // Fetch 4 pages of reservations per day in parallel (20 total fetches — within Cloudflare's 50 limit)
   const allFetches = dates.flatMap(date => [
