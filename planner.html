@@ -385,7 +385,7 @@
         db.style.cssText = 'display:block!important';
         db.style.cssText = 'display:block!important';
         const dc = _debug?.dayCounts || [];
-        db.innerHTML = `desks:${_debug?.deskApiCount} zones:${_debug?.zoneCount} parentInZones:${_debug?.parentInZones} | parentId:${_debug?.sampleParentId} | zoneIds:${(_debug?.sampleZoneIds||[]).join(' / ')} | ` +
+        db.innerHTML = `desks:${_debug?.deskApiCount} resvLocInDesks:${_debug?.resvLocInDesks} | resvLocId:${_debug?.sampleResvLocId} | deskIds:${(_debug?.sampleDeskIds||[]).join(' / ')} | ` +
             dc.map(d => `${d.date}: ${d.raw}/${d.matched}`).join(' | ');
 
         // Build desk lookup: id → name

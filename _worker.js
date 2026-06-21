@@ -570,7 +570,7 @@ async function handlePlannerData(request, url, env) {
   const resResponses = await Promise.all(
     dates.flatMap(date =>
       Array.from({ length: PAGES_PER_DAY }, (_, p) =>
-        fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=${p + 1}&location_id=${encodeURIComponent(locationId)}`, { headers })
+        fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=${p + 1}`, { headers })
       )
     )
   );
@@ -598,15 +598,16 @@ async function handlePlannerData(request, url, env) {
   });
 
   const firstResv = resJsons.flat().find(r => r && typeof r === 'object');
-  const _sampleParentId = firstResv?.location?.parent_id || 'none';
-  const _sampleZoneIds = zonesRaw.slice(0, 3).map(z => z.location_id);
-  const _parentInZones = zoneIds.has(_sampleParentId);
+  const _sampleResvLocId = firstResv?.location?.location_id || 'none';
+  const _sampleDeskIds = desksRaw.slice(0, 3).map(d => d.location_id);
+  const deskIds = new Set(desksRaw.map(d => d.location_id).filter(Boolean));
+  const _resvLocInDesks = deskIds.has(_sampleResvLocId);
 
   const desks = desksRaw.length > 0
     ? desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }))
     : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
 
-  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, zoneCount: zonesRaw.length, sampleParentId: _sampleParentId, sampleZoneIds: _sampleZoneIds, parentInZones: _parentInZones, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, matched: d.reservations.length })) } });
+  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, sampleResvLocId: _sampleResvLocId, sampleDeskIds: _sampleDeskIds, resvLocInDesks: _resvLocInDesks, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, matched: d.reservations.length })) } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
