@@ -387,7 +387,8 @@
         console.log('[planner debug]\n' + dbText);
         const db = $('debugBanner');
         db.style.cssText = 'display:block!important';
-        db.innerHTML = dbText.replace(/\n/g, '<br>');
+        const dayDebug = days.map(d => `${d.date}: ${d._d?.total} fetched → ${d._d?.inDeskIds} matched → ${d.reservations.length} active [${(d._d?.statuses||[]).join(',')}] sample: ${(d._d?.sampleLocIds||[]).join(' | ')}`).join('\n');
+        db.innerHTML = (dbText + '\n' + dayDebug).replace(/\n/g, '<br>');
 
         // Build desk lookup: id → name
         const deskMap = {};

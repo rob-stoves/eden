@@ -599,10 +599,11 @@ async function handlePlannerData(request, url, env) {
       .filter(r => !INACTIVE.has(r.status))
       .map(r => ({ deskId: r.location.location_id, name: r.owner?.name || 'Unknown' }));
 
-    return { date, reservations, _d: { total: all.length, inDeskIds: inDeskIds.length, statuses } };
+    const sampleLocIds = all.slice(0, 3).map(r => r.location?.location_id + ' / ' + (r.location?.title || '?'));
+    return { date, reservations, _d: { total: all.length, inDeskIds: inDeskIds.length, statuses, sampleLocIds } };
   });
 
-  return jsonResponse({ desks, days, _debug: { deskCount: desks.length } });
+  return jsonResponse({ desks, days, _debug: { deskCount: desks.length, queriedParent: locationId } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
