@@ -562,9 +562,11 @@ async function handlePlannerData(request, url, env) {
   const zonesRaw = Array.isArray(zonesJson) ? zonesJson : [];
   const desksRaw = Array.isArray(desksJson) ? desksJson : [];
 
-  // Match reservations by exact zone location_id (reservations are booked against zones, not individual desks)
+  // Match reservations by checking if the desk's parent zone is under London.
+  // Hierarchy: London → Zone → Desk. Reservations reference individual desks;
+  // r.location.parent_id is the zone, which must be in our London zones set.
   const zoneIds = new Set(zonesRaw.map(z => z.location_id).filter(Boolean));
-  const deskFilter = r => zoneIds.has(r.location?.location_id);
+  const deskFilter = r => zoneIds.has(r.location?.parent_id);
 
   // Step 2: fetch 8 pages of reservations per day in parallel (8×5+1=41 subrequests, within 50 limit)
   const PAGES_PER_DAY = 8;
@@ -599,11 +601,9 @@ async function handlePlannerData(request, url, env) {
     return { date, reservations, _rawCount: all.length, _activeCount: all.filter(r => !INACTIVE.has(r.status)).length };
   });
 
-  // Sample from first non-empty page for field structure debugging
   const firstResv = resJsons.flat().find(r => r && typeof r === 'object');
-  const _sampleKeys = firstResv ? Object.keys(firstResv) : [];
-  const _sampleLocKeys = firstResv?.location ? Object.keys(firstResv.location) : [];
-  const _sampleLocId = firstResv?.location?.location_id || firstResv?.location_id || 'none';
+  const _sampleLocId = firstResv?.location?.location_id || 'none';
+  const _sampleParentId = firstResv?.location?.parent_id || 'none';
 
   // Use physical desks for display/count; fall back to zones, then to whatever was booked
   const desks = desksRaw.length > 0
@@ -612,7 +612,7 @@ async function handlePlannerData(request, url, env) {
       ? zonesRaw.map(z => ({ id: z.location_id, name: (z.title || '').trim() }))
       : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
 
-  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, zoneCount: zonesRaw.length, sampleLocId: _sampleLocId, day0Statuses, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, active: d._activeCount, matched: d.reservations.length })) } });
+  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, zoneCount: zonesRaw.length, sampleLocId: _sampleLocId, sampleParentId: _sampleParentId, day0Statuses, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, matched: d.reservations.length })) } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
