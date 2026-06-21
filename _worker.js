@@ -593,14 +593,16 @@ async function handlePlannerData(request, url, env) {
     const page4 = page3.length >= 25 && Array.isArray(p4) ? p4 : [];
     const all = [...page1, ...page2, ...page3, ...page4];
 
-    const reservations = all
-      .filter(r => deskIds.has(r.location?.location_id) && !INACTIVE.has(r.status))
+    const statuses = [...new Set(all.map(r => r.status))];
+    const inDeskIds = all.filter(r => deskIds.has(r.location?.location_id));
+    const reservations = inDeskIds
+      .filter(r => !INACTIVE.has(r.status))
       .map(r => ({ deskId: r.location.location_id, name: r.owner?.name || 'Unknown' }));
 
-    return { date, reservations };
+    return { date, reservations, _d: { total: all.length, inDeskIds: inDeskIds.length, statuses } };
   });
 
-  return jsonResponse({ desks, days });
+  return jsonResponse({ desks, days, _debug: { deskCount: desks.length } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }

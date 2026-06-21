@@ -383,10 +383,9 @@
 
         // Surface debug info so we can diagnose data issues
         const db = $('debugBanner');
-        if (_debug) {
-            db.style.display = 'block';
-            db.textContent = `API: ${_debug.rawDeskCount} desks returned, ${desks.length} after filter. Sample: ${JSON.stringify(_debug.deskSample)}`;
-        }
+        db.style.display = 'block';
+        db.innerHTML = `Desks: ${_debug?.deskCount} raw → ${desks.length} after name filter<br>` +
+            days.map(d => `${d.date}: ${d._d?.total} fetched, ${d._d?.inDeskIds} matched desk IDs, ${d.reservations.length} after status filter [${(d._d?.statuses||[]).join(', ')}]`).join('<br>');
 
         // Build desk lookup: id → name
         const deskMap = {};
