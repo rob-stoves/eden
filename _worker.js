@@ -545,25 +545,30 @@ async function handlePlannerData(request, url, env) {
 
   const apiToken = (env.EDEN_API_TOKEN || '').trim();
   if (!apiToken) return jsonResponse({ error: 'EDEN_API_TOKEN not configured' }, 503);
-  const headers = { 'Authorization': apiToken };
+  // Match the proxy exactly: same headers the main board uses
+  const headers = { 'Authorization': apiToken, 'Content-Type': 'application/json' };
 
   const dates = getWorkingDays(5);
 
-  // Step 1: fetch direct children of the location (zones) — 1 subrequest
-  const subRes = await fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(locationId)}`, { headers });
-  const subJson = await subRes.json().catch(() => []);
-  const subLocs = Array.isArray(subJson) ? subJson : [];
-  const zoneIds = subLocs.map(l => l.location_id).filter(Boolean);
+  // Step 1: fetch desks for this location (same call as main board counter)
+  const desksRes = await fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers });
+  const desksJson = await desksRes.json().catch(() => []);
+  const desksRaw = Array.isArray(desksJson) ? desksJson : [];
 
-  // Desk IDs from reservations share a 15-char prefix with their parent zone ID.
-  // Build a set of zone prefixes (15 chars) to filter reservations to this office only.
-  const zonePrefixes = new Set(zoneIds.map(id => id.slice(0, 15)));
+  let deskFilter;
+  if (desksRaw.length > 0) {
+    // Use exact desk IDs from the locations API (matches main board exactly)
+    const deskIds = new Set(desksRaw.map(d => d.location_id).filter(Boolean));
+    deskFilter = r => deskIds.has(r.location?.location_id);
+  } else {
+    // Fallback: fetch sub-locations and use 15-char prefix matching
+    const subRes = await fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(locationId)}`, { headers });
+    const subJson = await subRes.json().catch(() => []);
+    const zonePrefixes = new Set((Array.isArray(subJson) ? subJson : []).map(l => (l.location_id || '').slice(0, 15)).filter(Boolean));
+    deskFilter = r => zonePrefixes.has(r.location?.location_id?.slice(0, 15));
+  }
 
-  // Test: try cola_reservations with location_id filter (Eden may support server-side filtering)
-  const testRes = await fetch(`https://public-api.eden.io/cola_reservations?date=${dates[2]}&location_id=${encodeURIComponent(locationId)}&page=1`, { headers });
-  const testJson = await testRes.json().catch(() => null);
-
-  // Fetch 4 pages of reservations per day — all in parallel (20 subrequests)
+  // Step 2: fetch 4 pages of reservations per day in parallel — same logic as main board, 5 days
   const resFetches = dates.flatMap(date => [
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=1`, { headers }),
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=2`, { headers }),
@@ -588,23 +593,17 @@ async function handlePlannerData(request, url, env) {
     const all = [...page1, ...page2, ...page3, ...page4];
 
     const reservations = all
-      .filter(r => !INACTIVE.has(r.status) && zonePrefixes.has(r.location?.location_id?.slice(0, 15)))
+      .filter(r => !INACTIVE.has(r.status) && deskFilter(r))
       .map(r => ({ deskId: r.location.location_id, deskName: (r.location.title || '').trim(), name: r.owner?.name || 'Unknown' }));
 
-    return { date, reservations, _d: { raw: all.length, matched: reservations.length } };
+    return { date, reservations };
   });
 
-  // Build unique desk list from all reservations seen across all days
-  const deskMap = {};
-  days.forEach(d => d.reservations.forEach(r => { deskMap[r.deskId] = r.deskName; }));
-  const desks = Object.entries(deskMap).map(([id, name]) => ({ id, name }));
+  const desks = desksRaw.length > 0
+    ? desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }))
+    : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
 
-  const sampleRes = Array.isArray(resJsons[8]) && resJsons[8].length > 0 ? resJsons[8][0] : null;
-  return jsonResponse({ desks, days, _debug: {
-    deskCount: desks.length, zoneCount: zoneIds.length, zonePrefixes: [...zonePrefixes],
-    locationFilterTest: { count: Array.isArray(testJson) ? testJson.length : null, sample: JSON.stringify(testJson).slice(0, 200) },
-    sampleReservation: sampleRes ? { locId: sampleRes.location?.location_id, locTitle: sampleRes.location?.title, locKeys: Object.keys(sampleRes.location || {}) } : null,
-  } });
+  return jsonResponse({ desks, days });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
