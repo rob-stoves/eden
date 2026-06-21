@@ -563,18 +563,17 @@ async function handlePlannerData(request, url, env) {
   const desksRaw = Array.isArray(desksJson) ? desksJson : [];
 
   const zoneIds = new Set(zonesRaw.map(z => z.location_id).filter(Boolean));
-  const deskFilter = r => zoneIds.has(r.location?.parent_id);
+  const deskFilter = r => !!r.location?.location_id;
 
-  // Step 2: fetch 8 pages of reservations per day in parallel (8×5+1=41 subrequests, within 50 limit)
+  // Step 2: fetch 8 pages of reservations per day, filtered by location_id if the API supports it
   const PAGES_PER_DAY = 8;
   const resResponses = await Promise.all(
     dates.flatMap(date =>
       Array.from({ length: PAGES_PER_DAY }, (_, p) =>
-        fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=${p + 1}`, { headers })
+        fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=${p + 1}&location_id=${encodeURIComponent(locationId)}`, { headers })
       )
     )
   );
-  // Also capture HTTP statuses for the first day (for debugging 0-result days)
   const day0Statuses = resResponses.slice(0, PAGES_PER_DAY).map(r => r.status);
   const resJsons = await Promise.all(resResponses.map(r => r.json().catch(() => [])));
 
