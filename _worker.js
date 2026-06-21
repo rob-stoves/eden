@@ -559,7 +559,11 @@ async function handlePlannerData(request, url, env) {
   // Build a set of zone prefixes (15 chars) to filter reservations to this office only.
   const zonePrefixes = new Set(zoneIds.map(id => id.slice(0, 15)));
 
-  // Step 2: fetch 4 pages of reservations per day — all in parallel (20 subrequests)
+  // Test: try cola_reservations with location_id filter (Eden may support server-side filtering)
+  const testRes = await fetch(`https://public-api.eden.io/cola_reservations?date=${dates[2]}&location_id=${encodeURIComponent(locationId)}&page=1`, { headers });
+  const testJson = await testRes.json().catch(() => null);
+
+  // Fetch 4 pages of reservations per day — all in parallel (20 subrequests)
   const resFetches = dates.flatMap(date => [
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=1`, { headers }),
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=2`, { headers }),
@@ -595,7 +599,12 @@ async function handlePlannerData(request, url, env) {
   days.forEach(d => d.reservations.forEach(r => { deskMap[r.deskId] = r.deskName; }));
   const desks = Object.entries(deskMap).map(([id, name]) => ({ id, name }));
 
-  return jsonResponse({ desks, days, _debug: { deskCount: desks.length, zoneCount: zoneIds.length, zonePrefixes: [...zonePrefixes] } });
+  const sampleRes = Array.isArray(resJsons[8]) && resJsons[8].length > 0 ? resJsons[8][0] : null;
+  return jsonResponse({ desks, days, _debug: {
+    deskCount: desks.length, zoneCount: zoneIds.length, zonePrefixes: [...zonePrefixes],
+    locationFilterTest: { count: Array.isArray(testJson) ? testJson.length : null, sample: JSON.stringify(testJson).slice(0, 200) },
+    sampleReservation: sampleRes ? { locId: sampleRes.location?.location_id, locTitle: sampleRes.location?.title, locKeys: Object.keys(sampleRes.location || {}) } : null,
+  } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
