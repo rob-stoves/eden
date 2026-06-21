@@ -555,12 +555,14 @@ async function handlePlannerData(request, url, env) {
   const subLocs = (Array.isArray(subJson) ? subJson : []).slice(0, 10); // cap at 10 zones
   const zoneIds = subLocs.map(l => l.location_id).filter(Boolean);
 
-  // Step 2: fetch children of each zone (no type filter — desks aren't typed as 'desks' at this level)
-  // plus 4 pages of reservations per day — all in parallel
-  // Max subrequests: 10 (zone children) + 20 (5 days × 4 pages) = 30
-  const deskFetches = zoneIds.map(pid =>
-    fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(pid)}`, { headers })
-  );
+  // Try type=desks on zone IDs — also try the top-level locations list
+  // Max subrequests: 1 (top-level locs) + 10 (zone desks) + 20 (reservations) = 31
+  const deskFetches = [
+    fetch(`https://public-api.eden.io/locations?type=all`, { headers }),
+    ...zoneIds.map(pid =>
+      fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(pid)}`, { headers })
+    ),
+  ];
   const resFetches = dates.flatMap(date => [
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=1`, { headers }),
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=2`, { headers }),
@@ -572,8 +574,10 @@ async function handlePlannerData(request, url, env) {
   const allJsons = await Promise.all(allResponses.map(r => r.json().catch(() => [])));
 
   const deskJsons = allJsons.slice(0, deskFetches.length);
-  const firstZoneRaw = deskJsons[0]; // raw response from first zone — for debugging
-  const allDesksRaw = deskJsons.flatMap(d => Array.isArray(d) ? d : []);
+  const topLevelRaw = deskJsons[0]; // locations?type=all response
+  const zoneDesksJsons = deskJsons.slice(1);
+  const firstZoneRaw = zoneDesksJsons[0];
+  const allDesksRaw = zoneDesksJsons.flatMap(d => Array.isArray(d) ? d : []);
   const desks = allDesksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }));
   const deskIds = new Set(desks.map(d => d.id));
 
@@ -598,7 +602,8 @@ async function handlePlannerData(request, url, env) {
     return { date, reservations, _d: { raw: all.length, matched: reservations.length } };
   });
 
-  return jsonResponse({ desks, days, _debug: { deskCount: desks.length, zoneCount: zoneIds.length, subLocSample: subLocs.slice(0, 3).map(l => l.location_id + ' / ' + l.title), firstZoneRaw: JSON.stringify(firstZoneRaw).slice(0, 300) } });
+  const topLevelSample = Array.isArray(topLevelRaw) ? topLevelRaw.slice(0, 3).map(l => l.location_id + ' / ' + l.title + ' (' + l.location_type + ')') : JSON.stringify(topLevelRaw).slice(0, 200);
+  return jsonResponse({ desks, days, _debug: { deskCount: desks.length, zoneCount: zoneIds.length, firstZoneDesks: JSON.stringify(firstZoneRaw).slice(0, 200), topLevelSample } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
