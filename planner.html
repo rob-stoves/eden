@@ -70,22 +70,39 @@
 
         .loading {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 12px;
+            justify-content: center;
+            gap: 20px;
+            padding: 60px 0 40px;
             color: var(--fg-tertiary);
-            font-size: 13px;
-            padding: 20px 0;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
         }
 
         .spinner {
-            width: 18px; height: 18px;
-            border: 2px solid var(--border-default);
+            width: 44px; height: 44px;
+            border: 3px solid var(--border-default);
             border-top-color: var(--brand);
             border-radius: 50%;
-            animation: spin .75s linear infinite;
-            flex-shrink: 0;
+            animation: spin .8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        .debug-banner {
+            background: var(--bg-default);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            color: var(--fg-tertiary);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            display: none;
+        }
 
         /* ─── Error ──────────────────────────────────────────────── */
 
@@ -283,6 +300,7 @@
     </div>
 
     <div class="error-banner" id="errorBanner"></div>
+    <div class="debug-banner" id="debugBanner"></div>
 
     <div id="mainContent" style="display:none">
         <div class="chart-section">
@@ -357,11 +375,21 @@
 
     // ── Render ───────────────────────────────────────────────────────
 
-    function render({ desks, days }) {
+    function render({ desks: allDesks, days, _debug }) {
         $('loadingState').style.display = 'none';
         $('subtitle').textContent = dateRange(days);
 
-        // Build desk lookup: location_id → title
+        // Apply name-length filter client-side (≤ 3 chars = desk codes, not rooms/booths)
+        const desks = allDesks.filter(d => d.name && d.name.trim().length <= 3);
+
+        // Surface debug info so we can diagnose data issues
+        const db = $('debugBanner');
+        if (_debug) {
+            db.style.display = 'block';
+            db.textContent = `API: ${_debug.rawDeskCount} desks returned, ${desks.length} after filter. Sample: ${JSON.stringify(_debug.deskSample)}`;
+        }
+
+        // Build desk lookup: id → name
         const deskMap = {};
         desks.forEach(d => { deskMap[d.id] = d.name; });
 

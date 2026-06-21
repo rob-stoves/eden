@@ -558,16 +558,22 @@ async function handlePlannerData(request, url, env) {
   ];
 
   const responses = await Promise.all(allFetches);
+
+  // Check for API auth failure on the desks call
+  if (!responses[0].ok) {
+    return jsonResponse({ error: `Eden API error ${responses[0].status} fetching desks` }, 502);
+  }
+
   const jsons = await Promise.all(responses.map(r => r.json().catch(() => [])));
 
   const desksRaw = jsons[0];
-  const allDesks = Array.isArray(desksRaw) ? desksRaw : (desksRaw?.data || []);
-  // Keep only short desk codes (≤ 3 chars) — filters out rooms, booths etc.
-  const desks = allDesks.filter(d => {
-    const name = (d.title || '').trim();
-    return name.length > 0 && name.length <= 3;
-  }).map(d => ({ id: d.location_id, name: d.title }));
+  // Return all desks unfiltered — client applies the name-length filter
+  const allDesks = Array.isArray(desksRaw) ? desksRaw
+                 : Array.isArray(desksRaw?.data) ? desksRaw.data
+                 : Array.isArray(desksRaw?.locations) ? desksRaw.locations
+                 : [];
 
+  const desks = allDesks.map(d => ({ id: d.location_id, name: d.title || '' }));
   const deskIds = new Set(desks.map(d => d.id));
   const INACTIVE = new Set(['cancelled', 'finished', 'released']);
 
@@ -575,7 +581,6 @@ async function handlePlannerData(request, url, env) {
     const p1 = jsons[1 + i * 2];
     const p2 = jsons[2 + i * 2];
     const page1 = Array.isArray(p1) ? p1 : [];
-    // Only use page 2 if page 1 was full (25 items)
     const page2 = page1.length === 25 && Array.isArray(p2) ? p2 : [];
     const all = [...page1, ...page2];
 
@@ -592,7 +597,7 @@ async function handlePlannerData(request, url, env) {
     return { date, reservations };
   });
 
-  return jsonResponse({ desks, days });
+  return jsonResponse({ desks, days, _debug: { rawDeskCount: allDesks.length, deskSample: allDesks.slice(0, 2) } });
 }
 
 async function handleCheckAvailability(request, url, env) {
