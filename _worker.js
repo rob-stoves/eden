@@ -549,11 +549,14 @@ async function handlePlannerData(request, url, env) {
 
   const dates = getWorkingDays(5);
 
+  // Fetch desks + 4 pages of reservations per day (covers up to 100) — all in parallel
   const allFetches = [
     fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers }),
     ...dates.flatMap(date => [
       fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=1`, { headers }),
       fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=2`, { headers }),
+      fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=3`, { headers }),
+      fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=4`, { headers }),
     ]),
   ];
 
@@ -564,14 +567,12 @@ async function handlePlannerData(request, url, env) {
     return jsonResponse({
       error: `Eden API ${responses[0].status} fetching desks`,
       detail: body.slice(0, 500),
-      authSent: `${apiToken.slice(0, 6)}...${apiToken.slice(-4)} (len=${apiToken.length})`,
     }, 502);
   }
 
   const jsons = await Promise.all(responses.map(r => r.json().catch(() => [])));
 
   const desksRaw = jsons[0];
-  // Return all desks unfiltered — client applies the name-length filter
   const allDesks = Array.isArray(desksRaw) ? desksRaw
                  : Array.isArray(desksRaw?.data) ? desksRaw.data
                  : Array.isArray(desksRaw?.locations) ? desksRaw.locations
@@ -582,26 +583,24 @@ async function handlePlannerData(request, url, env) {
   const INACTIVE = new Set(['cancelled', 'finished', 'released']);
 
   const days = dates.map((date, i) => {
-    const p1 = jsons[1 + i * 2];
-    const p2 = jsons[2 + i * 2];
+    const p1 = jsons[1 + i * 4];
+    const p2 = jsons[2 + i * 4];
+    const p3 = jsons[3 + i * 4];
+    const p4 = jsons[4 + i * 4];
     const page1 = Array.isArray(p1) ? p1 : [];
-    const page2 = page1.length === 25 && Array.isArray(p2) ? p2 : [];
-    const all = [...page1, ...page2];
+    const page2 = page1.length >= 25 && Array.isArray(p2) ? p2 : [];
+    const page3 = page2.length >= 25 && Array.isArray(p3) ? p3 : [];
+    const page4 = page3.length >= 25 && Array.isArray(p4) ? p4 : [];
+    const all = [...page1, ...page2, ...page3, ...page4];
 
     const reservations = all
-      .filter(r => {
-        const deskId = r.location?.location_id;
-        return deskIds.has(deskId) && !INACTIVE.has(r.status);
-      })
-      .map(r => ({
-        deskId: r.location.location_id,
-        name: r.owner?.name || 'Unknown',
-      }));
+      .filter(r => deskIds.has(r.location?.location_id) && !INACTIVE.has(r.status))
+      .map(r => ({ deskId: r.location.location_id, name: r.owner?.name || 'Unknown' }));
 
     return { date, reservations };
   });
 
-  return jsonResponse({ desks, days, _debug: { rawDeskCount: allDesks.length, deskSample: allDesks.slice(0, 2) } });
+  return jsonResponse({ desks, days });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
