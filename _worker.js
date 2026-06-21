@@ -549,52 +549,39 @@ async function handlePlannerData(request, url, env) {
 
   const dates = getWorkingDays(5);
 
-  // Step 1: get direct child locations of the London parent (zones/sections)
-  const subRes = await fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(locationId)}`, { headers });
-  const subJson = await subRes.json().catch(() => []);
-  const subLocs = Array.isArray(subJson) ? subJson : [];
-  const parentIds = [locationId, ...subLocs.map(l => l.location_id).filter(Boolean)];
+  // All Eden location IDs under the same office share a common prefix with their parent.
+  // Use the first 16 chars of the London location ID to filter reservations to this office only.
+  const locPrefix = locationId.slice(0, 16);
 
-  // Step 2: fetch desks for the location + all sub-locations, plus 4 pages of reservations per day — all in parallel
-  const deskFetches = parentIds.map(pid =>
-    fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(pid)}`, { headers })
-  );
-  const resFetches = dates.flatMap(date => [
+  // Fetch 2 pages of reservations per day in parallel (10 total fetches — within Cloudflare's 50 limit)
+  const allFetches = dates.flatMap(date => [
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=1`, { headers }),
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=2`, { headers }),
-    fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=3`, { headers }),
-    fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=4`, { headers }),
   ]);
 
-  const allResponses = await Promise.all([...deskFetches, ...resFetches]);
-  const allJsons = await Promise.all(allResponses.map(r => r.json().catch(() => [])));
+  const responses = await Promise.all(allFetches);
+  const jsons = await Promise.all(responses.map(r => r.json().catch(() => [])));
 
-  // Build desk ID set from all desk fetches
-  const deskJsons = allJsons.slice(0, deskFetches.length);
-  const allDesksRaw = deskJsons.flatMap(d => Array.isArray(d) ? d : Array.isArray(d?.data) ? d.data : []);
-  const desks = allDesksRaw.map(d => ({ id: d.location_id, name: d.title || '' }));
-  const deskIds = new Set(desks.map(d => d.id));
-
-  const resJsons = allJsons.slice(deskFetches.length);
   const INACTIVE = new Set(['cancelled', 'finished', 'released']);
 
   const days = dates.map((date, i) => {
-    const p1 = resJsons[i * 4];
-    const p2 = resJsons[i * 4 + 1];
-    const p3 = resJsons[i * 4 + 2];
-    const p4 = resJsons[i * 4 + 3];
+    const p1 = jsons[i * 2];
+    const p2 = jsons[i * 2 + 1];
     const page1 = Array.isArray(p1) ? p1 : [];
     const page2 = page1.length >= 25 && Array.isArray(p2) ? p2 : [];
-    const page3 = page2.length >= 25 && Array.isArray(p3) ? p3 : [];
-    const page4 = page3.length >= 25 && Array.isArray(p4) ? p4 : [];
-    const all = [...page1, ...page2, ...page3, ...page4];
+    const all = [...page1, ...page2];
 
     const reservations = all
-      .filter(r => !INACTIVE.has(r.status) && deskIds.has(r.location?.location_id))
+      .filter(r => !INACTIVE.has(r.status) && r.location?.location_id?.startsWith(locPrefix))
       .map(r => ({ deskId: r.location.location_id, deskName: (r.location.title || '').trim(), name: r.owner?.name || 'Unknown' }));
 
     return { date, reservations };
   });
+
+  // Build unique desk list from all reservations seen across all days
+  const deskMap = {};
+  days.forEach(d => d.reservations.forEach(r => { deskMap[r.deskId] = r.deskName; }));
+  const desks = Object.entries(deskMap).map(([id, name]) => ({ id, name }));
 
   return jsonResponse({ desks, days });
   } catch (e) {
