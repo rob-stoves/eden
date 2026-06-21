@@ -555,10 +555,11 @@ async function handlePlannerData(request, url, env) {
   const subLocs = (Array.isArray(subJson) ? subJson : []).slice(0, 10); // cap at 10 zones
   const zoneIds = subLocs.map(l => l.location_id).filter(Boolean);
 
-  // Step 2: fetch desks for London parent + each zone, plus 4 pages of reservations per day — all in parallel
-  // Max subrequests: 1 (parent desks) + 10 (zone desks) + 20 (5 days × 4 pages) = 31
-  const deskFetches = [locationId, ...zoneIds].map(pid =>
-    fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(pid)}`, { headers })
+  // Step 2: fetch children of each zone (no type filter — desks aren't typed as 'desks' at this level)
+  // plus 4 pages of reservations per day — all in parallel
+  // Max subrequests: 10 (zone children) + 20 (5 days × 4 pages) = 30
+  const deskFetches = zoneIds.map(pid =>
+    fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(pid)}`, { headers })
   );
   const resFetches = dates.flatMap(date => [
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=1`, { headers }),
