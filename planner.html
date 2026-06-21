@@ -361,9 +361,8 @@
     async function load() {
         try {
             const res = await fetch(`/planner-data?location=${encodeURIComponent(locId)}`);
-            if (!res.ok) throw new Error(`Server error ${res.status}`);
-            const data = await res.json();
-            if (data.error) throw new Error(data.error + (data.detail ? `: ${data.detail}` : ''));
+            const data = await res.json().catch(() => ({ error: `Server error ${res.status} (no JSON body)` }));
+            if (!res.ok || data.error) throw new Error(data.error + (data.detail ? ` — ${data.detail}` : ''));
             render(data);
         } catch (e) {
             $('loadingState').style.display = 'none';

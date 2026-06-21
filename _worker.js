@@ -539,12 +539,14 @@ function getWorkingDays(n) {
 }
 
 async function handlePlannerData(request, url, env) {
+  try {
   const locationId = url.searchParams.get('location');
   if (!locationId) return jsonResponse({ error: 'location required' }, 400);
 
-  const apiToken = env.EDEN_API_TOKEN;
-  if (!apiToken) return jsonResponse({ error: 'EDEN_API_TOKEN not configured' }, 503);
-
+  const rawToken = env.EDEN_API_TOKEN;
+  if (!rawToken) return jsonResponse({ error: 'EDEN_API_TOKEN not configured' }, 503);
+  // Strip accidental "Bearer " prefix if the user included it in the env var value
+  const apiToken = rawToken.replace(/^Bearer\s+/i, '');
   const headers = { 'Authorization': `Bearer ${apiToken}` };
   const dates = getWorkingDays(5);
 
@@ -599,6 +601,9 @@ async function handlePlannerData(request, url, env) {
   });
 
   return jsonResponse({ desks, days, _debug: { rawDeskCount: allDesks.length, deskSample: allDesks.slice(0, 2) } });
+  } catch (e) {
+    return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
+  }
 }
 
 async function handleCheckAvailability(request, url, env) {
