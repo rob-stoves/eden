@@ -322,8 +322,9 @@
     const DAY_SHORT  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-    const params   = new URLSearchParams(location.search);
-    const locId    = params.get('location') || LONDON_LOCATION;
+    const params    = new URLSearchParams(location.search);
+    const locId     = params.get('location') || LONDON_LOCATION;
+    const apiToken  = params.get('apiToken') || localStorage.getItem('eden_api_token') || '';
 
     const $  = id => document.getElementById(id);
     let activeDay = 0;
@@ -360,7 +361,8 @@
 
     async function load() {
         try {
-            const res = await fetch(`/planner-data?location=${encodeURIComponent(locId)}`);
+            if (!apiToken) throw new Error('No Eden API token found. Add ?apiToken=YOUR_TOKEN to the URL.');
+            const res = await fetch(`/planner-data?location=${encodeURIComponent(locId)}&apiToken=${encodeURIComponent(apiToken)}`);
             const data = await res.json().catch(() => ({ error: `Server error ${res.status} (no JSON body)` }));
             if (!res.ok || data.error) throw new Error(data.error + (data.detail ? ` — ${data.detail}` : ''));
             render(data);
