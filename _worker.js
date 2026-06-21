@@ -549,20 +549,17 @@ async function handlePlannerData(request, url, env) {
 
   const dates = getWorkingDays(5);
 
-  // Step 1: fetch direct children of the London location to find zone IDs (1 subrequest)
+  // Step 1: fetch direct children of the location (zones) — 1 subrequest
   const subRes = await fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(locationId)}`, { headers });
   const subJson = await subRes.json().catch(() => []);
-  const subLocs = (Array.isArray(subJson) ? subJson : []).slice(0, 10); // cap at 10 zones
+  const subLocs = Array.isArray(subJson) ? subJson : [];
   const zoneIds = subLocs.map(l => l.location_id).filter(Boolean);
 
-  // Try type=desks on zone IDs — also try the top-level locations list
-  // Max subrequests: 1 (top-level locs) + 10 (zone desks) + 20 (reservations) = 31
-  const deskFetches = [
-    fetch(`https://public-api.eden.io/locations?type=all`, { headers }),
-    ...zoneIds.map(pid =>
-      fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(pid)}`, { headers })
-    ),
-  ];
+  // Desk IDs from reservations share a 15-char prefix with their parent zone ID.
+  // Build a set of zone prefixes (15 chars) to filter reservations to this office only.
+  const zonePrefixes = new Set(zoneIds.map(id => id.slice(0, 15)));
+
+  // Step 2: fetch 4 pages of reservations per day — all in parallel (20 subrequests)
   const resFetches = dates.flatMap(date => [
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=1`, { headers }),
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=2`, { headers }),
@@ -570,18 +567,9 @@ async function handlePlannerData(request, url, env) {
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=4`, { headers }),
   ]);
 
-  const allResponses = await Promise.all([...deskFetches, ...resFetches]);
-  const allJsons = await Promise.all(allResponses.map(r => r.json().catch(() => [])));
+  const resResponses = await Promise.all(resFetches);
+  const resJsons = await Promise.all(resResponses.map(r => r.json().catch(() => [])));
 
-  const deskJsons = allJsons.slice(0, deskFetches.length);
-  const topLevelRaw = deskJsons[0]; // locations?type=all response
-  const zoneDesksJsons = deskJsons.slice(1);
-  const firstZoneRaw = zoneDesksJsons[0];
-  const allDesksRaw = zoneDesksJsons.flatMap(d => Array.isArray(d) ? d : []);
-  const desks = allDesksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }));
-  const deskIds = new Set(desks.map(d => d.id));
-
-  const resJsons = allJsons.slice(deskFetches.length);
   const INACTIVE = new Set(['cancelled', 'finished', 'released']);
 
   const days = dates.map((date, i) => {
@@ -596,14 +584,18 @@ async function handlePlannerData(request, url, env) {
     const all = [...page1, ...page2, ...page3, ...page4];
 
     const reservations = all
-      .filter(r => !INACTIVE.has(r.status) && deskIds.has(r.location?.location_id))
+      .filter(r => !INACTIVE.has(r.status) && zonePrefixes.has(r.location?.location_id?.slice(0, 15)))
       .map(r => ({ deskId: r.location.location_id, deskName: (r.location.title || '').trim(), name: r.owner?.name || 'Unknown' }));
 
     return { date, reservations, _d: { raw: all.length, matched: reservations.length } };
   });
 
-  const topLevelSample = Array.isArray(topLevelRaw) ? topLevelRaw.slice(0, 3).map(l => l.location_id + ' / ' + l.title + ' (' + l.location_type + ')') : JSON.stringify(topLevelRaw).slice(0, 200);
-  return jsonResponse({ desks, days, _debug: { deskCount: desks.length, zoneCount: zoneIds.length, firstZoneDesks: JSON.stringify(firstZoneRaw).slice(0, 200), topLevelSample } });
+  // Build unique desk list from all reservations seen across all days
+  const deskMap = {};
+  days.forEach(d => d.reservations.forEach(r => { deskMap[r.deskId] = r.deskName; }));
+  const desks = Object.entries(deskMap).map(([id, name]) => ({ id, name }));
+
+  return jsonResponse({ desks, days, _debug: { deskCount: desks.length, zoneCount: zoneIds.length, zonePrefixes: [...zonePrefixes] } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }

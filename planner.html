@@ -383,9 +383,7 @@
         // Surface debug info so we can diagnose data issues
         const db = $('debugBanner');
         db.style.cssText = 'display:block!important';
-        db.innerHTML = `Desks: ${_debug?.deskCount} | Zones: ${_debug?.zoneCount}<br>` +
-            `Zone[0] type=desks: ${_debug?.firstZoneDesks}<br>` +
-            `type=all sample: ${JSON.stringify(_debug?.topLevelSample)}<br>` +
+        db.innerHTML = `Desks: ${_debug?.deskCount} | Zones: ${_debug?.zoneCount} | Prefixes: ${(_debug?.zonePrefixes||[]).join(', ')}<br>` +
             days.map(d => `${d.date}: ${d._d?.raw} fetched → ${d._d?.matched} matched → ${d.reservations.length} booked`).join('<br>');
 
         // Build desk lookup: id → name
