@@ -384,8 +384,9 @@
         const db = $('debugBanner');
         db.style.cssText = 'display:block!important';
         db.style.cssText = 'display:block!important';
-        db.innerHTML = `desk API: ${_debug?.deskApiCount} | ` +
-            days.map(d => `${d.date}: ${d.reservations.length}`).join(' | ');
+        const dc = _debug?.dayCounts || [];
+        db.innerHTML = `desks:${_debug?.deskApiCount} sampleLocId:${_debug?.sampleLocId} keys:[${(_debug?.sampleKeys||[]).join(',')}] locKeys:[${(_debug?.sampleLocKeys||[]).join(',')}] | ` +
+            dc.map(d => `${d.date} raw:${d.raw} active:${d.active} matched:${d.matched}`).join(' | ');
 
         // Build desk lookup: id → name
         const deskMap = {};
@@ -414,7 +415,7 @@
             });
 
             const card = document.createElement('div');
-            card.className = 'day-card' + (i === 0 ? ' active' : '');
+            card.className = 'day-card';
             card.dataset.index = i;
 
             const peopleRows = sorted.length
@@ -454,13 +455,14 @@
     }
 
     function selectDay(index) {
-        activeDay = index;
+        const isOpen = activeDay === index && document.querySelectorAll('.day-card')[index]?.classList.contains('active');
+        activeDay = isOpen ? -1 : index;
         document.querySelectorAll('.day-card').forEach((card, i) => {
-            card.classList.toggle('active', i === index);
+            card.classList.toggle('active', !isOpen && i === index);
         });
         // Highlight the bar
         document.querySelectorAll('.chart-bar').forEach((bar, i) => {
-            bar.style.opacity = i === index ? '1' : '0.45';
+            bar.style.opacity = activeDay === -1 || i === activeDay ? '1' : '0.45';
         });
     }
 

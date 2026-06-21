@@ -594,16 +594,22 @@ async function handlePlannerData(request, url, env) {
 
     const reservations = all
       .filter(r => !INACTIVE.has(r.status) && deskFilter(r))
-      .map(r => ({ deskId: r.location.location_id, deskName: (r.location.title || '').trim(), name: r.owner?.name || 'Unknown' }));
+      .map(r => ({ deskId: r.location?.location_id || r.location_id, deskName: (r.location?.title || r.locationTitle || '').trim(), name: r.owner?.name || 'Unknown' }));
 
-    return { date, reservations };
+    return { date, reservations, _rawCount: all.length, _activeCount: all.filter(r => !INACTIVE.has(r.status)).length };
   });
+
+  // Expose first reservation's keys for debugging field structure
+  const firstResv = resJsons[0]?.[0];
+  const _sampleKeys = firstResv ? Object.keys(firstResv) : [];
+  const _sampleLocKeys = firstResv?.location ? Object.keys(firstResv.location) : [];
+  const _sampleLocId = firstResv?.location?.location_id || firstResv?.location_id || 'none';
 
   const desks = desksRaw.length > 0
     ? desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }))
     : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
 
-  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length } });
+  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, sampleKeys: _sampleKeys, sampleLocKeys: _sampleLocKeys, sampleLocId: _sampleLocId, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, active: d._activeCount, matched: d.reservations.length })) } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
