@@ -383,8 +383,8 @@
         // Surface debug info so we can diagnose data issues
         const db = $('debugBanner');
         db.style.cssText = 'display:block!important';
-        db.innerHTML = `Desks seen across all days: ${desks.length}<br>` +
-            days.map(d => `${d.date}: ${d.reservations.length} booked`).join('<br>');
+        db.innerHTML = `Desks seen across all days: ${desks.length} | prefix: ${_debug?.prefix}<br>` +
+            days.map(d => `${d.date}: ${d._d?.raw} fetched → ${d._d?.matched} matched prefix → ${d.reservations.length} booked`).join('<br>');
 
         // Build desk lookup: id → name
         const deskMap = {};

@@ -581,7 +581,7 @@ async function handlePlannerData(request, url, env) {
       .filter(r => !INACTIVE.has(r.status) && r.location?.location_id?.startsWith(locPrefix))
       .map(r => ({ deskId: r.location.location_id, deskName: (r.location.title || '').trim(), name: r.owner?.name || 'Unknown' }));
 
-    return { date, reservations };
+    return { date, reservations, _d: { raw: all.length, matched: reservations.length } };
   });
 
   // Build unique desk list from all reservations seen across all days
@@ -589,7 +589,7 @@ async function handlePlannerData(request, url, env) {
   days.forEach(d => d.reservations.forEach(r => { deskMap[r.deskId] = r.deskName; }));
   const desks = Object.entries(deskMap).map(([id, name]) => ({ id, name }));
 
-  return jsonResponse({ desks, days });
+  return jsonResponse({ desks, days, _debug: { prefix: locPrefix } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
