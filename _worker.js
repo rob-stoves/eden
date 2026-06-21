@@ -603,7 +603,7 @@ async function handlePlannerData(request, url, env) {
     ? desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }))
     : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
 
-  return jsonResponse({ desks, days });
+  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }

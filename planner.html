@@ -383,7 +383,9 @@
         // Surface debug info so we can diagnose data issues
         const db = $('debugBanner');
         db.style.cssText = 'display:block!important';
-        db.style.display = 'none';
+        db.style.cssText = 'display:block!important';
+        db.innerHTML = `desk API: ${_debug?.deskApiCount} | ` +
+            days.map(d => `${d.date}: ${d.reservations.length}`).join(' | ');
 
         // Build desk lookup: id → name
         const deskMap = {};
