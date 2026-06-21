@@ -550,13 +550,19 @@ async function handlePlannerData(request, url, env) {
 
   const dates = getWorkingDays(5);
 
-  // Step 1: fetch desk count for this location (used for occupancy % in the UI)
-  const desksRes = await fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers });
-  const desksJson = await desksRes.json().catch(() => []);
+  // Step 1: fetch zones (direct children of location) and physical desks in parallel
+  const [zonesRes, desksRes] = await Promise.all([
+    fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(locationId)}`, { headers }),
+    fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers }),
+  ]);
+  const [zonesJson, desksJson] = await Promise.all([
+    zonesRes.json().catch(() => []),
+    desksRes.json().catch(() => []),
+  ]);
+  const zonesRaw = Array.isArray(zonesJson) ? zonesJson : [];
   const desksRaw = Array.isArray(desksJson) ? desksJson : [];
 
-  // No location filtering on reservations — cola_reservations is already org-scoped.
-  // Accept any reservation that has a desk location attached.
+  const zoneIds = new Set(zonesRaw.map(z => z.location_id).filter(Boolean));
   const deskFilter = r => !!r.location?.location_id;
 
   // Step 2: fetch 8 pages of reservations per day in parallel (8×5+1=41 subrequests, within 50 limit)
@@ -593,14 +599,15 @@ async function handlePlannerData(request, url, env) {
   });
 
   const firstResv = resJsons.flat().find(r => r && typeof r === 'object');
-  const _sampleLocId = firstResv?.location?.location_id || 'none';
   const _sampleParentId = firstResv?.location?.parent_id || 'none';
+  const _sampleZoneIds = zonesRaw.slice(0, 3).map(z => z.location_id);
+  const _parentInZones = zoneIds.has(_sampleParentId);
 
   const desks = desksRaw.length > 0
     ? desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }))
     : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
 
-  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, day0Statuses, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, matched: d.reservations.length })) } });
+  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, zoneCount: zonesRaw.length, sampleParentId: _sampleParentId, sampleZoneIds: _sampleZoneIds, parentInZones: _parentInZones, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, matched: d.reservations.length })) } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
