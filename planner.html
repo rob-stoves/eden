@@ -382,13 +382,10 @@
         const desks = allDesks.filter(d => d.name && d.name.trim().length <= 3);
 
         // Surface debug info so we can diagnose data issues
-        const dbText = `Desks: ${_debug?.deskCount} raw → ${desks.length} after name filter\n` +
-            days.map(d => `${d.date}: ${d._d?.total} fetched, ${d._d?.inDeskIds} matched desk IDs, ${d.reservations.length} after status filter [${(d._d?.statuses||[]).join(', ')}]`).join('\n');
-        console.log('[planner debug]\n' + dbText);
         const db = $('debugBanner');
         db.style.cssText = 'display:block!important';
-        const dayDebug = days.map(d => `${d.date}: ${d._d?.total} fetched → ${d._d?.inDeskIds} matched → ${d.reservations.length} active [${(d._d?.statuses||[]).join(',')}] sample: ${(d._d?.sampleLocIds||[]).join(' | ')}`).join('\n');
-        db.innerHTML = (dbText + '\n' + dayDebug).replace(/\n/g, '<br>');
+        db.innerHTML = `Desks seen across all days: ${desks.length}<br>` +
+            days.map(d => `${d.date}: ${d.reservations.length} booked`).join('<br>');
 
         // Build desk lookup: id → name
         const deskMap = {};
