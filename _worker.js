@@ -563,7 +563,7 @@ async function handlePlannerData(request, url, env) {
   const desksRaw = Array.isArray(desksJson) ? desksJson : [];
 
   const zoneIds = new Set(zonesRaw.map(z => z.location_id).filter(Boolean));
-  const deskFilter = r => !!r.location?.location_id;
+  const deskFilter = r => zoneIds.has(r.location?.parent_id);
 
   // Step 2: fetch 8 pages of reservations per day in parallel (8×5+1=41 subrequests, within 50 limit)
   const PAGES_PER_DAY = 8;
