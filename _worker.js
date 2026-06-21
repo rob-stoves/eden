@@ -559,9 +559,10 @@ async function handlePlannerData(request, url, env) {
 
   const responses = await Promise.all(allFetches);
 
-  // Check for API auth failure on the desks call
+  // Check for API failure on the desks call — return full detail for diagnosis
   if (!responses[0].ok) {
-    return jsonResponse({ error: `Eden API error ${responses[0].status} fetching desks` }, 502);
+    const body = await responses[0].text().catch(() => '');
+    return jsonResponse({ error: `Eden API ${responses[0].status} fetching desks`, detail: body.slice(0, 500) }, 502);
   }
 
   const jsons = await Promise.all(responses.map(r => r.json().catch(() => [])));
