@@ -553,10 +553,12 @@ async function handlePlannerData(request, url, env) {
   // Use the first 16 chars of the London location ID to filter reservations to this office only.
   const locPrefix = locationId.slice(0, 16);
 
-  // Fetch 2 pages of reservations per day in parallel (10 total fetches — within Cloudflare's 50 limit)
+  // Fetch 4 pages of reservations per day in parallel (20 total fetches — within Cloudflare's 50 limit)
   const allFetches = dates.flatMap(date => [
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=1`, { headers }),
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=2`, { headers }),
+    fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=3`, { headers }),
+    fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=4`, { headers }),
   ]);
 
   const responses = await Promise.all(allFetches);
@@ -565,11 +567,15 @@ async function handlePlannerData(request, url, env) {
   const INACTIVE = new Set(['cancelled', 'finished', 'released']);
 
   const days = dates.map((date, i) => {
-    const p1 = jsons[i * 2];
-    const p2 = jsons[i * 2 + 1];
+    const p1 = jsons[i * 4];
+    const p2 = jsons[i * 4 + 1];
+    const p3 = jsons[i * 4 + 2];
+    const p4 = jsons[i * 4 + 3];
     const page1 = Array.isArray(p1) ? p1 : [];
     const page2 = page1.length >= 25 && Array.isArray(p2) ? p2 : [];
-    const all = [...page1, ...page2];
+    const page3 = page2.length >= 25 && Array.isArray(p3) ? p3 : [];
+    const page4 = page3.length >= 25 && Array.isArray(p4) ? p4 : [];
+    const all = [...page1, ...page2, ...page3, ...page4];
 
     const reservations = all
       .filter(r => !INACTIVE.has(r.status) && r.location?.location_id?.startsWith(locPrefix))
