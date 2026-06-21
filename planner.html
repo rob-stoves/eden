@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who's in the London Office</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Condensed:wght@900&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand:           #ABFF44;
+            --brand-ink:       #08251A;
+            --bg-page:         #252825;
+            --bg-default:      #2B2E2B;
+            --bg-secondary:    #202320;
+            --bg-hover:        #323532;
+            --border-default:  #484E46;
+            --border-tertiary: #383E38;
+            --fg-default:      #D2DEC2;
+            --fg-secondary:    #B2BD9E;
+            --fg-tertiary:     #A1AC8D;
+            --accent-red:      #ff4466;
+            --glow-brand:      rgba(171,255,68,.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg-page);
+            color: var(--fg-default);
+            min-height: 100vh;
+            color-scheme: dark;
+        }
+
+        /* ─── Page shell ────────────────────────────────────────── */
+
+        .page {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 28px 20px 48px;
+        }
+
+        /* ─── Header ────────────────────────────────────────────── */
+
+        .page-logo {
+            height: 36px;
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 34px;
+            line-height: .95;
+            letter-spacing: -0.025em;
+            margin-bottom: 6px;
+        }
+
+        .page-subtitle {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--fg-tertiary);
+            margin-bottom: 32px;
+        }
+
+        /* ─── Loading ────────────────────────────────────────────── */
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--fg-tertiary);
+            font-size: 13px;
+            padding: 20px 0;
+        }
+
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid var(--border-default);
+            border-top-color: var(--brand);
+            border-radius: 50%;
+            animation: spin .75s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── Error ──────────────────────────────────────────────── */
+
+        .error-banner {
+            background: rgba(255,68,102,.1);
+            border: 1px solid var(--accent-red);
+            border-radius: 10px;
+            padding: 16px;
+            color: var(--accent-red);
+            font-size: 13px;
+            display: none;
+        }
+
+        /* ─── Chart ──────────────────────────────────────────────── */
+
+        .chart-section {
+            margin-bottom: 24px;
+        }
+
+        .chart-wrap {
+            background: var(--bg-default);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 12px;
+            padding: 20px 16px 12px;
+            overflow: hidden;
+        }
+
+        .chart-svg {
+            width: 100%;
+            display: block;
+        }
+
+        /* ─── Day cards ──────────────────────────────────────────── */
+
+        .days-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .day-card {
+            background: var(--bg-default);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color .2s;
+            cursor: pointer;
+        }
+
+        .day-card.active {
+            border-color: var(--brand);
+        }
+
+        .day-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+        }
+
+        .day-card-label {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .day-card-name {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+
+        .day-card-date {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            color: var(--fg-tertiary);
+            letter-spacing: .06em;
+        }
+
+        .day-card-count {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 900;
+            font-size: 28px;
+            letter-spacing: -.02em;
+            color: var(--brand);
+            flex-shrink: 0;
+            text-align: right;
+        }
+
+        .day-card-count-label {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10px;
+            color: var(--fg-tertiary);
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            text-align: right;
+        }
+
+        .day-card-count-wrap {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .day-card-bar {
+            height: 3px;
+            background: var(--bg-secondary);
+        }
+
+        .day-card-bar-fill {
+            height: 100%;
+            background: var(--brand);
+            transition: width .4s cubic-bezier(0.22,1,0.36,1);
+        }
+
+        .day-card-chevron {
+            color: var(--fg-tertiary);
+            flex-shrink: 0;
+            transition: transform .2s;
+        }
+        .day-card.active .day-card-chevron { transform: rotate(180deg); }
+
+        /* ─── People list ────────────────────────────────────────── */
+
+        .day-card-body {
+            display: none;
+            border-top: 1px solid var(--border-tertiary);
+            padding: 0;
+        }
+
+        .day-card.active .day-card-body {
+            display: block;
+        }
+
+        .people-list {
+            padding: 8px 0;
+        }
+
+        .person-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 16px;
+            transition: background .12s;
+        }
+        .person-row:hover { background: var(--bg-hover); }
+
+        .person-desk {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--brand);
+            width: 28px;
+            flex-shrink: 0;
+        }
+
+        .person-name {
+            font-size: 14px;
+            color: var(--fg-default);
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .day-empty {
+            padding: 16px;
+            color: var(--fg-tertiary);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* ─── Footer ─────────────────────────────────────────────── */
+
+        .page-footer {
+            margin-top: 32px;
+            text-align: center;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10px;
+            color: var(--fg-tertiary);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <img src="Optimizely_Primary-Logo_Medium_Green_RGB.svg" alt="Optimizely" class="page-logo">
+    <h1 class="page-title">Who's in the<br>London Office</h1>
+    <p class="page-subtitle" id="subtitle">Loading…</p>
+
+    <div class="loading" id="loadingState">
+        <div class="spinner"></div>
+        <span>Fetching desk data…</span>
+    </div>
+
+    <div class="error-banner" id="errorBanner"></div>
+
+    <div id="mainContent" style="display:none">
+        <div class="chart-section">
+            <div class="chart-wrap">
+                <svg class="chart-svg" id="chartSvg" viewBox="0 0 320 140" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
+        </div>
+
+        <div class="days-list" id="daysList"></div>
+    </div>
+
+    <div class="page-footer" id="footer" style="display:none">Live data from Eden · <span id="footerTime"></span></div>
+</div>
+
+<script>
+(function () {
+    const LONDON_LOCATION = 'IVVkLRIiGDH4uEB8pSlVvHM7DfO--kF6RQYQa4D8UQ==';
+    const DAY_NAMES  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const DAY_SHORT  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    const params   = new URLSearchParams(location.search);
+    const locId    = params.get('location') || LONDON_LOCATION;
+
+    const $  = id => document.getElementById(id);
+    let activeDay = 0;
+
+    // ── Date helpers ─────────────────────────────────────────────────
+
+    function parseDate(str) {
+        const [y, m, d] = str.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    }
+
+    function formatLong(str) {
+        const d = parseDate(str);
+        return `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
+    }
+
+    function formatShort(str) {
+        const d = parseDate(str);
+        return { day: DAY_SHORT[d.getDay()], date: d.getDate() };
+    }
+
+    function dateRange(days) {
+        if (!days.length) return '';
+        const first = parseDate(days[0].date);
+        const last  = parseDate(days[days.length - 1].date);
+        const sameMonth = first.getMonth() === last.getMonth();
+        if (sameMonth) {
+            return `${DAY_SHORT[first.getDay()]} ${first.getDate()} – ${DAY_SHORT[last.getDay()]} ${last.getDate()} ${MONTH_NAMES[first.getMonth()]} ${first.getFullYear()}`;
+        }
+        return `${DAY_SHORT[first.getDay()]} ${first.getDate()} ${MONTH_NAMES[first.getMonth()]} – ${DAY_SHORT[last.getDay()]} ${last.getDate()} ${MONTH_NAMES[last.getMonth()]} ${last.getFullYear()}`;
+    }
+
+    // ── Fetch data ───────────────────────────────────────────────────
+
+    async function load() {
+        try {
+            const res = await fetch(`/planner-data?location=${encodeURIComponent(locId)}`);
+            if (!res.ok) throw new Error(`Server error ${res.status}`);
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            render(data);
+        } catch (e) {
+            $('loadingState').style.display = 'none';
+            const eb = $('errorBanner');
+            eb.textContent = `Could not load desk data: ${e.message}`;
+            eb.style.display = 'block';
+        }
+    }
+
+    // ── Render ───────────────────────────────────────────────────────
+
+    function render({ desks, days }) {
+        $('loadingState').style.display = 'none';
+        $('subtitle').textContent = dateRange(days);
+
+        // Build desk lookup: id → name
+        const deskMap = {};
+        desks.forEach(d => { deskMap[d.id] = d.name; });
+
+        const totalDesks = desks.length;
+
+        // Render chart
+        renderChart(days, totalDesks);
+
+        // Render day cards
+        const list = $('daysList');
+        list.innerHTML = '';
+
+        days.forEach((day, i) => {
+            const count = day.reservations.length;
+            const pct   = totalDesks > 0 ? Math.round((count / totalDesks) * 100) : 0;
+            const { day: dayShort, date: dateNum } = formatShort(day.date);
+            const label = formatLong(day.date);
+
+            // Sort reservations by desk name
+            const sorted = [...day.reservations].sort((a, b) => {
+                const na = deskMap[a.deskId] || a.deskId;
+                const nb = deskMap[b.deskId] || b.deskId;
+                return na.localeCompare(nb);
+            });
+
+            const card = document.createElement('div');
+            card.className = 'day-card' + (i === 0 ? ' active' : '');
+            card.dataset.index = i;
+
+            const peopleRows = sorted.length
+                ? sorted.map(r => `
+                    <div class="person-row">
+                        <span class="person-desk">${deskMap[r.deskId] || '?'}</span>
+                        <span class="person-name">${escHtml(r.name)}</span>
+                    </div>`).join('')
+                : `<div class="day-empty">No reservations found</div>`;
+
+            card.innerHTML = `
+                <div class="day-card-bar"><div class="day-card-bar-fill" style="width:${pct}%"></div></div>
+                <div class="day-card-header">
+                    <div class="day-card-label">
+                        <div class="day-card-name">${label}</div>
+                        <div class="day-card-date">${day.date}</div>
+                    </div>
+                    <div class="day-card-count-wrap">
+                        <div class="day-card-count">${count}</div>
+                        <div class="day-card-count-label">in office</div>
+                    </div>
+                    <svg class="day-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </div>
+                <div class="day-card-body">
+                    <div class="people-list">${peopleRows}</div>
+                </div>`;
+
+            card.addEventListener('click', () => selectDay(i));
+            list.appendChild(card);
+        });
+
+        $('mainContent').style.display = 'block';
+        $('footer').style.display = 'block';
+        $('footerTime').textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function selectDay(index) {
+        activeDay = index;
+        document.querySelectorAll('.day-card').forEach((card, i) => {
+            card.classList.toggle('active', i === index);
+        });
+        // Highlight the bar
+        document.querySelectorAll('.chart-bar').forEach((bar, i) => {
+            bar.style.opacity = i === index ? '1' : '0.45';
+        });
+    }
+
+    // ── SVG chart ────────────────────────────────────────────────────
+
+    function renderChart(days, totalDesks) {
+        const svg    = $('chartSvg');
+        const W      = 320;
+        const H      = 140;
+        const padL   = 8;
+        const padR   = 8;
+        const padTop = 24;
+        const padBot = 36;
+        const chartH = H - padTop - padBot;
+        const n      = days.length;
+        const slotW  = (W - padL - padR) / n;
+        const barW   = Math.min(slotW * 0.55, 36);
+        const maxCount = Math.max(...days.map(d => d.reservations.length), 1);
+
+        let svgContent = '';
+
+        days.forEach((day, i) => {
+            const count  = day.reservations.length;
+            const barH   = chartH * (count / maxCount);
+            const x      = padL + i * slotW + slotW / 2;
+            const barX   = x - barW / 2;
+            const barY   = padTop + (chartH - barH);
+            const { day: dayShort, date: dateNum } = formatShort(day.date);
+
+            // Background track
+            svgContent += `<rect x="${barX.toFixed(1)}" y="${padTop}" width="${barW.toFixed(1)}" height="${chartH}" rx="4" fill="#202320"/>`;
+
+            // Filled bar
+            if (barH > 0) {
+                svgContent += `<rect class="chart-bar" data-index="${i}" x="${barX.toFixed(1)}" y="${barY.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="4" fill="#ABFF44" style="opacity:${i === 0 ? '1' : '0.45'};cursor:pointer;transition:opacity .2s"/>`;
+            } else {
+                // Empty placeholder so click still registers
+                svgContent += `<rect class="chart-bar" data-index="${i}" x="${barX.toFixed(1)}" y="${padTop}" width="${barW.toFixed(1)}" height="${chartH}" rx="4" fill="transparent" style="opacity:${i === 0 ? '1' : '0.45'};cursor:pointer"/>`;
+            }
+
+            // Count label above bar
+            if (count > 0) {
+                svgContent += `<text x="${x.toFixed(1)}" y="${(barY - 5).toFixed(1)}" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" font-weight="600" fill="#ABFF44">${count}</text>`;
+            }
+
+            // Day label below
+            svgContent += `<text x="${x.toFixed(1)}" y="${(H - padBot + 16).toFixed(1)}" text-anchor="middle" font-family="Roboto,sans-serif" font-size="11" font-weight="600" fill="#B2BD9E">${dayShort}</text>`;
+            svgContent += `<text x="${x.toFixed(1)}" y="${(H - padBot + 30).toFixed(1)}" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="10" fill="#A1AC8D">${dateNum}</text>`;
+        });
+
+        svg.innerHTML = svgContent;
+
+        // Wire up bar clicks
+        svg.querySelectorAll('.chart-bar').forEach(bar => {
+            bar.addEventListener('click', () => selectDay(parseInt(bar.dataset.index)));
+        });
+    }
+
+    // ── Utils ─────────────────────────────────────────────────────────
+
+    function escHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    load();
+})();
+</script>
+</body>
+</html>

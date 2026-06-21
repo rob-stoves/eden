@@ -35,13 +35,18 @@ export default {
       return handleCheckAvailability(request, url, env);
     }
 
+    // Planner data: desks + 5 working days reservations, all fetched in parallel
+    if (url.pathname === '/planner-data') {
+      return handlePlannerData(request, url, env);
+    }
+
     // Handle API proxy requests
     if (url.pathname.startsWith('/api/')) {
       return handleApiProxy(request, url, env);
     }
     
     // Gate index and join pages behind a URL token
-    const gatedPaths = ['/', '/index.html', '/index', '/join', '/join.html'];
+    const gatedPaths = ['/', '/index.html', '/index', '/join', '/join.html', '/planner', '/planner.html'];
     if (gatedPaths.includes(url.pathname)) {
       const expected = env.DISPLAY_TOKEN;
       if (!expected) {
@@ -518,6 +523,76 @@ async function handleNicknamesDelete(request, env) {
     console.error('Nicknames delete error:', error);
     return jsonResponse({ error: error.message }, 500);
   }
+}
+
+function getWorkingDays(n) {
+  const days = [];
+  const d = new Date();
+  while (days.length < n) {
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6) {
+      days.push(d.toISOString().slice(0, 10));
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+
+async function handlePlannerData(request, url, env) {
+  const locationId = url.searchParams.get('location');
+  if (!locationId) return jsonResponse({ error: 'location required' }, 400);
+
+  const apiToken = env.EDEN_API_TOKEN;
+  if (!apiToken) return jsonResponse({ error: 'EDEN_API_TOKEN not configured' }, 503);
+
+  const headers = { 'Authorization': `Bearer ${apiToken}` };
+  const dates = getWorkingDays(5);
+
+  // Fetch desks + pages 1 & 2 of reservations for all 5 days — all in parallel
+  const allFetches = [
+    fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers }),
+    ...dates.flatMap(date => [
+      fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=1`, { headers }),
+      fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=2`, { headers }),
+    ]),
+  ];
+
+  const responses = await Promise.all(allFetches);
+  const jsons = await Promise.all(responses.map(r => r.json().catch(() => [])));
+
+  const desksRaw = jsons[0];
+  const allDesks = Array.isArray(desksRaw) ? desksRaw : (desksRaw?.data || []);
+  // Keep only short desk codes (≤ 3 chars) — filters out rooms, booths etc.
+  const desks = allDesks.filter(d => {
+    const name = (d.title || d.name || '').trim();
+    return name.length > 0 && name.length <= 3;
+  }).map(d => ({ id: d.id || d.location_id, name: d.title || d.name }));
+
+  const deskIds = new Set(desks.map(d => d.id));
+  const ACTIVE = new Set(['scheduled', 'in_progress', 'checked_in']);
+
+  const days = dates.map((date, i) => {
+    const p1 = jsons[1 + i * 2];
+    const p2 = jsons[2 + i * 2];
+    const page1 = Array.isArray(p1) ? p1 : [];
+    // Only use page 2 if page 1 was full (25 items)
+    const page2 = page1.length === 25 && Array.isArray(p2) ? p2 : [];
+    const all = [...page1, ...page2];
+
+    const reservations = all
+      .filter(r => {
+        const deskId = r.location?.location_id;
+        return deskIds.has(deskId) && ACTIVE.has(r.status);
+      })
+      .map(r => ({
+        deskId: r.location.location_id,
+        name: r.owner?.name || 'Unknown',
+      }));
+
+    return { date, reservations };
+  });
+
+  return jsonResponse({ desks, days });
 }
 
 async function handleCheckAvailability(request, url, env) {
