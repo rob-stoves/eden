@@ -572,6 +572,7 @@ async function handlePlannerData(request, url, env) {
   const allJsons = await Promise.all(allResponses.map(r => r.json().catch(() => [])));
 
   const deskJsons = allJsons.slice(0, deskFetches.length);
+  const firstZoneRaw = deskJsons[0]; // raw response from first zone — for debugging
   const allDesksRaw = deskJsons.flatMap(d => Array.isArray(d) ? d : []);
   const desks = allDesksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }));
   const deskIds = new Set(desks.map(d => d.id));
@@ -597,7 +598,7 @@ async function handlePlannerData(request, url, env) {
     return { date, reservations, _d: { raw: all.length, matched: reservations.length } };
   });
 
-  return jsonResponse({ desks, days, _debug: { deskCount: desks.length, zoneCount: zoneIds.length, subLocSample: subLocs.slice(0, 3).map(l => l.location_id + ' / ' + l.title) } });
+  return jsonResponse({ desks, days, _debug: { deskCount: desks.length, zoneCount: zoneIds.length, subLocSample: subLocs.slice(0, 3).map(l => l.location_id + ' / ' + l.title), firstZoneRaw: JSON.stringify(firstZoneRaw).slice(0, 300) } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
