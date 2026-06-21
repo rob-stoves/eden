@@ -549,28 +549,40 @@ async function handlePlannerData(request, url, env) {
 
   const dates = getWorkingDays(5);
 
-  // All Eden location IDs under the same office share a common prefix with their parent.
-  // Use the first 16 chars of the London location ID to filter reservations to this office only.
-  const locPrefix = locationId.slice(0, 14);
+  // Step 1: fetch direct children of the London location to find zone IDs (1 subrequest)
+  const subRes = await fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(locationId)}`, { headers });
+  const subJson = await subRes.json().catch(() => []);
+  const subLocs = (Array.isArray(subJson) ? subJson : []).slice(0, 10); // cap at 10 zones
+  const zoneIds = subLocs.map(l => l.location_id).filter(Boolean);
 
-  // Fetch 4 pages of reservations per day in parallel (20 total fetches — within Cloudflare's 50 limit)
-  const allFetches = dates.flatMap(date => [
+  // Step 2: fetch desks for London parent + each zone, plus 4 pages of reservations per day — all in parallel
+  // Max subrequests: 1 (parent desks) + 10 (zone desks) + 20 (5 days × 4 pages) = 31
+  const deskFetches = [locationId, ...zoneIds].map(pid =>
+    fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(pid)}`, { headers })
+  );
+  const resFetches = dates.flatMap(date => [
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=1`, { headers }),
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=2`, { headers }),
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=3`, { headers }),
     fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=4`, { headers }),
   ]);
 
-  const responses = await Promise.all(allFetches);
-  const jsons = await Promise.all(responses.map(r => r.json().catch(() => [])));
+  const allResponses = await Promise.all([...deskFetches, ...resFetches]);
+  const allJsons = await Promise.all(allResponses.map(r => r.json().catch(() => [])));
 
+  const deskJsons = allJsons.slice(0, deskFetches.length);
+  const allDesksRaw = deskJsons.flatMap(d => Array.isArray(d) ? d : []);
+  const desks = allDesksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }));
+  const deskIds = new Set(desks.map(d => d.id));
+
+  const resJsons = allJsons.slice(deskFetches.length);
   const INACTIVE = new Set(['cancelled', 'finished', 'released']);
 
   const days = dates.map((date, i) => {
-    const p1 = jsons[i * 4];
-    const p2 = jsons[i * 4 + 1];
-    const p3 = jsons[i * 4 + 2];
-    const p4 = jsons[i * 4 + 3];
+    const p1 = resJsons[i * 4];
+    const p2 = resJsons[i * 4 + 1];
+    const p3 = resJsons[i * 4 + 2];
+    const p4 = resJsons[i * 4 + 3];
     const page1 = Array.isArray(p1) ? p1 : [];
     const page2 = page1.length >= 25 && Array.isArray(p2) ? p2 : [];
     const page3 = page2.length >= 25 && Array.isArray(p3) ? p3 : [];
@@ -578,18 +590,13 @@ async function handlePlannerData(request, url, env) {
     const all = [...page1, ...page2, ...page3, ...page4];
 
     const reservations = all
-      .filter(r => !INACTIVE.has(r.status) && r.location?.location_id?.startsWith(locPrefix))
+      .filter(r => !INACTIVE.has(r.status) && deskIds.has(r.location?.location_id))
       .map(r => ({ deskId: r.location.location_id, deskName: (r.location.title || '').trim(), name: r.owner?.name || 'Unknown' }));
 
     return { date, reservations, _d: { raw: all.length, matched: reservations.length } };
   });
 
-  // Build unique desk list from all reservations seen across all days
-  const deskMap = {};
-  days.forEach(d => d.reservations.forEach(r => { deskMap[r.deskId] = r.deskName; }));
-  const desks = Object.entries(deskMap).map(([id, name]) => ({ id, name }));
-
-  return jsonResponse({ desks, days, _debug: { prefix: locPrefix } });
+  return jsonResponse({ desks, days, _debug: { deskCount: desks.length, zoneCount: zoneIds.length, subLocSample: subLocs.slice(0, 3).map(l => l.location_id + ' / ' + l.title) } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
