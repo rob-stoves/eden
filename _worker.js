@@ -543,11 +543,9 @@ async function handlePlannerData(request, url, env) {
   const locationId = url.searchParams.get('location');
   if (!locationId) return jsonResponse({ error: 'location required' }, 400);
 
-  const rawToken = (env.EDEN_API_TOKEN || '').trim();
-  if (!rawToken) return jsonResponse({ error: 'EDEN_API_TOKEN not configured' }, 503);
-  const apiToken = rawToken.replace(/^Bearer\s+/i, '').trim();
-  const authHeader = `Bearer ${apiToken}`;
-  const headers = { 'Authorization': authHeader };
+  const apiToken = (env.EDEN_API_TOKEN || '').trim();
+  if (!apiToken) return jsonResponse({ error: 'EDEN_API_TOKEN not configured' }, 503);
+  const headers = { 'Authorization': apiToken };
 
   const dates = getWorkingDays(5);
 
@@ -566,7 +564,7 @@ async function handlePlannerData(request, url, env) {
     return jsonResponse({
       error: `Eden API ${responses[0].status} fetching desks`,
       detail: body.slice(0, 500),
-      authSent: `Bearer ${apiToken.slice(0, 6)}...${apiToken.slice(-4)} (len=${apiToken.length})`,
+      authSent: `${apiToken.slice(0, 6)}...${apiToken.slice(-4)} (len=${apiToken.length})`,
     }, 502);
   }
 
