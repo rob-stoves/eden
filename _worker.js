@@ -562,9 +562,6 @@ async function handlePlannerData(request, url, env) {
 
   const INACTIVE = new Set(['cancelled', 'finished', 'released']);
 
-  // Filter reservations to desk-code names (≤3 chars), matching the main board's hideNonDesks=3 setting
-  function isDeskName(title) { return typeof title === 'string' && title.trim().length > 0 && title.trim().length <= 3; }
-
   const days = dates.map((date, i) => {
     const p1 = jsons[i * 4];
     const p2 = jsons[i * 4 + 1];
@@ -577,8 +574,8 @@ async function handlePlannerData(request, url, env) {
     const all = [...page1, ...page2, ...page3, ...page4];
 
     const reservations = all
-      .filter(r => !INACTIVE.has(r.status) && isDeskName(r.location?.title))
-      .map(r => ({ deskId: r.location.location_id, deskName: r.location.title.trim(), name: r.owner?.name || 'Unknown' }));
+      .filter(r => !INACTIVE.has(r.status) && r.location?.location_id)
+      .map(r => ({ deskId: r.location.location_id, deskName: (r.location.title || '').trim(), name: r.owner?.name || 'Unknown' }));
 
     return { date, reservations };
   });

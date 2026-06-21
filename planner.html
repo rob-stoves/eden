@@ -378,8 +378,7 @@
         $('loadingState').style.display = 'none';
         $('subtitle').textContent = dateRange(days);
 
-        // Apply name-length filter client-side (≤ 3 chars = desk codes, not rooms/booths)
-        const desks = allDesks.filter(d => d.name && d.name.trim().length <= 3);
+        const desks = allDesks;
 
         // Surface debug info so we can diagnose data issues
         const db = $('debugBanner');
