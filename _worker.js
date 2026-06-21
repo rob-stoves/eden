@@ -568,29 +568,31 @@ async function handlePlannerData(request, url, env) {
     deskFilter = r => zonePrefixes.has(r.location?.location_id?.slice(0, 15));
   }
 
-  // Step 2: fetch 4 pages of reservations per day in parallel — same logic as main board, 5 days
-  const resFetches = dates.flatMap(date => [
-    fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=1`, { headers }),
-    fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=2`, { headers }),
-    fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=3`, { headers }),
-    fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=4`, { headers }),
-  ]);
-
-  const resResponses = await Promise.all(resFetches);
+  // Step 2: fetch 8 pages of reservations per day in parallel (8×5+1=41 subrequests, within 50 limit)
+  const PAGES_PER_DAY = 8;
+  const resResponses = await Promise.all(
+    dates.flatMap(date =>
+      Array.from({ length: PAGES_PER_DAY }, (_, p) =>
+        fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=${p + 1}`, { headers })
+      )
+    )
+  );
+  // Also capture HTTP statuses for the first day (for debugging 0-result days)
+  const day0Statuses = resResponses.slice(0, PAGES_PER_DAY).map(r => r.status);
   const resJsons = await Promise.all(resResponses.map(r => r.json().catch(() => [])));
 
   const INACTIVE = new Set(['cancelled', 'finished', 'released']);
 
   const days = dates.map((date, i) => {
-    const p1 = resJsons[i * 4];
-    const p2 = resJsons[i * 4 + 1];
-    const p3 = resJsons[i * 4 + 2];
-    const p4 = resJsons[i * 4 + 3];
-    const page1 = Array.isArray(p1) ? p1 : [];
-    const page2 = page1.length >= 25 && Array.isArray(p2) ? p2 : [];
-    const page3 = page2.length >= 25 && Array.isArray(p3) ? p3 : [];
-    const page4 = page3.length >= 25 && Array.isArray(p4) ? p4 : [];
-    const all = [...page1, ...page2, ...page3, ...page4];
+    const pages = Array.from({ length: PAGES_PER_DAY }, (_, p) => resJsons[i * PAGES_PER_DAY + p]);
+    // Only include a page if the previous one was full (25 items)
+    const used = [];
+    for (const page of pages) {
+      const arr = Array.isArray(page) ? page : [];
+      used.push(arr);
+      if (arr.length < 25) break;
+    }
+    const all = used.flat();
 
     const reservations = all
       .filter(r => !INACTIVE.has(r.status) && deskFilter(r))
@@ -599,8 +601,8 @@ async function handlePlannerData(request, url, env) {
     return { date, reservations, _rawCount: all.length, _activeCount: all.filter(r => !INACTIVE.has(r.status)).length };
   });
 
-  // Expose first reservation's keys for debugging field structure
-  const firstResv = resJsons[0]?.[0];
+  // Sample from first non-empty page for field structure debugging
+  const firstResv = resJsons.flat().find(r => r && typeof r === 'object');
   const _sampleKeys = firstResv ? Object.keys(firstResv) : [];
   const _sampleLocKeys = firstResv?.location ? Object.keys(firstResv.location) : [];
   const _sampleLocId = firstResv?.location?.location_id || firstResv?.location_id || 'none';
@@ -609,7 +611,7 @@ async function handlePlannerData(request, url, env) {
     ? desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }))
     : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
 
-  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, sampleKeys: _sampleKeys, sampleLocKeys: _sampleLocKeys, sampleLocId: _sampleLocId, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, active: d._activeCount, matched: d.reservations.length })) } });
+  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, sampleKeys: _sampleKeys, sampleLocKeys: _sampleLocKeys, sampleLocId: _sampleLocId, day0Statuses, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, active: d._activeCount, matched: d.reservations.length })) } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
