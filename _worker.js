@@ -543,13 +543,14 @@ async function handlePlannerData(request, url, env) {
   const locationId = url.searchParams.get('location');
   if (!locationId) return jsonResponse({ error: 'location required' }, 400);
 
-  const rawToken = env.EDEN_API_TOKEN || '';
+  const rawToken = (env.EDEN_API_TOKEN || '').trim();
   if (!rawToken) return jsonResponse({ error: 'EDEN_API_TOKEN not configured' }, 503);
-  const apiToken = rawToken.replace(/^Bearer\s+/i, '');
-  const headers = { 'Authorization': `Bearer ${apiToken}` };
+  const apiToken = rawToken.replace(/^Bearer\s+/i, '').trim();
+  const authHeader = `Bearer ${apiToken}`;
+  const headers = { 'Authorization': authHeader };
+
   const dates = getWorkingDays(5);
 
-  // Fetch desks + pages 1 & 2 of reservations for all 5 days — all in parallel
   const allFetches = [
     fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers }),
     ...dates.flatMap(date => [
@@ -560,10 +561,13 @@ async function handlePlannerData(request, url, env) {
 
   const responses = await Promise.all(allFetches);
 
-  // Check for API failure on the desks call — return full detail for diagnosis
   if (!responses[0].ok) {
     const body = await responses[0].text().catch(() => '');
-    return jsonResponse({ error: `Eden API ${responses[0].status} fetching desks`, detail: body.slice(0, 500) }, 502);
+    return jsonResponse({
+      error: `Eden API ${responses[0].status} fetching desks`,
+      detail: body.slice(0, 500),
+      authSent: `Bearer ${apiToken.slice(0, 6)}...${apiToken.slice(-4)} (len=${apiToken.length})`,
+    }, 502);
   }
 
   const jsons = await Promise.all(responses.map(r => r.json().catch(() => [])));
