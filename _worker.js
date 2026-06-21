@@ -570,7 +570,7 @@ async function handlePlannerData(request, url, env) {
   const resResponses = await Promise.all(
     dates.flatMap(date =>
       Array.from({ length: PAGES_PER_DAY }, (_, p) =>
-        fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=${p + 1}`, { headers })
+        fetch(`https://public-api.eden.io/reservations?date=${date}&page=${p + 1}`, { headers })
       )
     )
   );
