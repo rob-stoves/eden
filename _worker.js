@@ -556,35 +556,26 @@ async function handlePlannerData(request, url, env) {
   const desksRaw = Array.isArray(desksJson) ? desksJson : [];
   const deskIds = new Set(desksRaw.map(d => d.location_id).filter(Boolean));
 
-  // Step 2: fetch 8 pages per day in parallel (8×5+1=41 subrequests, within 50 limit)
-  const PAGES_PER_DAY = 8;
-  const resResponses = await Promise.all(
-    dates.flatMap(date =>
-      Array.from({ length: PAGES_PER_DAY }, (_, p) =>
-        fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=${p + 1}`, { headers })
-      )
-    )
-  );
-  const resJsons = await Promise.all(resResponses.map(r => r.json().catch(() => [])));
-
+  // Step 2: fetch each day sequentially (avoid rate limiting), days run in parallel
+  // Peak concurrency = 5 (one page-1 per day), not 40
   const INACTIVE = new Set(['cancelled', 'finished', 'released']);
 
-  const days = dates.map((date, i) => {
-    const pages = Array.from({ length: PAGES_PER_DAY }, (_, p) => resJsons[i * PAGES_PER_DAY + p]);
-    const used = [];
-    for (const page of pages) {
-      const arr = Array.isArray(page) ? page : [];
-      used.push(arr);
+  async function fetchDay(date) {
+    const all = [];
+    for (let page = 1; page <= 10; page++) {
+      const res = await fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=${page}`, { headers });
+      const data = await res.json().catch(() => []);
+      const arr = Array.isArray(data) ? data : [];
+      all.push(...arr);
       if (arr.length < 25) break;
     }
-    const all = used.flat();
-
     const reservations = all
       .filter(r => !INACTIVE.has(r.status) && deskIds.has(r.location?.location_id))
       .map(r => ({ deskId: r.location.location_id, deskName: (r.location.title || '').trim(), name: r.owner?.name || 'Unknown' }));
-
     return { date, reservations };
-  });
+  }
+
+  const days = await Promise.all(dates.map(fetchDay));
 
   const desks = desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }));
 
