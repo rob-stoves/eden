@@ -270,6 +270,7 @@
     const params  = new URLSearchParams(location.search);
     const locId   = params.get('location') || '';
     const locName = params.get('name') || '';
+    const locDate = params.get('date') || '';
 
     const $ = id => document.getElementById(id);
 
@@ -301,7 +302,7 @@
         if (savedName)  $('joinName').value  = savedName;
         if (savedEmail) $('joinEmail').value = savedEmail;
 
-        $('joinDate').value = todayDate();
+        $('joinDate').value = locDate || todayDate();
         $('joinDate').min   = todayDate();
 
     }

@@ -304,6 +304,27 @@
             }
         }
 
+        /* ─── Join waitlist bar ─────────────────────────────────────── */
+
+        .join-bar {
+            display: block;
+            margin: 0 12px 12px;
+            padding: 8px 12px;
+            background: rgba(171,255,68,.12);
+            border: 1px solid rgba(171,255,68,.35);
+            border-radius: 6px;
+            color: var(--brand);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            text-decoration: none;
+            text-align: center;
+            transition: background .15s, border-color .15s;
+        }
+
+        .join-bar:hover { background: rgba(171,255,68,.2); border-color: var(--brand); }
+
         /* ─── Free toggle ───────────────────────────────────────────── */
 
         .free-toggle-row {
@@ -416,6 +437,7 @@
 
     const params = new URLSearchParams(location.search);
     const locId  = params.get('location') || LONDON_LOCATION;
+    const token  = params.get('token') || '';
 
     const $  = id => document.getElementById(id);
     let activeDay = 0;
@@ -555,6 +577,7 @@
                     </svg>
                 </div>
                 <div class="day-card-body">
+                    <a class="join-bar" href="/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(locId)}&name=London+Office&date=${day.date}">Join waiting list</a>
                     <div class="people-list">${peopleRows}</div>
                 </div>`;
 

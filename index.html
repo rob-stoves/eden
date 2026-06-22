@@ -642,19 +642,8 @@
             <div class="header-right">
                 <!-- Waiting list -->
                 <div class="waiting-list-header" id="waitingListContainer" style="display:none;">
-                    <div id="waitlistQr" class="waitlist-qr" style="display:none;"></div>
-                    <button class="waiting-list-btn-small" id="joinWaitingListBtn">Join Waitlist</button>
-                    <div class="waiting-list-form-inline" id="waitingListForm">
-                        <div class="waiting-list-inputs">
-                            <input type="text" class="waiting-list-input-small" id="waitingListName" placeholder="Your name">
-                            <input type="email" class="waiting-list-input-small" id="waitingListEmail" placeholder="Email (optional)">
-                            <input type="date" class="waiting-list-input-small" id="waitingListDate">
-                        </div>
-                        <button class="waiting-list-submit-small" id="waitingListSubmit">✓</button>
-                        <button class="waiting-list-cancel-small" id="waitingListCancel">✕</button>
-                    </div>
+                    <a id="waitlistQrLink" href="#" style="display:none;"><div id="waitlistQr" class="waitlist-qr"></div></a>
                     <div class="waiting-list-queue-small" id="waitingListQueue"></div>
-                    <div class="waiting-list-success-small" id="waitingListSuccess">Added!</div>
                 </div>
 
                 <!-- Stat block -->
@@ -848,44 +837,6 @@
             }
         });
 
-        $('joinWaitingListBtn').addEventListener('click', () => {
-            $('waitingListForm').classList.add('active');
-            $('joinWaitingListBtn').style.display = 'none';
-            $('waitingListQueue').style.display = 'none';
-            $('waitingListDate').value = todayDate();
-            $('waitingListName').value = localStorage.getItem('eden_wl_name') || '';
-            $('waitingListEmail').value = localStorage.getItem('eden_wl_email') || '';
-            $('waitingListName').focus();
-        });
-
-        $('waitingListCancel').addEventListener('click', () => {
-            $('waitingListForm').classList.remove('active');
-            $('joinWaitingListBtn').style.display = 'inline-block';
-            $('waitingListQueue').style.display = 'block';
-            $('waitingListName').value = '';
-        });
-
-        $('waitingListSubmit').addEventListener('click', async () => {
-            const name = $('waitingListName').value.trim();
-            const email = $('waitingListEmail').value.trim();
-            const date = $('waitingListDate').value;
-            if (name) {
-                const success = await addToWaitingList(name, email, date);
-                if (success) {
-                    localStorage.setItem('eden_wl_name', name);
-                    if (email) localStorage.setItem('eden_wl_email', email);
-                    $('waitingListName').value = '';
-                    $('waitingListEmail').value = '';
-                    $('waitingListDate').value = '';
-                    $('waitingListForm').classList.remove('active');
-                    $('joinWaitingListBtn').style.display = 'inline-block';
-                    $('waitingListQueue').style.display = 'block';
-                    await updateWaitingListQueue();
-                }
-            }
-        });
-
-        $('waitingListName').addEventListener('keypress', e => { if (e.key === 'Enter') $('waitingListSubmit').click(); });
 
         function updateStartButton() { startBtn.disabled = !state.apiToken || !state.locationId; }
 
@@ -1130,13 +1081,14 @@
 
         // ── Inline waitlist QR ────────────────────────────────────────
         function updateQrCode() {
-            const el = $('waitlistQr');
+            const el   = $('waitlistQr');
+            const link = $('waitlistQrLink');
             if (!el || !state.locationId || typeof QRCode === 'undefined') return;
-            const token  = new URLSearchParams(window.location.search).get('token') || '';
-            const url    = `${window.location.origin}/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(state.locationId)}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
+            const token = new URLSearchParams(window.location.search).get('token') || '';
+            const url   = `${window.location.origin}/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(state.locationId)}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
             el.innerHTML = '';
             new QRCode(el, { text: url, width: 72, height: 72, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-            el.style.display = 'block';
+            if (link) { link.href = url; link.style.display = 'block'; }
         }
 
         settingsBtn.addEventListener('click', () => {
