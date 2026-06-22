@@ -91,19 +91,6 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .debug-banner {
-            background: var(--bg-default);
-            border: 1px solid var(--border-tertiary);
-            border-radius: 8px;
-            padding: 12px 14px;
-            margin-bottom: 16px;
-            color: var(--fg-tertiary);
-            font-family: 'Roboto Mono', monospace;
-            font-size: 11px;
-            line-height: 1.6;
-            display: none;
-        }
-
         /* ─── Error ──────────────────────────────────────────────── */
 
         .error-banner {
@@ -300,7 +287,6 @@
     </div>
 
     <div class="error-banner" id="errorBanner"></div>
-    <div class="debug-banner" id="debugBanner"></div>
 
     <div id="mainContent" style="display:none">
         <div class="chart-section">
@@ -380,12 +366,6 @@
 
         const desks = allDesks;
 
-        // Surface debug info so we can diagnose data issues
-        const db = $('debugBanner');
-        db.style.cssText = 'display:block!important';
-        db.style.cssText = 'display:block!important';
-        const dc = _debug?.dayCounts || [];
-        db.innerHTML = `desks:${_debug?.deskApiCount} | ` + dc.map(d => `${d.date}: ${d.matched}`).join(' | ');
 
         // Build desk lookup: id → name
         const deskMap = {};
