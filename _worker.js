@@ -550,22 +550,13 @@ async function handlePlannerData(request, url, env) {
 
   const dates = getWorkingDays(5);
 
-  // Step 1: fetch zones (direct children of location) and physical desks in parallel
-  const [zonesRes, desksRes] = await Promise.all([
-    fetch(`https://public-api.eden.io/locations?parent_id=${encodeURIComponent(locationId)}`, { headers }),
-    fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers }),
-  ]);
-  const [zonesJson, desksJson] = await Promise.all([
-    zonesRes.json().catch(() => []),
-    desksRes.json().catch(() => []),
-  ]);
-  const zonesRaw = Array.isArray(zonesJson) ? zonesJson : [];
+  // Step 1: fetch London desks — same call as main board
+  const desksRes = await fetch(`https://public-api.eden.io/locations?type=desks&parent_id=${encodeURIComponent(locationId)}`, { headers });
+  const desksJson = await desksRes.json().catch(() => []);
   const desksRaw = Array.isArray(desksJson) ? desksJson : [];
+  const deskIds = new Set(desksRaw.map(d => d.location_id).filter(Boolean));
 
-  const zoneIds = new Set(zonesRaw.map(z => z.location_id).filter(Boolean));
-  const deskFilter = r => deskIds.has(r.location?.location_id);
-
-  // Step 2: fetch 8 pages of reservations per day, filtered by location_id if the API supports it
+  // Step 2: fetch 8 pages per day in parallel (8×5+1=41 subrequests, within 50 limit)
   const PAGES_PER_DAY = 8;
   const resResponses = await Promise.all(
     dates.flatMap(date =>
@@ -574,14 +565,12 @@ async function handlePlannerData(request, url, env) {
       )
     )
   );
-  const day0Statuses = resResponses.slice(0, PAGES_PER_DAY).map(r => r.status);
   const resJsons = await Promise.all(resResponses.map(r => r.json().catch(() => [])));
 
   const INACTIVE = new Set(['cancelled', 'finished', 'released']);
 
   const days = dates.map((date, i) => {
     const pages = Array.from({ length: PAGES_PER_DAY }, (_, p) => resJsons[i * PAGES_PER_DAY + p]);
-    // Only include a page if the previous one was full (25 items)
     const used = [];
     for (const page of pages) {
       const arr = Array.isArray(page) ? page : [];
@@ -591,23 +580,15 @@ async function handlePlannerData(request, url, env) {
     const all = used.flat();
 
     const reservations = all
-      .filter(r => !INACTIVE.has(r.status) && deskFilter(r))
-      .map(r => ({ deskId: r.location?.location_id || r.location_id, deskName: (r.location?.title || r.locationTitle || '').trim(), name: r.owner?.name || 'Unknown' }));
+      .filter(r => !INACTIVE.has(r.status) && deskIds.has(r.location?.location_id))
+      .map(r => ({ deskId: r.location.location_id, deskName: (r.location.title || '').trim(), name: r.owner?.name || 'Unknown' }));
 
-    return { date, reservations, _rawCount: all.length, _activeCount: all.filter(r => !INACTIVE.has(r.status)).length };
+    return { date, reservations };
   });
 
-  const firstResv = resJsons.flat().find(r => r && typeof r === 'object');
-  const _sampleResvLocId = firstResv?.location?.location_id || 'none';
-  const _sampleDeskIds = desksRaw.slice(0, 3).map(d => d.location_id);
-  const deskIds = new Set(desksRaw.map(d => d.location_id).filter(Boolean));
-  const _resvLocInDesks = deskIds.has(_sampleResvLocId);
+  const desks = desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }));
 
-  const desks = desksRaw.length > 0
-    ? desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }))
-    : Object.entries(Object.fromEntries(days.flatMap(d => d.reservations.map(r => [r.deskId, r.deskName])))).map(([id, name]) => ({ id, name }));
-
-  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, sampleResvLocId: _sampleResvLocId, sampleDeskIds: _sampleDeskIds, resvLocInDesks: _resvLocInDesks, dayCounts: days.map(d => ({ date: d.date, raw: d._rawCount, matched: d.reservations.length })) } });
+  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, dayCounts: days.map(d => ({ date: d.date, matched: d.reservations.length })) } });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
