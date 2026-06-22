@@ -563,14 +563,14 @@ async function handlePlannerData(request, url, env) {
   const desksRaw = Array.isArray(desksJson) ? desksJson : [];
 
   const zoneIds = new Set(zonesRaw.map(z => z.location_id).filter(Boolean));
-  const deskFilter = r => !!r.location?.location_id;
+  const deskFilter = r => deskIds.has(r.location?.location_id);
 
   // Step 2: fetch 8 pages of reservations per day, filtered by location_id if the API supports it
   const PAGES_PER_DAY = 8;
   const resResponses = await Promise.all(
     dates.flatMap(date =>
       Array.from({ length: PAGES_PER_DAY }, (_, p) =>
-        fetch(`https://public-api.eden.io/reservations?date=${date}&page=${p + 1}`, { headers })
+        fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=${p + 1}`, { headers })
       )
     )
   );
