@@ -583,8 +583,8 @@
 
         days.forEach((day, i) => {
             const booked = day.reservations.filter(r => (r.deskName || '').length <= 3).length;
-            const count  = showFree ? (totalDesks - booked) : booked;
-            const barH   = chartH * (count / CHART_MAX);
+            const displayCount = showFree ? (totalDesks - booked) : booked;
+            const barH   = chartH * (booked / CHART_MAX);
             const x      = padL + i * slotW + slotW / 2;
             const barX   = x - barW / 2;
             const barY   = padTop + (chartH - barH);
@@ -602,8 +602,9 @@
             }
 
             // Count label above bar
-            if (count > 0) {
-                svgContent += `<text x="${x.toFixed(1)}" y="${(barY - 5).toFixed(1)}" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" font-weight="600" fill="#ABFF44">${count}</text>`;
+            if (booked > 0) {
+                const label = showFree ? `${displayCount} free` : `${displayCount}`;
+                svgContent += `<text x="${x.toFixed(1)}" y="${(barY - 5).toFixed(1)}" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" font-weight="600" fill="#ABFF44">${label}</text>`;
             }
 
             // Day label below
