@@ -376,7 +376,12 @@
 
         /* Waiting list in dashboard header */
         .waiting-list-header {
-            display: flex; align-items: center; gap: 8px; margin-right: 16px;
+            display: flex; flex-direction: column; align-items: center; gap: 6px; margin-right: 16px;
+        }
+        .waitlist-label {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+            color: var(--fg-tertiary); white-space: nowrap;
         }
         .waiting-list-btn-small {
             padding: 6px 14px;
@@ -642,6 +647,7 @@
             <div class="header-right">
                 <!-- Waiting list -->
                 <div class="waiting-list-header" id="waitingListContainer" style="display:none;">
+                    <div class="waitlist-label">Join waiting list</div>
                     <a id="waitlistQrLink" href="#" style="display:none;"><div id="waitlistQr" class="waitlist-qr"></div></a>
                     <div class="waiting-list-queue-small" id="waitingListQueue"></div>
                 </div>
