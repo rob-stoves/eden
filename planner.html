@@ -306,32 +306,58 @@
 
         /* ─── Free toggle ───────────────────────────────────────────── */
 
-        .free-toggle {
-            display: block;
+        .free-toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
             margin-top: 10px;
-            width: 100%;
-            padding: 7px 12px;
-            background: transparent;
-            border: 1px solid var(--border-default);
-            border-radius: 6px;
-            color: var(--fg-secondary);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .free-toggle-label {
             font-family: 'Roboto Mono', monospace;
             font-size: 11px;
             letter-spacing: .08em;
             text-transform: uppercase;
-            cursor: pointer;
-            transition: border-color .15s, color .15s, background .15s;
+            color: var(--fg-tertiary);
+            transition: color .15s;
         }
 
-        .free-toggle:hover {
-            border-color: var(--brand);
-            color: var(--brand);
+        .free-toggle-row:hover .free-toggle-label { color: var(--fg-secondary); }
+        .free-toggle-row.active .free-toggle-label { color: var(--brand); }
+
+        .free-toggle-track {
+            width: 32px;
+            height: 18px;
+            border-radius: 9px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            position: relative;
+            transition: background .2s, border-color .2s;
+            flex-shrink: 0;
         }
 
-        .free-toggle.active {
-            background: var(--glow-brand);
+        .free-toggle-row.active .free-toggle-track {
+            background: var(--brand);
             border-color: var(--brand);
-            color: var(--brand);
+        }
+
+        .free-toggle-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--fg-tertiary);
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform .2s, background .2s;
+        }
+
+        .free-toggle-row.active .free-toggle-thumb {
+            transform: translateX(14px);
+            background: var(--brand-ink);
         }
 
         /* ─── Footer ─────────────────────────────────────────────── */
@@ -367,7 +393,10 @@
             <div class="chart-wrap">
                 <svg class="chart-svg" id="chartSvg" viewBox="0 0 320 140" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
-            <button class="free-toggle" id="freeToggle" type="button">Show free desks</button>
+            <div class="free-toggle-row" id="freeToggle">
+                <span class="free-toggle-label">Show free desks</span>
+                <div class="free-toggle-track"><div class="free-toggle-thumb"></div></div>
+            </div>
         </div>
     </div>
 
@@ -465,6 +494,7 @@
             showFree = !showFree;
             localStorage.setItem('planner_show_free', showFree);
             btn.classList.toggle('active', showFree);
+            renderChart(lastDays, lastTotalDesks);
             renderCards(lastDays, lastTotalDesks, lastDeskMap);
         });
     }
@@ -552,7 +582,8 @@
         let svgContent = '';
 
         days.forEach((day, i) => {
-            const count  = day.reservations.filter(r => (r.deskName || '').length <= 3).length;
+            const booked = day.reservations.filter(r => (r.deskName || '').length <= 3).length;
+            const count  = showFree ? (totalDesks - booked) : booked;
             const barH   = chartH * (count / CHART_MAX);
             const x      = padL + i * slotW + slotW / 2;
             const barX   = x - barW / 2;
