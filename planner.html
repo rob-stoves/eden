@@ -266,14 +266,23 @@
 
         /* ─── Desktop layout (≥1024px) ──────────────────────────── */
 
+        .page-header { display: block; }
+
         @media (min-width: 1024px) {
             .page { max-width: 1400px; }
 
+            .page-header {
+                display: flex;
+                align-items: flex-start;
+                gap: 32px;
+                margin-bottom: 24px;
+            }
+
+            .page-header-text { flex: 1; }
+
             .chart-section {
-                float: right;
-                max-width: 535px;
-                width: 40%;
-                margin: 0 0 16px 24px;
+                flex-shrink: 0;
+                width: 535px;
             }
 
             .days-list {
@@ -310,24 +319,28 @@
 </head>
 <body>
 <div class="page">
-    <img src="Optimizely_Primary-Logo_Medium_Green_RGB.svg" alt="Optimizely" class="page-logo">
-    <h1 class="page-title">Who's in the<br>London Office</h1>
-    <p class="page-subtitle" id="subtitle">Loading…</p>
+    <div class="page-header">
+        <div class="page-header-text">
+            <img src="Optimizely_Primary-Logo_Medium_Green_RGB.svg" alt="Optimizely" class="page-logo">
+            <h1 class="page-title">Who's in the<br>London Office</h1>
+            <p class="page-subtitle" id="subtitle">Loading…</p>
 
-    <div class="loading" id="loadingState">
-        <div class="spinner"></div>
-        <span>Fetching desk data…</span>
-    </div>
+            <div class="loading" id="loadingState">
+                <div class="spinner"></div>
+                <span>Fetching desk data…</span>
+            </div>
 
-    <div class="error-banner" id="errorBanner"></div>
+            <div class="error-banner" id="errorBanner"></div>
+        </div>
 
-    <div id="mainContent" style="display:none">
-        <div class="chart-section">
+        <div class="chart-section" id="chartSection" style="display:none">
             <div class="chart-wrap">
                 <svg class="chart-svg" id="chartSvg" viewBox="0 0 320 140" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
         </div>
+    </div>
 
+    <div id="mainContent" style="display:none">
         <div class="days-list" id="daysList"></div>
     </div>
 
@@ -461,6 +474,7 @@
         });
 
         $('mainContent').style.display = 'block';
+        $('chartSection').style.display = 'block';
         $('footer').style.display = 'block';
         $('footerTime').textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     }
