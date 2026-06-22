@@ -603,8 +603,12 @@
 
             // Count label above bar
             if (booked > 0) {
-                const label = showFree ? `${displayCount} free` : `${displayCount}`;
-                svgContent += `<text x="${x.toFixed(1)}" y="${(barY - 5).toFixed(1)}" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="11" font-weight="600" fill="#ABFF44">${label}</text>`;
+                if (showFree) {
+                    svgContent += `<text x="${x.toFixed(1)}" y="${(barY - 12).toFixed(1)}" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="9" font-weight="600" fill="#ABFF44">${displayCount}</text>`;
+                    svgContent += `<text x="${x.toFixed(1)}" y="${(barY - 3).toFixed(1)}" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="9" fill="#ABFF44">free</text>`;
+                } else {
+                    svgContent += `<text x="${x.toFixed(1)}" y="${(barY - 5).toFixed(1)}" text-anchor="middle" font-family="Roboto Mono,monospace" font-size="9" font-weight="600" fill="#ABFF44">${displayCount}</text>`;
+                }
             }
 
             // Day label below
