@@ -402,11 +402,15 @@
 
         days.forEach((day, i) => {
             const count = day.reservations.length;
-            const pct   = totalDesks > 0 ? Math.round((count / totalDesks) * 100) : 0;
             const { day: dayShort, date: dateNum } = formatShort(day.date);
             const label = formatLong(day.date);
 
-            const sorted = [...day.reservations].sort((a, b) => a.name.localeCompare(b.name));
+            const sorted = [...day.reservations]
+                .filter(r => (r.deskName || '').length <= 3)
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            const filteredCount = sorted.length;
+            const pct = totalDesks > 0 ? Math.round((filteredCount / totalDesks) * 100) : 0;
 
             const card = document.createElement('div');
             card.className = 'day-card';
@@ -428,7 +432,7 @@
                         <div class="day-card-date">${day.date}</div>
                     </div>
                     <div class="day-card-count-wrap">
-                        <div class="day-card-count">${count}</div>
+                        <div class="day-card-count">${filteredCount}</div>
                         <div class="day-card-count-label">in office</div>
                     </div>
                     <svg class="day-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
