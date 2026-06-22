@@ -304,6 +304,36 @@
             }
         }
 
+        /* ─── Free toggle ───────────────────────────────────────────── */
+
+        .free-toggle {
+            display: block;
+            margin-top: 10px;
+            width: 100%;
+            padding: 7px 12px;
+            background: transparent;
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            color: var(--fg-secondary);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: border-color .15s, color .15s, background .15s;
+        }
+
+        .free-toggle:hover {
+            border-color: var(--brand);
+            color: var(--brand);
+        }
+
+        .free-toggle.active {
+            background: var(--glow-brand);
+            border-color: var(--brand);
+            color: var(--brand);
+        }
+
         /* ─── Footer ─────────────────────────────────────────────── */
 
         .page-footer {
@@ -337,6 +367,7 @@
             <div class="chart-wrap">
                 <svg class="chart-svg" id="chartSvg" viewBox="0 0 320 140" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
+            <button class="free-toggle" id="freeToggle" type="button">Show free desks</button>
         </div>
     </div>
 
@@ -359,6 +390,8 @@
 
     const $  = id => document.getElementById(id);
     let activeDay = 0;
+    let showFree  = localStorage.getItem('planner_show_free') === 'true';
+    let lastDays, lastTotalDesks, lastDeskMap;
 
     // ── Date helpers ─────────────────────────────────────────────────
 
@@ -410,25 +443,37 @@
         $('loadingState').style.display = 'none';
         $('subtitle').textContent = dateRange(days);
 
-        const desks = allDesks;
-
-
-        // Build desk lookup: id → name
         const deskMap = {};
-        desks.forEach(d => { deskMap[d.id] = d.name; });
+        allDesks.forEach(d => { deskMap[d.id] = d.name; });
 
-        const totalDesks = desks.length;
+        lastDays      = days;
+        lastTotalDesks = allDesks.length;
+        lastDeskMap   = deskMap;
 
-        // Render chart
-        renderChart(days, totalDesks);
+        renderChart(days, lastTotalDesks);
+        renderCards(days, lastTotalDesks, deskMap);
 
-        // Render day cards
+        $('mainContent').style.display = 'block';
+        $('chartSection').style.display = 'block';
+        $('footer').style.display = 'block';
+        $('footerTime').textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+        // Wire toggle
+        const btn = $('freeToggle');
+        btn.classList.toggle('active', showFree);
+        btn.addEventListener('click', () => {
+            showFree = !showFree;
+            localStorage.setItem('planner_show_free', showFree);
+            btn.classList.toggle('active', showFree);
+            renderCards(lastDays, lastTotalDesks, lastDeskMap);
+        });
+    }
+
+    function renderCards(days, totalDesks, deskMap) {
         const list = $('daysList');
         list.innerHTML = '';
 
         days.forEach((day, i) => {
-            const count = day.reservations.length;
-            const { day: dayShort, date: dateNum } = formatShort(day.date);
             const label = formatLong(day.date);
 
             const sorted = [...day.reservations]
@@ -436,6 +481,8 @@
                 .sort((a, b) => a.name.localeCompare(b.name));
 
             const filteredCount = sorted.length;
+            const displayCount  = showFree ? (totalDesks - filteredCount) : filteredCount;
+            const displayLabel  = showFree ? 'free' : 'in office';
             const pct = totalDesks > 0 ? Math.round((filteredCount / totalDesks) * 100) : 0;
 
             const card = document.createElement('div');
@@ -458,8 +505,8 @@
                         <div class="day-card-date">${day.date}</div>
                     </div>
                     <div class="day-card-count-wrap">
-                        <div class="day-card-count">${filteredCount}</div>
-                        <div class="day-card-count-label">in office</div>
+                        <div class="day-card-count">${displayCount}</div>
+                        <div class="day-card-count-label">${displayLabel}</div>
                     </div>
                     <svg class="day-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <polyline points="6 9 12 15 18 9"/>
@@ -472,11 +519,6 @@
             card.addEventListener('click', () => selectDay(i));
             list.appendChild(card);
         });
-
-        $('mainContent').style.display = 'block';
-        $('chartSection').style.display = 'block';
-        $('footer').style.display = 'block';
-        $('footerTime').textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     }
 
     function selectDay(index) {
