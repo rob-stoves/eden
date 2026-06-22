@@ -406,12 +406,7 @@
             const { day: dayShort, date: dateNum } = formatShort(day.date);
             const label = formatLong(day.date);
 
-            // Sort reservations by desk name
-            const sorted = [...day.reservations].sort((a, b) => {
-                const na = deskMap[a.deskId] || a.deskId;
-                const nb = deskMap[b.deskId] || b.deskId;
-                return na.localeCompare(nb);
-            });
+            const sorted = [...day.reservations].sort((a, b) => a.name.localeCompare(b.name));
 
             const card = document.createElement('div');
             card.className = 'day-card';
