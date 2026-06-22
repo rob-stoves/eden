@@ -458,13 +458,13 @@
         const n      = days.length;
         const slotW  = (W - padL - padR) / n;
         const barW   = Math.min(slotW * 0.55, 36);
-        const maxCount = Math.max(...days.map(d => d.reservations.length), 1);
+        const CHART_MAX = 58;
 
         let svgContent = '';
 
         days.forEach((day, i) => {
-            const count  = day.reservations.length;
-            const barH   = chartH * (count / maxCount);
+            const count  = day.reservations.filter(r => (r.deskName || '').length <= 3).length;
+            const barH   = chartH * (count / CHART_MAX);
             const x      = padL + i * slotW + slotW / 2;
             const barX   = x - barW / 2;
             const barY   = padTop + (chartH - barH);
