@@ -264,6 +264,30 @@
             text-align: center;
         }
 
+        /* ─── Desktop layout (≥1024px) ──────────────────────────── */
+
+        @media (min-width: 1024px) {
+            .page { max-width: 1400px; }
+
+            .days-list {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 12px;
+            }
+
+            .day-card {
+                cursor: default;
+            }
+
+            .day-card-body {
+                display: block !important;
+            }
+
+            .day-card-chevron {
+                display: none;
+            }
+        }
+
         /* ─── Footer ─────────────────────────────────────────────── */
 
         .page-footer {
