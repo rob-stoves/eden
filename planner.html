@@ -443,6 +443,7 @@
     let activeDay = 0;
     let showFree  = localStorage.getItem('planner_show_free') === 'true';
     let lastDays, lastTotalDesks, lastDeskMap;
+    let nicknamesMap = {};
 
     // ── Date helpers ─────────────────────────────────────────────────
 
@@ -477,7 +478,12 @@
     async function load(silent = false) {
         try {
             if (!silent) $('loadingState').style.display = 'flex';
-            const res = await fetch(`/planner-data?location=${encodeURIComponent(locId)}`);
+            const [res, nickRes] = await Promise.all([
+                fetch(`/planner-data?location=${encodeURIComponent(locId)}`),
+                fetch('/nicknames/get')
+            ]);
+            const nickJson = await nickRes.json().catch(() => ({}));
+            if (nickJson.nicknames) nicknamesMap = nickJson.nicknames;
             const data = await res.json().catch(() => ({ error: `Server error ${res.status} (no JSON body)` }));
             if (!res.ok || data.error) throw new Error(data.error + (data.detail ? ` — ${data.detail}` : ''));
             render(data);
@@ -542,7 +548,8 @@
 
             const sorted = [...day.reservations]
                 .filter(r => (r.deskName || '').length <= 3)
-                .sort((a, b) => a.name.localeCompare(b.name));
+                .map(r => ({ ...r, displayName: nicknamesMap[r.name.toLowerCase()] || r.name }))
+                .sort((a, b) => a.displayName.localeCompare(b.displayName));
 
             const filteredCount = sorted.length;
             const displayCount  = showFree ? (totalDesks - filteredCount) : filteredCount;
@@ -557,7 +564,7 @@
                 ? sorted.map(r => `
                     <div class="person-row">
                         <span class="person-desk">${deskMap[r.deskId] || '?'}</span>
-                        <span class="person-name">${escHtml(r.name)}</span>
+                        <span class="person-name">${escHtml(r.displayName)}</span>
                     </div>`).join('')
                 : `<div class="day-empty">No reservations found</div>`;
 
