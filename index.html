@@ -376,12 +376,23 @@
 
         /* Waiting list in dashboard header */
         .waiting-list-header {
-            display: flex; flex-direction: column; align-items: center; gap: 6px; margin-right: 16px;
+            display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-right: 16px;
         }
         .waitlist-label {
             font-family: 'Roboto Mono', monospace;
             font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
-            color: var(--fg-tertiary); white-space: nowrap;
+            color: var(--brand); white-space: nowrap;
+        }
+        .waitlist-body {
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .waitlist-queue-wrap {
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .waitlist-queue-subtitle {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+            color: var(--fg-tertiary); margin-bottom: 2px;
         }
         .waiting-list-btn-small {
             padding: 6px 14px;
@@ -648,8 +659,10 @@
                 <!-- Waiting list -->
                 <div class="waiting-list-header" id="waitingListContainer" style="display:none;">
                     <div class="waitlist-label">Join waiting list</div>
-                    <a id="waitlistQrLink" href="#" style="display:none;"><div id="waitlistQr" class="waitlist-qr"></div></a>
-                    <div class="waiting-list-queue-small" id="waitingListQueue"></div>
+                    <div class="waitlist-body">
+                        <a id="waitlistQrLink" href="#" style="display:none;"><div id="waitlistQr" class="waitlist-qr"></div></a>
+                        <div class="waitlist-queue-wrap" id="waitingListQueue"></div>
+                    </div>
                 </div>
 
                 <!-- Stat block -->
@@ -914,7 +927,8 @@
             if (list.length > 0) {
                 const top = list.slice(0, 3);
                 const extra = list.length - top.length;
-                queueEl.innerHTML = top.map(e => `<div style="font-size:12px;color:var(--fg-secondary);line-height:1.5;">${esc(e.name)}</div>`).join('')
+                queueEl.innerHTML = `<div class="waitlist-queue-subtitle">Current queue</div>`
+                    + top.map(e => `<div style="font-size:12px;color:var(--fg-secondary);line-height:1.5;">${esc(e.name)}</div>`).join('')
                     + (extra > 0 ? `<div style="font-size:11px;color:var(--fg-tertiary);">+${extra} more</div>` : '');
             } else {
                 queueEl.innerHTML = '';
