@@ -476,7 +476,7 @@
         allDesks.forEach(d => { deskMap[d.id] = d.name; });
 
         lastDays      = days;
-        lastTotalDesks = allDesks.length;
+        lastTotalDesks = allDesks.filter(d => (d.name || '').length <= 3).length;
         lastDeskMap   = deskMap;
 
         renderChart(days, lastTotalDesks);
