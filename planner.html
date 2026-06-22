@@ -499,13 +499,16 @@
         // Wire toggle
         const btn = $('freeToggle');
         btn.classList.toggle('active', showFree);
-        btn.addEventListener('click', () => {
+        function onToggle(e) {
+            e.preventDefault();
             showFree = !showFree;
             localStorage.setItem('planner_show_free', showFree);
             btn.classList.toggle('active', showFree);
             renderChart(lastDays, lastTotalDesks);
             renderCards(lastDays, lastTotalDesks, lastDeskMap);
-        });
+        }
+        btn.addEventListener('click', onToggle);
+        btn.addEventListener('touchend', onToggle, { passive: false });
     }
 
     function renderCards(days, totalDesks, deskMap) {
