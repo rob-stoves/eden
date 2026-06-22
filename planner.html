@@ -584,7 +584,7 @@
                     </svg>
                 </div>
                 <div class="day-card-body">
-                    <a class="join-bar" href="/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(locId)}&name=London+Office&date=${day.date}">Join waiting list</a>
+                    ${filteredCount >= totalDesks ? `<a class="join-bar" href="/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(locId)}&name=London+Office&date=${day.date}">Join waiting list</a>` : ''}
                     <div class="people-list">${peopleRows}</div>
                 </div>`;
 

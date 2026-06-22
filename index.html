@@ -1221,9 +1221,11 @@
             const noDesksAvailable = avail === 0;
             if (state.showWaitingList === 'always') {
                 waitingListContainer.style.display = 'flex';
+                updateWaitingListQueue();
                 if (avail > 0) checkAndRemoveBookedFromWaitingList(deskRes);
             } else if (state.showWaitingList === 'auto' && noDesksAvailable) {
                 waitingListContainer.style.display = 'flex';
+                updateWaitingListQueue();
             } else if (state.showWaitingList === 'auto' && avail > 0) {
                 waitingListContainer.style.display = 'none';
                 checkAndRemoveBookedFromWaitingList(deskRes);
