@@ -306,17 +306,7 @@
 
         /* ─── Free desks panel ──────────────────────────────────────── */
 
-        .day-card-count-wrap--clickable {
-            cursor: pointer;
-            border-radius: 6px;
-            transition: background .15s;
-        }
-
-        .day-card-count-wrap--clickable:hover {
-            background: var(--bg-hover);
-        }
-
-        .free-desks-panel {
+.free-desks-panel {
             padding: 8px 12px;
             margin-bottom: 8px;
             background: var(--bg-secondary);
@@ -481,7 +471,6 @@
     let showFree  = localStorage.getItem('planner_show_free') === 'true';
     let lastDays, lastTotalDesks, lastDeskMap, lastFilteredDesks;
     let nicknamesMap = {};
-    const freeExpandedDays = new Set();
     const moreExpandedDays = new Set();
 
     // ── Date helpers ─────────────────────────────────────────────────
@@ -604,8 +593,7 @@
                 .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
             const first3 = freeDesks.slice(0, 3);
             const rest   = freeDesks.slice(3);
-            const panelOpen = freeExpandedDays.has(i);
-            const moreOpen  = moreExpandedDays.has(i);
+            const moreOpen = moreExpandedDays.has(i);
 
             let freePanelHtml = '';
             if (showFree && freeDesks.length > 0) {
@@ -614,12 +602,12 @@
                         ? `, ${rest.join(', ')} <span class="free-desks-more" data-day="${i}">less</span>`
                         : `, <span class="free-desks-more" data-day="${i}">+${rest.length} more</span>`)
                     : '';
-                freePanelHtml = `<div class="free-desks-panel" style="display:${panelOpen ? 'block' : 'none'}">
+                freePanelHtml = `<div class="free-desks-panel">
                     <span class="free-desks-title">Available desks:</span> ${first3.join(', ')}${moreLink}
                 </div>`;
             }
 
-            const countWrapClass = showFree ? 'day-card-count-wrap day-card-count-wrap--clickable' : 'day-card-count-wrap';
+            const countWrapClass = 'day-card-count-wrap';
 
             const card = document.createElement('div');
             card.className = 'day-card';
@@ -653,18 +641,6 @@
                     ${filteredCount >= totalDesks ? `<a class="join-bar" href="/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(locId)}&name=London+Office&date=${day.date}">Join waiting list</a>` : ''}
                     <div class="people-list">${peopleRows}</div>
                 </div>`;
-
-            // Count-wrap click — toggle free desks panel
-            if (showFree) {
-                card.querySelector('.day-card-count-wrap').addEventListener('click', e => {
-                    e.stopPropagation();
-                    freeExpandedDays.has(i) ? freeExpandedDays.delete(i) : freeExpandedDays.add(i);
-                    renderCards(lastDays, lastTotalDesks, lastDeskMap, lastFilteredDesks);
-                });
-                ['click', 'touchend'].forEach(evt => {
-                    card.querySelector('.day-card-count-wrap').addEventListener(evt, e => e.stopPropagation(), { passive: false });
-                });
-            }
 
             // "more / less" link click
             const moreLink = card.querySelector('.free-desks-more');
