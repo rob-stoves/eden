@@ -304,6 +304,43 @@
             }
         }
 
+        /* ─── Free desks panel ──────────────────────────────────────── */
+
+        .day-card-count-wrap--clickable {
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background .15s;
+        }
+
+        .day-card-count-wrap--clickable:hover {
+            background: var(--bg-hover);
+        }
+
+        .free-desks-panel {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px;
+            color: var(--fg-secondary);
+            line-height: 1.6;
+        }
+
+        .free-desks-title {
+            color: var(--fg-tertiary);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            font-size: 10px;
+        }
+
+        .free-desks-more {
+            color: var(--brand);
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
         /* ─── Join waitlist bar ─────────────────────────────────────── */
 
         .join-bar {
@@ -442,8 +479,10 @@
     const $  = id => document.getElementById(id);
     let activeDay = 0;
     let showFree  = localStorage.getItem('planner_show_free') === 'true';
-    let lastDays, lastTotalDesks, lastDeskMap;
+    let lastDays, lastTotalDesks, lastDeskMap, lastFilteredDesks;
     let nicknamesMap = {};
+    const freeExpandedDays = new Set();
+    const moreExpandedDays = new Set();
 
     // ── Date helpers ─────────────────────────────────────────────────
 
@@ -512,12 +551,13 @@
         const deskMap = {};
         allDesks.forEach(d => { deskMap[d.id] = d.name; });
 
-        lastDays      = days;
-        lastTotalDesks = allDesks.filter(d => (d.name || '').length <= 3).length;
-        lastDeskMap   = deskMap;
+        lastFilteredDesks = allDesks.filter(d => (d.name || '').length <= 3);
+        lastDays       = days;
+        lastTotalDesks = lastFilteredDesks.length;
+        lastDeskMap    = deskMap;
 
         renderChart(days, lastTotalDesks);
-        renderCards(days, lastTotalDesks, deskMap);
+        renderCards(days, lastTotalDesks, deskMap, lastFilteredDesks);
 
         $('mainContent').style.display = 'block';
         $('chartSection').style.display = 'block';
@@ -533,13 +573,13 @@
             localStorage.setItem('planner_show_free', showFree);
             btn.classList.toggle('active', showFree);
             renderChart(lastDays, lastTotalDesks);
-            renderCards(lastDays, lastTotalDesks, lastDeskMap);
+            renderCards(lastDays, lastTotalDesks, lastDeskMap, lastFilteredDesks);
         }
         btn.addEventListener('click', onToggle);
         btn.addEventListener('touchend', onToggle, { passive: false });
     }
 
-    function renderCards(days, totalDesks, deskMap) {
+    function renderCards(days, totalDesks, deskMap, filteredDesks) {
         const list = $('daysList');
         list.innerHTML = '';
 
@@ -555,6 +595,31 @@
             const displayCount  = showFree ? (totalDesks - filteredCount) : filteredCount;
             const displayLabel  = showFree ? 'free' : 'in office';
             const pct = totalDesks > 0 ? Math.round((filteredCount / totalDesks) * 100) : 0;
+
+            // Compute free desks for this day
+            const bookedIds = new Set(sorted.map(r => r.deskId));
+            const freeDesks = (filteredDesks || [])
+                .filter(d => !bookedIds.has(d.id))
+                .map(d => d.name)
+                .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+            const first3 = freeDesks.slice(0, 3);
+            const rest   = freeDesks.slice(3);
+            const panelOpen = freeExpandedDays.has(i);
+            const moreOpen  = moreExpandedDays.has(i);
+
+            let freePanelHtml = '';
+            if (showFree && freeDesks.length > 0) {
+                const moreLink = rest.length > 0
+                    ? (moreOpen
+                        ? `, ${rest.join(', ')} <span class="free-desks-more" data-day="${i}">less</span>`
+                        : `, <span class="free-desks-more" data-day="${i}">+${rest.length} more</span>`)
+                    : '';
+                freePanelHtml = `<div class="free-desks-panel" style="display:${panelOpen ? 'block' : 'none'}">
+                    <span class="free-desks-title">Available desks:</span> ${first3.join(', ')}${moreLink}
+                </div>`;
+            }
+
+            const countWrapClass = showFree ? 'day-card-count-wrap day-card-count-wrap--clickable' : 'day-card-count-wrap';
 
             const card = document.createElement('div');
             card.className = 'day-card';
@@ -575,7 +640,7 @@
                         <div class="day-card-name">${label}</div>
                         <div class="day-card-date">${day.date}</div>
                     </div>
-                    <div class="day-card-count-wrap">
+                    <div class="${countWrapClass}" data-day="${i}">
                         <div class="day-card-count">${displayCount}</div>
                         <div class="day-card-count-label">${displayLabel}</div>
                     </div>
@@ -584,9 +649,32 @@
                     </svg>
                 </div>
                 <div class="day-card-body">
+                    ${freePanelHtml}
                     ${filteredCount >= totalDesks ? `<a class="join-bar" href="/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(locId)}&name=London+Office&date=${day.date}">Join waiting list</a>` : ''}
                     <div class="people-list">${peopleRows}</div>
                 </div>`;
+
+            // Count-wrap click — toggle free desks panel
+            if (showFree) {
+                card.querySelector('.day-card-count-wrap').addEventListener('click', e => {
+                    e.stopPropagation();
+                    freeExpandedDays.has(i) ? freeExpandedDays.delete(i) : freeExpandedDays.add(i);
+                    renderCards(lastDays, lastTotalDesks, lastDeskMap, lastFilteredDesks);
+                });
+                ['click', 'touchend'].forEach(evt => {
+                    card.querySelector('.day-card-count-wrap').addEventListener(evt, e => e.stopPropagation(), { passive: false });
+                });
+            }
+
+            // "more / less" link click
+            const moreLink = card.querySelector('.free-desks-more');
+            if (moreLink) {
+                moreLink.addEventListener('click', e => {
+                    e.stopPropagation();
+                    moreExpandedDays.has(i) ? moreExpandedDays.delete(i) : moreExpandedDays.add(i);
+                    renderCards(lastDays, lastTotalDesks, lastDeskMap, lastFilteredDesks);
+                });
+            }
 
             card.addEventListener('click', () => selectDay(i));
             list.appendChild(card);
