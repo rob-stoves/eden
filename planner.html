@@ -523,7 +523,12 @@
         }
     }
 
-    // Refresh when the web app is foregrounded (iOS home screen shortcut)
+    // Auto-refresh every 60s when page is visible
+    setInterval(() => {
+        if (document.visibilityState === 'visible' && lastDays) load(true);
+    }, 60000);
+
+    // Refresh immediately when foregrounded (iOS home screen shortcut)
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && lastDays) load(true);
     });
