@@ -772,18 +772,11 @@
         async function fetchReservations(locationId) {
             const today = new Date().toISOString().split('T')[0];
             try {
-                // Fetch page 1 first to check if there are more pages
-                const first = await apiRequest(`/cola_reservations?date=${today}&page=1`);
-                if (first.message === "No items found" || !Array.isArray(first) || first.length === 0) return [];
-                if (first.length < 25) return first;
-
-                // Pages remain — fetch in parallel batches of 4
-                let all = [...first];
-                let batchStart = 2;
+                let all = [];
+                let batchStart = 1;
                 while (batchStart <= 50) {
-                    const pages = [batchStart, batchStart+1, batchStart+2, batchStart+3];
                     const results = await Promise.all(
-                        pages.map(p => apiRequest(`/cola_reservations?date=${today}&page=${p}`).catch(() => null))
+                        [0,1,2,3].map(j => apiRequest(`/cola_reservations?date=${today}&page=${batchStart+j}`).catch(() => null))
                     );
                     let hasMore = false;
                     for (const data of results) {
