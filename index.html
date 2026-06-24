@@ -771,19 +771,30 @@
 
         async function fetchReservations(locationId) {
             const today = new Date().toISOString().split('T')[0];
-            let allReservations = [];
-            let page = 1;
             try {
-                while (true) {
-                    const data = await apiRequest(`/cola_reservations?date=${today}&page=${page}`);
-                    if (data.message === "No items found") break;
-                    if (!Array.isArray(data) || data.length === 0) break;
-                    allReservations = allReservations.concat(data);
-                    if (data.length < 25) break;
-                    page++;
-                    if (page > 50) break;
+                // Fetch page 1 first to check if there are more pages
+                const first = await apiRequest(`/cola_reservations?date=${today}&page=1`);
+                if (first.message === "No items found" || !Array.isArray(first) || first.length === 0) return [];
+                if (first.length < 25) return first;
+
+                // Pages remain — fetch in parallel batches of 4
+                let all = [...first];
+                let batchStart = 2;
+                while (batchStart <= 50) {
+                    const pages = [batchStart, batchStart+1, batchStart+2, batchStart+3];
+                    const results = await Promise.all(
+                        pages.map(p => apiRequest(`/cola_reservations?date=${today}&page=${p}`).catch(() => null))
+                    );
+                    let hasMore = false;
+                    for (const data of results) {
+                        if (!data || data.message === "No items found" || !Array.isArray(data) || data.length === 0) continue;
+                        all = all.concat(data);
+                        if (data.length >= 25) hasMore = true;
+                    }
+                    if (!hasMore) break;
+                    batchStart += 4;
                 }
-                return allReservations;
+                return all;
             } catch (e) {
                 console.error('Error fetching reservations - will preserve existing data:', e);
                 return null;
