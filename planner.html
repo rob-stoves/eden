@@ -557,8 +557,10 @@
         $('chartSection').style.display = 'block';
         $('footer').style.display = 'block';
         $('footerTime').textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    }
 
-        // Wire toggle
+    // Wire toggle once at init
+    (function () {
         const btn = $('freeToggle');
         btn.classList.toggle('active', showFree);
         function onToggle(e) {
@@ -566,12 +568,14 @@
             showFree = !showFree;
             localStorage.setItem('planner_show_free', showFree);
             btn.classList.toggle('active', showFree);
-            renderChart(lastDays, lastTotalDesks);
-            renderCards(lastDays, lastTotalDesks, lastDeskMap, lastFilteredDesks);
+            if (lastDays) {
+                renderChart(lastDays, lastTotalDesks);
+                renderCards(lastDays, lastTotalDesks, lastDeskMap, lastFilteredDesks);
+            }
         }
         btn.addEventListener('click', onToggle);
         btn.addEventListener('touchend', onToggle, { passive: false });
-    }
+    })();
 
     function renderCards(days, totalDesks, deskMap, filteredDesks) {
         const list = $('daysList');
