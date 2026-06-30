@@ -69,22 +69,47 @@
 
         @media (max-width: 700px) {
             .dashboard-header {
-                flex-direction: column; align-items: flex-start;
-                padding: 10px 12px 8px; gap: 8px;
+                flex-direction: column; align-items: stretch;
+                padding: 8px 12px; gap: 4px;
             }
-            .header-left {
-                width: 100%; flex-direction: column; align-items: flex-start; gap: 6px;
-            }
-            .header-logo    { height: 30px; display: block; margin: 0; padding: 0; }
-            .header-divider { display: none; }
-            .header-title   { font-size: 10px; }
+            /* Top bar: stat left, controls right */
             .header-right {
-                width: 100%; flex-wrap: wrap; gap: 10px;
-                justify-content: flex-start;
+                order: -1; width: 100%;
+                flex-direction: row; flex-wrap: wrap;
+                justify-content: space-between; align-items: center;
+                gap: 0;
             }
-            .grid-section { padding: 2px 20px 20px; }
+            .stat-block { order: 0; text-align: left; }
+            .stat-big-row { justify-content: flex-start; }
+            .stat-value { font-size: 36px; }
+            .stat-label { font-size: 18px; }
+            .header-controls { order: 1; align-self: flex-start; }
+            /* Waiting list full-width below stat/controls */
+            .waiting-list-header { order: 2; width: 100%; flex-direction: row; align-items: center; margin-right: 0; margin-top: 4px; }
+            /* Location title below top bar */
+            .header-left { order: 0; width: 100%; }
+            .header-logo    { display: none; }
+            .header-divider { display: none; }
+            .header-eyebrow { display: none; }
+            .header-title   { font-size: 16px; padding: 2px 0; }
+            /* QR hidden, join button shown */
+            .waitlistQrLink, #waitlistQrLink { display: none !important; }
+            .mobile-join-btn { display: inline-block; }
+            /* Grid */
+            .grid-section { padding: 2px 12px 20px; }
             .desk-card { padding: 0 10px; min-height: 56px; gap: 10px; }
             .desk-grid { grid-template-columns: 1fr !important; gap: 8px; }
+        }
+
+        .mobile-join-btn {
+            display: none;
+            padding: 6px 12px;
+            background: var(--brand); color: var(--brand-ink);
+            border-radius: 6px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px; font-weight: 600;
+            letter-spacing: .04em; text-decoration: none;
+            white-space: nowrap;
         }
 
         .config-logo { height: 90px; display: block; margin-bottom: 20px; }
@@ -668,6 +693,7 @@
                     <div class="waitlist-label">Waiting List</div>
                     <div class="waitlist-body">
                         <a id="waitlistQrLink" href="#" style="display:none;"><div id="waitlistQr" class="waitlist-qr"></div></a>
+                        <a class="mobile-join-btn" id="mobileJoinBtn" href="#">Join Waiting List</a>
                         <div class="waitlist-queue-wrap" id="waitingListQueue"></div>
                     </div>
                 </div>
@@ -681,7 +707,7 @@
                 </div>
 
                 <!-- Refresh + Live pill + Settings stacked -->
-                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+                <div class="header-controls" style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
                     <span id="nextRefresh" style="font-family:'Roboto Mono',monospace;font-size:11px;color:var(--fg-tertiary);letter-spacing:.08em;"></span>
                     <div class="live-pill">
                         <span class="live-dot"></span>
@@ -1120,6 +1146,8 @@
             el.innerHTML = '';
             new QRCode(el, { text: url, width: 72, height: 72, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
             if (link) { link.href = url; link.style.display = 'block'; }
+            const mobileBtn = $('mobileJoinBtn');
+            if (mobileBtn) mobileBtn.href = url;
         }
 
         settingsBtn.addEventListener('click', () => {
