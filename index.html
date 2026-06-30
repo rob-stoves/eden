@@ -405,7 +405,7 @@
 
         /* Grid section */
         .grid-section {
-            padding: 2px 52px 376px 52px;
+            padding: 2px 52px 32px;
             flex: 1; display: flex; flex-direction: column; gap: 14px;
             min-height: 0;
         }
@@ -509,14 +509,13 @@
         .waitlist-qr canvas, .waitlist-qr img { display: block; }
 
         .qr-corner-panel {
-            position: fixed; bottom: 24px; right: 24px;
-            display: inline-flex; flex-direction: column; align-items: center; gap: 8px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
             background: var(--bg-default);
             border: 1px solid var(--border-tertiary);
             border-radius: 12px;
             padding: 14px;
             text-decoration: none;
-            z-index: 10;
+            grid-column: span 2;
         }
         .qr-corner-label {
             font-family: 'Roboto Mono', monospace;
@@ -780,11 +779,6 @@
 
         <!-- Grid section -->
         <div class="grid-section">
-            <!-- QR panel floated right so desk tiles wrap around it -->
-            <a id="waitlistQrLink" href="#" class="qr-corner-panel" style="display:none;">
-                <div class="qr-corner-label">Join Waiting List</div>
-                <div id="waitlistQr" class="waitlist-qr"></div>
-            </a>
             <div class="desk-grid" id="deskGrid"></div>
         </div>
 
@@ -1203,17 +1197,30 @@
         });
 
         // ── Inline waitlist QR ────────────────────────────────────────
+        let qrUrl = '';
         function updateQrCode() {
-            const el   = $('waitlistQr');
-            const link = $('waitlistQrLink');
-            if (!el || !state.locationId || typeof QRCode === 'undefined') return;
+            if (!state.locationId || typeof QRCode === 'undefined') return;
             const token = new URLSearchParams(window.location.search).get('token') || '';
-            const url   = `${window.location.origin}/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(state.locationId)}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
-            el.innerHTML = '';
-            new QRCode(el, { text: url, width: 324, height: 324, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-            if (link) { link.href = url; link.style.display = 'flex'; }
+            qrUrl = `${window.location.origin}/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(state.locationId)}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
             const mobileBtn = $('mobileJoinBtn');
-            if (mobileBtn) mobileBtn.href = url;
+            if (mobileBtn) mobileBtn.href = qrUrl;
+            appendQrToGrid();
+        }
+
+        function appendQrToGrid() {
+            if (!qrUrl || typeof QRCode === 'undefined') return;
+            const grid = $('deskGrid');
+            if (!grid) return;
+            // Remove existing QR tile if present
+            const existing = grid.querySelector('.qr-corner-panel');
+            if (existing) existing.remove();
+            // Only show on desktop (CSS hides it on mobile)
+            const panel = document.createElement('a');
+            panel.className = 'qr-corner-panel';
+            panel.href = qrUrl;
+            panel.innerHTML = `<div class="qr-corner-label">Join Waiting List</div><div class="waitlist-qr" id="waitlistQr"></div>`;
+            grid.appendChild(panel);
+            new QRCode(panel.querySelector('#waitlistQr'), { text: qrUrl, width: 324, height: 324, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
         }
 
         settingsBtn.addEventListener('click', () => {
@@ -1347,6 +1354,8 @@
                 }
                 deskGrid.appendChild(card);
             });
+
+            appendQrToGrid();
 
             const waitingListContainer = $('waitingListContainer');
             const noDesksAvailable = avail === 0;
