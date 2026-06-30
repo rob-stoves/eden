@@ -1226,7 +1226,7 @@
             const deskCount = grid.children.length - 1; // exclude QR panel
             const totalRows = Math.ceil(deskCount / colCount);
             const midRow = Math.max(1, Math.round(totalRows / 2));
-            panel.style.gridColumn = `${colCount - 1} / ${colCount + 1}`;
+            panel.style.gridColumn = `1 / 3`;
             panel.style.gridRow = `${midRow} / span 3`;
             new QRCode(panel.querySelector('.waitlist-qr'), { text: qrUrl, width: 250, height: 250, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
         }
