@@ -95,10 +95,16 @@
             /* QR hidden, join button shown */
             .waitlistQrLink, #waitlistQrLink { display: none !important; }
             .mobile-join-btn { display: inline-block !important; }
+            /* Hide desktop waiting list on mobile */
+            .waiting-list-header { display: none !important; }
             /* Grid */
             .grid-section { padding: 2px 30px 20px !important; }
             .desk-card { padding: 0 10px; min-height: 56px; gap: 10px; }
             .desk-grid { grid-template-columns: 1fr !important; gap: 8px; }
+            /* Mobile waiting list banner */
+            .mobile-wl-banner { display: block; padding: 0 30px 8px; }
+            /* Join tile — full width, same height as desk card */
+            .mobile-join-tile { display: flex !important; }
         }
 
         .mobile-join-btn {
@@ -110,6 +116,28 @@
             font-size: 11px; font-weight: 600;
             letter-spacing: .04em; text-decoration: none;
             white-space: nowrap;
+        }
+
+        .mobile-wl-banner {
+            display: none;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px; font-weight: 600;
+            letter-spacing: .08em; text-transform: uppercase;
+            color: var(--brand);
+        }
+
+        .mobile-join-tile {
+            display: none;
+            align-items: center; justify-content: center;
+            border-radius: 8px; padding: 0 18px; min-height: 74px;
+            background: var(--bg-default);
+            border: 1px solid var(--brand);
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 900; font-size: 21px;
+            text-transform: uppercase; letter-spacing: .01em;
+            color: var(--brand);
+            text-decoration: none;
+            width: 100%; box-sizing: border-box;
         }
 
         .config-logo { height: 90px; display: block; margin-bottom: 20px; }
@@ -726,6 +754,9 @@
             </div>
         </header>
 
+        <!-- Mobile-only waiting list banner -->
+        <div class="mobile-wl-banner" id="mobileWlBanner" style="display:none;"></div>
+
         <!-- Grid section -->
         <div class="grid-section">
             <div class="desk-grid" id="deskGrid"></div>
@@ -962,6 +993,7 @@
 
         async function updateWaitingListQueue() {
             const queueEl = $('waitingListQueue');
+            const banner  = $('mobileWlBanner');
             const list = (await getWaitingList()).filter(isForToday);
             if (list.length > 0) {
                 const top = list.slice(0, 3);
@@ -969,8 +1001,14 @@
                 queueEl.innerHTML = `<div class="waitlist-queue-subtitle">Current queue</div>`
                     + top.map(e => `<div style="font-size:12px;color:var(--fg-secondary);line-height:1.5;">${esc(e.name)}</div>`).join('')
                     + (extra > 0 ? `<div style="font-size:11px;color:var(--fg-tertiary);">+${extra} more</div>` : '');
+                if (banner) {
+                    const names = list.map(e => esc(e.name)).join(', ');
+                    banner.textContent = `Waiting List: ${names}`;
+                    banner.style.display = 'block';
+                }
             } else {
                 queueEl.innerHTML = '';
+                if (banner) banner.style.display = 'none';
             }
         }
 
@@ -1249,6 +1287,14 @@
             lastUpdatedEl.textContent   = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
             deskGrid.innerHTML = '';
+
+            // Mobile join tile — first card, hidden on desktop via CSS
+            const joinTile = document.createElement('a');
+            joinTile.className = 'mobile-join-tile';
+            joinTile.textContent = 'Join Waiting List';
+            const joinToken = new URLSearchParams(window.location.search).get('token') || '';
+            joinTile.href = `${window.location.origin}/join?token=${encodeURIComponent(joinToken)}&location=${encodeURIComponent(state.locationId || '')}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
+            deskGrid.appendChild(joinTile);
 
             let desksToShow = [...state.desks].sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }));
             if (state.hideNonDesks > 0) desksToShow = desksToShow.filter(d => d.title.length <= state.hideNonDesks);
