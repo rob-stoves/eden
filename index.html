@@ -70,14 +70,21 @@
         @media (max-width: 700px) {
             .dashboard-header {
                 flex-direction: column; align-items: flex-start;
-                padding: 16px 20px 12px; gap: 12px;
+                padding: 10px 12px 8px; gap: 8px;
             }
+            .header-left {
+                width: 100%; gap: 10px;
+            }
+            .header-logo  { height: 28px; }
+            .header-divider { height: 22px; }
+            .header-title { font-size: 24px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
             .header-right {
-                width: 100%; flex-wrap: wrap; gap: 12px;
+                width: 100%; flex-wrap: wrap; gap: 10px;
                 justify-content: flex-start;
             }
-            .header-title { font-size: 28px; }
-            .header-logo  { height: 60px; }
+            .grid-section { padding: 2px 12px 20px; }
+            .desk-card { padding: 0 10px; min-height: 56px; gap: 10px; }
+            .desk-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
         }
 
         .config-logo { height: 90px; display: block; margin-bottom: 20px; }
