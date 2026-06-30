@@ -531,7 +531,6 @@
                 if (!waitingListByDate[d]) waitingListByDate[d] = [];
                 waitingListByDate[d].push(e.name);
             });
-            console.log('[planner] waitingListByDate', JSON.stringify(waitingListByDate));
             const data = await res.json().catch(() => ({ error: `Server error ${res.status} (no JSON body)` }));
             if (!res.ok || data.error) throw new Error(data.error + (data.detail ? ` — ${data.detail}` : ''));
             render(data);
