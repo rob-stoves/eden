@@ -1212,16 +1212,19 @@
             if (!qrUrl || typeof QRCode === 'undefined') return;
             const grid = $('deskGrid');
             if (!grid) return;
-            // Remove existing QR tile if present
             const existing = grid.querySelector('.qr-corner-panel');
             if (existing) existing.remove();
-            // Only show on desktop (CSS hides it on mobile)
             const panel = document.createElement('a');
             panel.className = 'qr-corner-panel';
             panel.href = qrUrl;
-            panel.innerHTML = `<div class="qr-corner-label">Join Waiting List</div><div class="waitlist-qr" id="waitlistQr"></div>`;
+            panel.innerHTML = `<div class="qr-corner-label">Join Waiting List</div><div class="waitlist-qr"></div>`;
             grid.appendChild(panel);
-            new QRCode(panel.querySelector('#waitlistQr'), { text: qrUrl, width: 250, height: 250, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+            // Calculate column count from computed style and set explicit placement
+            const computed = window.getComputedStyle(grid);
+            const colCount = computed.gridTemplateColumns.split(' ').length;
+            panel.style.gridColumn = `${colCount - 1} / ${colCount + 1}`;
+            panel.style.gridRow = 'span 3';
+            new QRCode(panel.querySelector('.waitlist-qr'), { text: qrUrl, width: 250, height: 250, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
         }
 
         settingsBtn.addEventListener('click', () => {
