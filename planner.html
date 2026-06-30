@@ -352,6 +352,15 @@
 
         .join-bar:hover { background: rgba(171,255,68,.2); border-color: var(--brand); }
 
+        .wl-queue-bar {
+            margin: 0 12px 12px;
+            padding: 6px 12px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10px;
+            letter-spacing: .05em;
+            color: var(--fg-tertiary);
+        }
+
         /* ─── Free toggle ───────────────────────────────────────────── */
 
         .free-toggle-row {
@@ -503,15 +512,25 @@
 
     // ── Fetch data ───────────────────────────────────────────────────
 
+    let waitingListByDate = {}; // date string -> [names]
+
     async function load(silent = false) {
         try {
             if (!silent) $('loadingState').style.display = 'flex';
-            const [res, nickRes] = await Promise.all([
+            const [res, nickRes, wlRes] = await Promise.all([
                 fetch(`/planner-data?location=${encodeURIComponent(locId)}`),
-                fetch('/nicknames/get')
+                fetch('/nicknames/get'),
+                fetch(`/waitinglist/get?locationId=${encodeURIComponent(locId)}`)
             ]);
             const nickJson = await nickRes.json().catch(() => ({}));
             if (nickJson.nicknames) nicknamesMap = nickJson.nicknames;
+            const wlJson = await wlRes.json().catch(() => []);
+            waitingListByDate = {};
+            (Array.isArray(wlJson) ? wlJson : []).forEach(e => {
+                const d = e.desired_date || '';
+                if (!waitingListByDate[d]) waitingListByDate[d] = [];
+                waitingListByDate[d].push(e.name);
+            });
             const data = await res.json().catch(() => ({ error: `Server error ${res.status} (no JSON body)` }));
             if (!res.ok || data.error) throw new Error(data.error + (data.detail ? ` — ${data.detail}` : ''));
             render(data);
@@ -648,6 +667,7 @@
                 <div class="day-card-body">
                     ${freePanelHtml}
                     ${filteredCount >= totalDesks ? `<a class="join-bar" href="/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(locId)}&name=London+Office&date=${day.date}">Join waiting list</a>` : ''}
+                    ${(() => { const q = waitingListByDate[day.date]; return q && q.length ? `<div class="wl-queue-bar">Current waiting list: ${q.map(n => n.replace(/</g,'&lt;')).join(', ')}</div>` : ''; })()}
                     <div class="people-list">${peopleRows}</div>
                 </div>`;
 
