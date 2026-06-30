@@ -508,6 +508,27 @@
         }
         .waitlist-qr canvas, .waitlist-qr img { display: block; }
 
+        .qr-corner-panel {
+            position: fixed; bottom: 24px; right: 24px;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            background: var(--bg-default);
+            border: 1px solid var(--border-tertiary);
+            border-radius: 12px;
+            padding: 14px;
+            text-decoration: none;
+            z-index: 100;
+        }
+        .qr-corner-label {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 11px; font-weight: 600;
+            letter-spacing: .08em; text-transform: uppercase;
+            color: var(--brand);
+            white-space: nowrap;
+        }
+        @media (max-width: 700px) {
+            .qr-corner-panel { display: none !important; }
+        }
+
         /* Desk grid */
         .desk-grid {
             display: grid;
@@ -720,7 +741,7 @@
                 <div class="waiting-list-header" id="waitingListContainer" style="display:none;">
                     <div class="waitlist-label">Waiting List</div>
                     <div class="waitlist-body">
-                        <a id="waitlistQrLink" href="#" style="display:none;"><div id="waitlistQr" class="waitlist-qr"></div></a>
+                        <!-- QR moved to bottom-right panel -->
                         <div class="waitlist-queue-wrap" id="waitingListQueue"></div>
                     </div>
                 </div>
@@ -763,6 +784,12 @@
         </div>
 
     </div>
+
+    <!-- QR code panel — fixed bottom right, desktop only -->
+    <a id="waitlistQrLink" href="#" class="qr-corner-panel" style="display:none;">
+        <div class="qr-corner-label">Join Waiting List</div>
+        <div id="waitlistQr" class="waitlist-qr"></div>
+    </a>
 
     <script>
         let state = {
@@ -1184,8 +1211,8 @@
             const token = new URLSearchParams(window.location.search).get('token') || '';
             const url   = `${window.location.origin}/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(state.locationId)}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
             el.innerHTML = '';
-            new QRCode(el, { text: url, width: 72, height: 72, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-            if (link) { link.href = url; link.style.display = 'block'; }
+            new QRCode(el, { text: url, width: 216, height: 216, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+            if (link) { link.href = url; link.style.display = 'flex'; }
             const mobileBtn = $('mobileJoinBtn');
             if (mobileBtn) mobileBtn.href = url;
         }
