@@ -1219,11 +1219,15 @@
             panel.href = qrUrl;
             panel.innerHTML = `<div class="qr-corner-label">Join Waiting List</div><div class="waitlist-qr"></div>`;
             grid.appendChild(panel);
-            // Calculate column count from computed style and set explicit placement
+            grid.style.gridAutoFlow = 'row dense';
+            // Calculate column count and place QR in last 2 cols at the midpoint row
             const computed = window.getComputedStyle(grid);
             const colCount = computed.gridTemplateColumns.split(' ').length;
+            const deskCount = grid.children.length - 1; // exclude QR panel
+            const totalRows = Math.ceil(deskCount / colCount);
+            const midRow = Math.max(1, Math.round(totalRows / 2));
             panel.style.gridColumn = `${colCount - 1} / ${colCount + 1}`;
-            panel.style.gridRow = 'span 3';
+            panel.style.gridRow = `${midRow} / span 3`;
             new QRCode(panel.querySelector('.waitlist-qr'), { text: qrUrl, width: 250, height: 250, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
         }
 
