@@ -1288,13 +1288,17 @@
 
             deskGrid.innerHTML = '';
 
-            // Mobile join tile — first card, hidden on desktop via CSS
-            const joinTile = document.createElement('a');
-            joinTile.className = 'mobile-join-tile';
-            joinTile.textContent = 'Join Waiting List';
-            const joinToken = new URLSearchParams(window.location.search).get('token') || '';
-            joinTile.href = `${window.location.origin}/join?token=${encodeURIComponent(joinToken)}&location=${encodeURIComponent(state.locationId || '')}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
-            deskGrid.appendChild(joinTile);
+            // Mobile join tile — shown based on waiting list setting
+            const showJoinTile = state.showWaitingList === 'always'
+                || (state.showWaitingList === 'auto' && avail === 0);
+            if (showJoinTile) {
+                const joinTile = document.createElement('a');
+                joinTile.className = 'mobile-join-tile';
+                joinTile.textContent = 'Join Waiting List';
+                const joinToken = new URLSearchParams(window.location.search).get('token') || '';
+                joinTile.href = `${window.location.origin}/join?token=${encodeURIComponent(joinToken)}&location=${encodeURIComponent(state.locationId || '')}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
+                deskGrid.appendChild(joinTile);
+            }
 
             let desksToShow = [...state.desks].sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true }));
             if (state.hideNonDesks > 0) desksToShow = desksToShow.filter(d => d.title.length <= state.hideNonDesks);
