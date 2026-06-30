@@ -516,6 +516,7 @@
             padding: 14px;
             text-decoration: none;
             grid-column: span 2;
+            grid-row: span 3;
         }
         .qr-corner-label {
             font-family: 'Roboto Mono', monospace;
@@ -1220,7 +1221,7 @@
             panel.href = qrUrl;
             panel.innerHTML = `<div class="qr-corner-label">Join Waiting List</div><div class="waitlist-qr" id="waitlistQr"></div>`;
             grid.appendChild(panel);
-            new QRCode(panel.querySelector('#waitlistQr'), { text: qrUrl, width: 324, height: 324, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+            new QRCode(panel.querySelector('#waitlistQr'), { text: qrUrl, width: 250, height: 250, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
         }
 
         settingsBtn.addEventListener('click', () => {
