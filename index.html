@@ -1009,7 +1009,7 @@
         }
 
         function isForToday(entry) {
-            return !entry.desired_date || entry.desired_date === todayDate();
+            return entry.desired_date === todayDate();
         }
 
         async function updateWaitingListQueue() {
