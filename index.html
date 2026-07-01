@@ -739,7 +739,7 @@
             <div class="header-right">
                 <!-- Waiting list -->
                 <div class="waiting-list-header" id="waitingListContainer" style="display:none;">
-                    <div class="waitlist-label">Waiting List</div>
+                    <div class="waitlist-label" id="waitlistLabel" style="display:none;">Waiting List</div>
                     <div class="waitlist-body">
                         <!-- QR moved to bottom-right panel -->
                         <div class="waitlist-queue-wrap" id="waitingListQueue"></div>
@@ -1015,6 +1015,7 @@
         async function updateWaitingListQueue() {
             const queueEl = $('waitingListQueue');
             const banner  = $('mobileWlBanner');
+            const label   = $('waitlistLabel');
             const list = (await getWaitingList()).filter(isForToday);
             if (list.length > 0) {
                 const top = list.slice(0, 3);
@@ -1022,6 +1023,7 @@
                 queueEl.innerHTML = `<div class="waitlist-queue-subtitle">Current queue</div>`
                     + top.map(e => `<div style="font-size:12px;color:var(--fg-secondary);line-height:1.5;">${esc(e.name)}</div>`).join('')
                     + (extra > 0 ? `<div style="font-size:11px;color:var(--fg-tertiary);">+${extra} more</div>` : '');
+                if (label) label.style.display = 'block';
                 if (banner) {
                     const names = list.map(e => esc(e.name)).join(', ');
                     banner.textContent = `Waiting List: ${names}`;
@@ -1029,6 +1031,7 @@
                 }
             } else {
                 queueEl.innerHTML = '';
+                if (label) label.style.display = 'none';
                 if (banner) banner.style.display = 'none';
             }
         }
