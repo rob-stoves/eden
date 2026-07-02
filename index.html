@@ -102,7 +102,6 @@
             .desk-card { padding: 0 10px; min-height: 56px; gap: 10px; }
             .desk-grid { grid-template-columns: 1fr !important; gap: 8px; }
             /* Mobile waiting list banner */
-            .mobile-wl-banner { display: block; padding: 0 30px 8px; }
             /* Join tile — full width, same height as desk card */
             .mobile-join-tile { display: flex !important; }
         }
@@ -118,13 +117,6 @@
             white-space: nowrap;
         }
 
-        .mobile-wl-banner {
-            display: none;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 12px; font-weight: 600;
-            letter-spacing: .08em; text-transform: uppercase;
-            color: var(--brand);
-        }
 
         .mobile-join-tile {
             display: none;
@@ -774,8 +766,6 @@
         </header>
 
         <!-- Mobile-only waiting list banner -->
-        <div class="mobile-wl-banner" id="mobileWlBanner" style="display:none;"></div>
-
         <!-- Grid section -->
         <div class="grid-section">
             <div class="desk-grid" id="deskGrid"></div>
@@ -1012,7 +1002,7 @@
 
         async function updateWaitingListQueue() {
             const queueEl = $('waitingListQueue');
-            const banner  = $('mobileWlBanner');
+
             const label   = $('waitlistLabel');
             const container = $('waitingListContainer');
             const list = (await getWaitingList()).filter(isForToday);
@@ -1021,15 +1011,10 @@
                 queueEl.textContent = names;
                 if (label) label.style.display = 'inline';
                 if (container) container.style.display = 'block';
-                if (banner) {
-                    banner.textContent = `Waiting List: ${names}`;
-                    banner.style.display = 'block';
-                }
             } else {
                 queueEl.textContent = '';
                 if (label) label.style.display = 'none';
                 if (container) container.style.display = 'none';
-                if (banner) banner.style.display = 'none';
             }
         }
 
