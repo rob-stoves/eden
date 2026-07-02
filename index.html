@@ -1348,7 +1348,10 @@
                 deskGrid.appendChild(card);
             });
 
-            appendQrToGrid();
+            const showQr = state.showWaitingList === 'always'
+                || (state.showWaitingList === 'auto' && avail === 0);
+            if (showQr) appendQrToGrid();
+            else { const eq = deskGrid.querySelector('.qr-corner-panel'); if (eq) eq.remove(); }
 
             const waitingListContainer = $('waitingListContainer');
             const noDesksAvailable = avail === 0;
