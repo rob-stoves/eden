@@ -1190,7 +1190,6 @@
             qrUrl = `${window.location.origin}/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(state.locationId)}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
             const mobileBtn = $('mobileJoinBtn');
             if (mobileBtn) mobileBtn.href = qrUrl;
-            appendQrToGrid();
         }
 
         function appendQrToGrid() {
