@@ -434,17 +434,20 @@
         .legend-swatch.occupied  { background: var(--bg-default); border: 1px solid var(--border-default); }
         .legend-text { font-size: 13px; color: var(--fg-secondary); }
 
-        /* Waiting list in dashboard header */
-        .waiting-list-header {
-            display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-right: 16px;
+        .header-wl-line {
+            margin-top: 4px;
+            font-size: 13px;
+            line-height: 1.4;
         }
         .waitlist-label {
+            display: inline;
             font-family: 'Roboto Mono', monospace;
-            font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+            font-size: 13px; letter-spacing: .08em; text-transform: uppercase;
             color: var(--brand); white-space: nowrap;
         }
-        .waitlist-body {
-            display: flex; align-items: flex-start; gap: 10px;
+        #waitingListQueue {
+            color: var(--fg-default);
+            font-size: 13px;
         }
         .waitlist-queue-wrap {
             display: flex; flex-direction: column; gap: 2px;
@@ -725,26 +728,21 @@
     <div class="dashboard" id="dashboard">
 
         <header class="dashboard-header">
-            <!-- Left: logo + divider + location text -->
+            <!-- Left: logo + divider + location text + waiting list -->
             <div class="header-left">
                 <img src="Optimizely_Primary-Logo_Medium_Green_RGB.svg" alt="Optimizely" class="header-logo">
                 <span class="header-divider"></span>
                 <div class="header-text">
                     <div class="header-eyebrow" id="headerEyebrow">WORKPLACE</div>
                     <h1 class="header-title" id="locationName">Loading…</h1>
+                    <div class="header-wl-line" id="waitingListContainer" style="display:none;">
+                        <span class="waitlist-label" id="waitlistLabel" style="display:none;">Waiting List: </span><span id="waitingListQueue"></span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right: waiting list + live pill + stat block -->
+            <!-- Right: live pill + stat block -->
             <div class="header-right">
-                <!-- Waiting list -->
-                <div class="waiting-list-header" id="waitingListContainer" style="display:none;">
-                    <div class="waitlist-label" id="waitlistLabel" style="display:none;">Waiting List</div>
-                    <div class="waitlist-body">
-                        <!-- QR moved to bottom-right panel -->
-                        <div class="waitlist-queue-wrap" id="waitingListQueue"></div>
-                    </div>
-                </div>
 
                 <!-- Stat block -->
                 <div class="stat-block">
@@ -1016,22 +1014,21 @@
             const queueEl = $('waitingListQueue');
             const banner  = $('mobileWlBanner');
             const label   = $('waitlistLabel');
+            const container = $('waitingListContainer');
             const list = (await getWaitingList()).filter(isForToday);
             if (list.length > 0) {
-                const top = list.slice(0, 3);
-                const extra = list.length - top.length;
-                queueEl.innerHTML = `<div class="waitlist-queue-subtitle">Current queue</div>`
-                    + top.map(e => `<div style="font-size:12px;color:var(--fg-secondary);line-height:1.5;">${esc(e.name)}</div>`).join('')
-                    + (extra > 0 ? `<div style="font-size:11px;color:var(--fg-tertiary);">+${extra} more</div>` : '');
-                if (label) label.style.display = 'block';
+                const names = list.map(e => esc(e.name)).join(', ');
+                queueEl.textContent = names;
+                if (label) label.style.display = 'inline';
+                if (container) container.style.display = 'block';
                 if (banner) {
-                    const names = list.map(e => esc(e.name)).join(', ');
                     banner.textContent = `Waiting List: ${names}`;
                     banner.style.display = 'block';
                 }
             } else {
-                queueEl.innerHTML = '';
+                queueEl.textContent = '';
                 if (label) label.style.display = 'none';
+                if (container) container.style.display = 'none';
                 if (banner) banner.style.display = 'none';
             }
         }
