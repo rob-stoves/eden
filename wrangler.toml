@@ -1,0 +1,5 @@
+name = "eden"
+pages_build_output_dir = "."
+
+[triggers]
+crons = ["*/15 * * * *"]
