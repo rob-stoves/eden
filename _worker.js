@@ -224,16 +224,22 @@ async function handleWaitingListRemove(request, env) {
     await initDB(env.EDEN_DB);
 
     const body = await request.json();
-    const { locationId, name } = body;
-    
+    const { locationId, name, desired_date } = body;
+
     if (!locationId || !name) {
       return jsonResponse({ error: 'locationId and name required' }, 400);
     }
 
-    // Delete by name (case-insensitive)
-    await env.EDEN_DB.prepare(`
-      DELETE FROM waiting_list WHERE location_id = ? AND LOWER(name) = LOWER(?)
-    `).bind(locationId, name.trim()).run();
+    // Delete by name and date (case-insensitive) — date scopes removal to avoid deleting future entries
+    if (desired_date) {
+      await env.EDEN_DB.prepare(`
+        DELETE FROM waiting_list WHERE location_id = ? AND LOWER(name) = LOWER(?) AND desired_date = ?
+      `).bind(locationId, name.trim(), desired_date).run();
+    } else {
+      await env.EDEN_DB.prepare(`
+        DELETE FROM waiting_list WHERE location_id = ? AND LOWER(name) = LOWER(?)
+      `).bind(locationId, name.trim()).run();
+    }
 
     // Get updated list
     const results = await env.EDEN_DB.prepare(

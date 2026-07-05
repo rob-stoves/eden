@@ -980,12 +980,12 @@
             }).catch(() => {});
         }
 
-        async function removeFromWaitingList(name) {
+        async function removeFromWaitingList(name, date) {
             try {
                 const r = await fetch('/waitinglist/remove', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ locationId: state.locationId, name })
+                    body: JSON.stringify({ locationId: state.locationId, name, desired_date: date || null })
                 });
                 return (await r.json()).success;
             } catch (e) { return false; }
@@ -1027,7 +1027,7 @@
             for (const entry of waitingList) {
                 const en = entry.name.toLowerCase().trim();
                 for (const bn of bookedNames) {
-                    if (en === bn) { await removeFromWaitingList(entry.name); break; }
+                    if (en === bn) { await removeFromWaitingList(entry.name, entry.desired_date); break; }
                 }
             }
         }
