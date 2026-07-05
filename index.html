@@ -1193,6 +1193,7 @@
         }
 
         function appendQrToGrid() {
+            updateQrCode();
             if (!qrUrl || typeof QRCode === 'undefined') return;
             const grid = $('deskGrid');
             if (!grid) return;
