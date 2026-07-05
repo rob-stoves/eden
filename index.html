@@ -1089,11 +1089,11 @@
                         <span class="waiting-list-manage-name">${esc(entry.name)}</span>
                         <span class="waiting-list-manage-time">${entry.desired_date || 'Any day'} · ${formatTimeAgo(entry.timestamp)}</span>
                     </div>
-                    <button class="waiting-list-manage-remove" data-name="${esc(entry.name)}">Remove</button>
+                    <button class="waiting-list-manage-remove" data-name="${esc(entry.name)}" data-date="${esc(entry.desired_date || '')}">Remove</button>
                 </div>`).join('');
             container.querySelectorAll('.waiting-list-manage-remove').forEach(btn => {
                 btn.addEventListener('click', async e => {
-                    await removeFromWaitingList(e.target.dataset.name);
+                    await removeFromWaitingList(e.target.dataset.name, e.target.dataset.date || null);
                     renderWaitingListManagement();
                 });
             });
