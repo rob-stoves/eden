@@ -326,7 +326,7 @@
             const r = await fetch('/waitinglist/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ locationId: locId, name, email: email || '', desired_date: date || null })
+                body: JSON.stringify({ locationId: locId, name, email: email || '', desired_date: date || null, locationName: locName || '' })
             });
 
             if (!r.ok) throw new Error(await r.text());
