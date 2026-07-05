@@ -1,2 +1,7 @@
 name = "eden"
 pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "EDEN_DB"
+database_name = "eden-db"
+database_id = "3ca3fd43-ee94-44d7-88f9-5677999f041d"
