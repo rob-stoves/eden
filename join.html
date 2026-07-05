@@ -318,6 +318,7 @@
         showError('');
 
         if (!name) { showError('Please enter your name.'); $('joinName').focus(); return; }
+        if (email && !email.toLowerCase().endsWith('@optimizely.com')) { showError('Please use your @optimizely.com email address.'); $('joinEmail').focus(); return; }
 
         $('joinBtn').disabled = true;
         $('joinBtn').textContent = 'Joining…';
