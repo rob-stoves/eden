@@ -179,6 +179,9 @@ async function handleWaitingListAdd(request, env) {
     if (!locationId || !name) {
       return jsonResponse({ error: 'locationId and name required' }, 400);
     }
+    if (email && !/@optimizely\.com$/i.test(email)) {
+      return jsonResponse({ error: 'Please use your @optimizely.com email address.' }, 400);
+    }
 
     const timestamp = Date.now();
     const token = crypto.randomUUID();
