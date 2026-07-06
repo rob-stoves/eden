@@ -409,7 +409,7 @@ async function handleWaitingListUnsubscribe(request, env) {
     await initDB(env.EDEN_DB);
 
     const entry = await env.EDEN_DB.prepare(
-      'SELECT id, name FROM waiting_list WHERE token = ?'
+      'SELECT id, name, desired_date FROM waiting_list WHERE token = ?'
     ).bind(token).first();
 
     if (!entry) {
@@ -420,7 +420,20 @@ async function handleWaitingListUnsubscribe(request, env) {
 
     await env.EDEN_DB.prepare('DELETE FROM waiting_list WHERE token = ?').bind(token).run();
 
-    return new Response(unsubscribePage(`You've been removed from the waiting list, ${entry.name}.`), {
+    const dateLabel = entry.desired_date
+      ? (() => {
+          const d = new Date(entry.desired_date + 'T12:00:00Z');
+          const day = d.getDate();
+          const suffix = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th';
+          return d.toLocaleDateString('en-GB', { weekday: 'long', month: 'long' }).replace(/(\w+), (\w+)/, `$1 the ${day}${suffix} $2`);
+        })()
+      : null;
+
+    const msg = dateLabel
+      ? `You've been removed from the waiting list for ${dateLabel}, ${entry.name}.`
+      : `You've been removed from the waiting list, ${entry.name}.`;
+
+    return new Response(unsubscribePage(msg), {
       status: 200, headers: { 'Content-Type': 'text/html' }
     });
   } catch (error) {
