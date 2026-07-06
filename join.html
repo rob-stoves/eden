@@ -332,7 +332,10 @@
                 body: JSON.stringify({ locationId: locId, name, email: email || '', desired_date: date || null, locationName: locName || '' })
             });
 
-            if (!r.ok) throw new Error(await r.text());
+            if (!r.ok) {
+                const data = await r.json().catch(() => ({}));
+                throw new Error(data.error || 'Could not join the waitlist. Please try again.');
+            }
 
             // Save to localStorage for next time
             localStorage.setItem('eden_wl_name', name);
@@ -350,7 +353,7 @@
             }
 
         } catch (e) {
-            showError('Could not join the waitlist. Please try again.');
+            showError(e.message || 'Could not join the waitlist. Please try again.');
             $('joinBtn').disabled = false;
             $('joinBtn').textContent = 'Join Waitlist';
         }

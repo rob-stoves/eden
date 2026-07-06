@@ -183,6 +183,20 @@ async function handleWaitingListAdd(request, env) {
       return jsonResponse({ error: 'Please use your @optimizely.com email address.' }, 400);
     }
 
+    // Duplicate check: same email + date, or same name + date
+    if (desired_date) {
+      if (email) {
+        const emailDupe = await env.EDEN_DB.prepare(
+          `SELECT id FROM waiting_list WHERE location_id = ? AND LOWER(email) = LOWER(?) AND desired_date = ? LIMIT 1`
+        ).bind(locationId, email.trim(), desired_date).first();
+        if (emailDupe) return jsonResponse({ error: `You're already on the waiting list for this date.` }, 409);
+      }
+      const nameDupe = await env.EDEN_DB.prepare(
+        `SELECT id FROM waiting_list WHERE location_id = ? AND LOWER(name) = LOWER(?) AND desired_date = ? LIMIT 1`
+      ).bind(locationId, name.trim(), desired_date).first();
+      if (nameDupe) return jsonResponse({ error: `Someone with this name is already on the waiting list for this date.` }, 409);
+    }
+
     const timestamp = Date.now();
     const token = crypto.randomUUID();
 
