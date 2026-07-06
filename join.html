@@ -158,6 +158,29 @@
         .btn-join:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
         .btn-join:disabled { opacity: .35; cursor: not-allowed; transform: none; }
 
+        .btn-back {
+            display: inline-block;
+            padding: 12px 24px;
+            background: transparent;
+            color: var(--brand);
+            border: 1.5px solid var(--brand);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Roboto Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            text-decoration: none;
+            transition: opacity .2s, transform .15s;
+            margin-top: 12px;
+        }
+        .btn-back:hover { opacity: .8; transform: translateY(-1px); }
+        .btn-back.btn-back--primary {
+            background: var(--brand);
+            color: var(--brand-ink);
+            border-color: var(--brand);
+        }
+
         /* ─── Success state ───────────────────────────────────────── */
 
         .success-panel {
@@ -263,8 +286,8 @@
         <div class="success-icon">&#x2713;</div>
         <div class="success-title">You're on the list!</div>
         <div class="success-sub" id="successSub"></div>
-        <a id="backBtn" href="#" style="display:none;margin-top:24px;padding:12px 24px;background:var(--brand);color:var(--brand-ink);border-radius:8px;font-size:13px;font-weight:700;font-family:'Roboto Mono',monospace;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;">&#8592; Back</a>
     </div>
+    <a id="backBtn" class="btn-back" href="#" style="display:none;">&#8592; Back</a>
 </div>
 
 <script>
@@ -293,6 +316,12 @@
     // ── Init ─────────────────────────────────────────────────────────
 
     $('locationLabel').textContent = locName || locId || 'Unknown location';
+
+    if (backUrl) {
+        const btn = $('backBtn');
+        btn.href = backUrl;
+        btn.style.display = 'inline-block';
+    }
 
     if (!locId) {
         $('configMissing').style.display = 'block';
@@ -346,11 +375,7 @@
             const dateLabel = date ? new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : 'today';
             $('successSub').innerHTML = `You've been added to the waitlist for <strong>${locName || 'the office'}</strong> on <strong>${dateLabel}</strong>.<br><br>${email ? "We'll email you at <strong>" + email + "</strong> if a desk becomes available." : 'Check back on the display board to see your position.'}`;
             $('successPanel').style.display = 'block';
-            if (backUrl) {
-                const btn = $('backBtn');
-                btn.href = backUrl;
-                btn.style.display = 'inline-block';
-            }
+            if (backUrl) $('backBtn').classList.add('btn-back--primary');
 
         } catch (e) {
             showError(e.message || 'Could not join the waitlist. Please try again.');
