@@ -666,7 +666,7 @@
                 </div>
                 <div class="day-card-body">
                     ${freePanelHtml}
-                    ${filteredCount >= totalDesks ? `<a class="join-bar" href="/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(locId)}&name=London+Office&date=${day.date}">Join waiting list</a>` : ''}
+                    ${filteredCount >= totalDesks ? `<a class="join-bar" href="/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(locId)}&name=London+Office&date=${day.date}&back=${encodeURIComponent(window.location.href)}">Join waiting list</a>` : ''}
                     ${(() => { const q = waitingListByDate[day.date]; return q && q.length ? `<div class="wl-queue-bar">Current waiting list: ${q.map(n => n.replace(/</g,'&lt;')).join(', ')}</div>` : ''; })()}
                     <div class="people-list">${peopleRows}</div>
                 </div>`;

@@ -263,6 +263,7 @@
         <div class="success-icon">&#x2713;</div>
         <div class="success-title">You're on the list!</div>
         <div class="success-sub" id="successSub"></div>
+        <a id="backBtn" href="#" style="display:none;margin-top:24px;padding:12px 24px;background:var(--brand);color:var(--brand-ink);border-radius:8px;font-size:13px;font-weight:700;font-family:'Roboto Mono',monospace;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;">&#8592; Back</a>
     </div>
 </div>
 
@@ -272,6 +273,7 @@
     const locId   = params.get('location') || '';
     const locName = params.get('name') || '';
     const locDate = params.get('date') || '';
+    const backUrl = params.get('back') || '';
 
     const $ = id => document.getElementById(id);
 
@@ -341,6 +343,11 @@
             const dateLabel = date ? new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : 'today';
             $('successSub').innerHTML = `You've been added to the waitlist for <strong>${locName || 'the office'}</strong> on <strong>${dateLabel}</strong>.<br><br>${email ? "We'll email you at <strong>" + email + "</strong> if a desk becomes available." : 'Check back on the display board to see your position.'}`;
             $('successPanel').style.display = 'block';
+            if (backUrl) {
+                const btn = $('backBtn');
+                btn.href = backUrl;
+                btn.style.display = 'inline-block';
+            }
 
         } catch (e) {
             showError('Could not join the waitlist. Please try again.');

@@ -1187,7 +1187,7 @@
         function updateQrCode() {
             if (!state.locationId || typeof QRCode === 'undefined') return;
             const token = new URLSearchParams(window.location.search).get('token') || '';
-            qrUrl = `${window.location.origin}/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(state.locationId)}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
+            qrUrl = `${window.location.origin}/join?token=${encodeURIComponent(token)}&location=${encodeURIComponent(state.locationId)}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}&back=${encodeURIComponent(window.location.href)}`;
             const mobileBtn = $('mobileJoinBtn');
             if (mobileBtn) mobileBtn.href = qrUrl;
         }
@@ -1322,7 +1322,7 @@
                 joinTile.className = 'mobile-join-tile';
                 joinTile.textContent = 'Join Waiting List';
                 const joinToken = new URLSearchParams(window.location.search).get('token') || '';
-                joinTile.href = `${window.location.origin}/join?token=${encodeURIComponent(joinToken)}&location=${encodeURIComponent(state.locationId || '')}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}`;
+                joinTile.href = `${window.location.origin}/join?token=${encodeURIComponent(joinToken)}&location=${encodeURIComponent(state.locationId || '')}&name=${encodeURIComponent(state.locationName || state.dashboardTitle || '')}&back=${encodeURIComponent(window.location.href)}`;
                 deskGrid.appendChild(joinTile);
             }
 
