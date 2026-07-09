@@ -597,12 +597,18 @@ async function handlePlannerData(request, url, env) {
 
   async function fetchDay(date) {
     const all = [];
-    for (let page = 1; page <= 10; page++) {
-      const res = await fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=${page}`, { headers });
-      const data = await res.json().catch(() => []);
-      const arr = Array.isArray(data) ? data : [];
-      all.push(...arr);
-      if (arr.length < 25) break;
+    for (let batchStart = 1; batchStart <= 200; batchStart += 4) {
+      const pages = await Promise.all(
+        [0, 1, 2, 3].map(j => fetch(`https://public-api.eden.io/cola_reservations?date=${date}&page=${batchStart + j}`, { headers })
+          .then(r => r.json()).catch(() => []))
+      );
+      let hasMore = false;
+      for (const data of pages) {
+        const arr = Array.isArray(data) ? data : [];
+        all.push(...arr);
+        if (arr.length >= 25) hasMore = true;
+      }
+      if (!hasMore) break;
     }
     const reservations = all
       .filter(r => !INACTIVE.has(r.status) && deskIds.has(r.location?.location_id))
