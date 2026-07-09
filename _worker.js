@@ -613,16 +613,14 @@ async function handlePlannerData(request, url, env) {
     const reservations = all
       .filter(r => !INACTIVE.has(r.status) && deskIds.has(r.location?.location_id))
       .map(r => ({ deskId: r.location.location_id, deskName: (r.location.title || '').trim(), name: r.owner?.name || 'Unknown' }));
-    const inactiveDesks = all.filter(r => deskIds.has(r.location?.location_id) && INACTIVE.has(r.status)).map(r => r.location?.title + ':' + r.status);
-    console.log(`[fetchDay] ${date}: ${all.length} raw, ${reservations.length} matched, inactive:`, inactiveDesks);
-    return { date, reservations, _raw: all.length, _inactive: inactiveDesks };
+    return { date, reservations };
   }
 
   const days = await Promise.all(dates.map(fetchDay));
 
   const desks = desksRaw.map(d => ({ id: d.location_id, name: (d.title || '').trim() }));
 
-  return jsonResponse({ desks, days, _debug: { deskApiCount: desksRaw.length, dayCounts: days.map(d => ({ date: d.date, raw: d._raw, matched: d.reservations.length, inactive: d._inactive })) } });
+  return jsonResponse({ desks, days });
   } catch (e) {
     return jsonResponse({ error: `Worker exception: ${e.message}` }, 500);
   }
