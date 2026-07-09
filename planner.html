@@ -603,8 +603,9 @@
         days.forEach((day, i) => {
             const label = formatLong(day.date);
 
+            const filteredDeskIds = new Set((filteredDesks || []).map(d => d.id));
             const sorted = [...day.reservations]
-                .filter(r => (r.deskName || '').length <= 3)
+                .filter(r => filteredDeskIds.has(r.deskId))
                 .map(r => ({ ...r, displayName: nicknamesMap[r.name.toLowerCase()] || r.name }))
                 .sort((a, b) => a.displayName.localeCompare(b.displayName));
 
