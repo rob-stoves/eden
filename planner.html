@@ -532,6 +532,7 @@
             });
             const data = await res.json().catch(() => ({ error: `Server error ${res.status} (no JSON body)` }));
             if (!res.ok || data.error) throw new Error(data.error + (data.detail ? ` — ${data.detail}` : ''));
+            console.log('[planner debug]', JSON.stringify(data._debug));
             render(data);
         } catch (e) {
             $('loadingState').style.display = 'none';
