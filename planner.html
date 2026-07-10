@@ -471,7 +471,7 @@
     const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
     const params = new URLSearchParams(location.search);
-    const locId  = params.get('location') || localStorage.getItem('eden_location_id') || '';
+    const locId  = params.get('location') || localStorage.getItem('eden_location_id') || 'IVVkLRIiGDH4uEB8pSlVvHM7DfO--kF6RQYQa4D8UQ==';
     const token  = params.get('token') || '';
 
     const $  = id => document.getElementById(id);
